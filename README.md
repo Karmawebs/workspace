@@ -55,3 +55,24 @@ Todas las apps deben reutilizar el mismo sistema de:
 8. El detalle de proyecto debe admitir paneles rápidos configurables según aplicación.
 
 Ver `WORKSPACE_ARCHITECTURE.md` y `ASTRA_HANDOFF.md` antes de desarrollar.
+
+## Ejecutar la V1
+
+Requiere Node.js 22.12+ (verificado con Node 24).
+
+```sh
+npm ci
+cp .env.example .env.local
+# Completar VITE_SUPABASE_PUBLISHABLE_KEY con una clave sb_publishable_.
+npm run dev
+```
+
+`npm run build` comprueba TypeScript y genera `dist/`; `npm test` ejecuta pruebas de componentes y lógica. El enrutado usa hash y funciona en hosting estático sin reglas de reescritura. Configurar las URLs autorizadas de Auth al desplegar (origen del sitio y recuperación de contraseña).
+
+`src/core` contiene las entidades, acceso a datos, autenticación, formularios y pantallas comunes. `src/modules` contiene configuración de navegación, dashboard, calendario y consulta técnica de Care. `src/lib` contiene el cliente y tipos generados del esquema real.
+
+La configuración rechaza cualquier backend distinto de `wrkoskqfjuefgrwhymqu` y cualquier clave que no sea pública. Registro, login y recuperación usan Supabase Auth. Crear una cuenta solo genera su perfil: la entrada exige `kw_workspace_members`. El primer propietario se concede de forma administrativa; a partir de ahí puede añadir cuentas confirmadas desde Equipo.
+
+La migración `20261024101724_fix_workspace_membership_recursion.sql` ya está aplicada al destino. Corrige una recursión preexistente mediante funciones privadas que consultan exclusivamente la membresía del usuario autenticado, sin desactivar RLS. El repositorio no contiene el historial anterior completo: no usarlo para reconstruir o reiniciar el backend. `supabase/tests/workspace_rls.sql` verifica Core, módulos y denegación a no miembros en una transacción que revierte sus escrituras.
+
+Care permite vincular `kw_care_sites.legacy_site_id` a un sitio existente y consultar diagnóstico, conexión, plugins, temas, alertas e historial de acciones. No modifica emparejamiento, instalaciones, RPC ni Edge Functions legacy. Las acciones remotas siguen en Care actual hasta revisar la autorización de `enqueue_care_action`.

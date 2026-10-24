@@ -7,3 +7,7 @@ dist/
 *.log
 .vscode/
 .idea/
+
+*.tsbuildinfo
+test-results/
+playwright-report/
