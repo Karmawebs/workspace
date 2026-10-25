@@ -145,7 +145,7 @@ describe("Acceso y navegación", () => {
   it("navega entre Work, Social y Care con Core compartido", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await screen.findByText("Tu trabajo, en perspectiva");
+    await screen.findByRole("heading", { name: "Tu espacio de trabajo" });
     await user.click(screen.getByRole("link", { name: "Social", exact: true }));
     await screen.findByRole("button", { name: "Nuevo proyecto" });
     await user.click(
@@ -158,6 +158,29 @@ describe("Acceso y navegación", () => {
       screen.getByRole("link", { name: "Área técnica", exact: true }),
     );
     await screen.findByRole("button", { name: "Nuevo sitio" });
+  });
+});
+describe("Creación desde la sidebar", () => {
+  it("abre el editor Work, guarda con su scope y navega al proyecto", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole("heading", { name: "Tu espacio de trabajo" });
+    await user.click(screen.getByRole("button", { name: "Nuevo proyecto" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(
+      within(dialog).getByLabelText("Nombre *"),
+      "Proyecto desde sidebar",
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "Guardar", exact: true }),
+    );
+    await screen.findByRole("heading", { name: "Proyecto desde sidebar" });
+    expect(mock.writes[0].values).toMatchObject({
+      workspace_id: "workspace-1",
+      app_key: "work",
+      name: "Proyecto desde sidebar",
+    });
+    expect(window.location.hash).toMatch(/^#\/work\/projects\//);
   });
 });
 describe("Flujos compartidos", () => {
