@@ -76,3 +76,9 @@ La configuración rechaza cualquier backend distinto de `wrkoskqfjuefgrwhymqu` y
 La migración `20261024101724_fix_workspace_membership_recursion.sql` ya está aplicada al destino. Corrige una recursión preexistente mediante funciones privadas que consultan exclusivamente la membresía del usuario autenticado, sin desactivar RLS. El repositorio no contiene el historial anterior completo: no usarlo para reconstruir o reiniciar el backend. `supabase/tests/workspace_rls.sql` verifica Core, módulos y denegación a no miembros en una transacción que revierte sus escrituras.
 
 Care permite vincular `kw_care_sites.legacy_site_id` a un sitio existente y consultar diagnóstico, conexión, plugins, temas, alertas e historial de acciones. No modifica emparejamiento, instalaciones, RPC ni Edge Functions legacy. Las acciones remotas siguen en Care actual hasta revisar la autorización de `enqueue_care_action`.
+
+## Cloudflare Workers
+
+Producción de pruebas desde `main`: build `npm run build`, deploy `npx wrangler deploy`, raíz `/`. `wrangler.jsonc` publica `dist` con fallback SPA y conserva workers.dev y el Custom Domain `workspace.karmawebs.com`.
+
+Configurar `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` en **Builds → Production → Variables and secrets**. Vite incorpora estos valores al JavaScript al compilar; las variables runtime del Worker no los sustituyen. La clave debe pertenecer al proyecto autorizado. El build valida tanto la configuración como su aceptación por Supabase Auth antes de generar assets; requiere conexión al backend. Nunca usar una clave privada/service-role.
