@@ -14,7 +14,7 @@ export function ProjectDetail({ scope }: { scope: Scope }) {
   const { id = "" } = useParams(),
     [project, setProject] = useState<Row>(),
     [error, setError] = useState(""),
-    [tab, setTab] = useState(scope.app === "work" ? "journal" : "activity"),
+    [tab, setTab] = useState("activity"),
     [edit, setEdit] = useState(false),
     [version, setVersion] = useState(0);
   const panels = useRows(entity("panels"), scope, id),
@@ -59,8 +59,7 @@ export function ProjectDetail({ scope }: { scope: Scope }) {
   const tabs: { key: string; title: string; entity?: EntityKey }[] = [
     ...(scope.app === "work"
       ? [
-          { key: "journal", title: "Diario", entity: "journal" as const },
-          { key: "activity", title: "Tareas" },
+          { key: "activity", title: "Actividad" },
           { key: "meetings", title: "Reuniones" },
         ]
       : [
@@ -177,7 +176,10 @@ export function ProjectDetail({ scope }: { scope: Scope }) {
       <div role="tabpanel">
         {tab === "activity" ? (
           scope.app === "work" ? (
-            <EntityView kind="tasks" scope={scope} projectId={id} compact />
+            <div className="operations-grid">
+              <EntityView kind="tasks" scope={scope} projectId={id} compact />
+              <EntityView kind="journal" scope={scope} projectId={id} compact />
+            </div>
           ) : (
             <div className="operations-grid">
               <EntityView kind="tasks" scope={scope} projectId={id} compact />
