@@ -1,191 +1,365 @@
 /* WORK V2 */
-@media (min-width:761px){
-  /* Same rail model as legacy Karma Work: 76px closed, 228px overlay on hover. */
-  .sidebar{
-    width:76px!important;
-    min-width:76px!important;
-    max-width:76px!important;
-    position:fixed;
-    inset:0 auto 0 0;
-    padding:27px 14px 18px!important;
-    background:#151618;
-    border-right:1px solid #2a2b2f;
-    color:#fff;
-    z-index:40;
-    overflow:hidden;
-    align-items:stretch;
-    transition:width .22s ease,min-width .22s ease,max-width .22s ease,box-shadow .22s ease;
-  }
-  .sidebar:hover,.sidebar:has(:focus-visible){
-    width:228px!important;
-    min-width:228px!important;
-    max-width:228px!important;
-    box-shadow:16px 0 36px #0003;
-  }
-  /* The page always reserves only the compact rail. Expansion overlays it, so the app never jumps. */
-  .main-shell{
-    margin-left:76px!important;
-    width:calc(100% - 76px);
-    transition:none!important;
-  }
-  .mobile-only-topbar{display:none!important}
-  .main-shell>main{min-height:100vh}
 
-  .brand{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    width:48px!important;
-    height:40px!important;
-    min-width:48px!important;
-    margin:0 0 38px!important;
-    gap:13px;
-    flex-shrink:0;
-    overflow:hidden;
-  }
-  .sidebar:hover .brand,.sidebar:has(:focus-visible) .brand{width:200px!important;justify-content:flex-start}
-  .brand-mark{
-    width:48px!important;
-    height:40px!important;
-    min-width:48px!important;
-    flex:0 0 48px;
-    border:0;
-    border-radius:0;
-    background:transparent;
-    color:#fff;
-    font-size:0;
-    position:relative;
-  }
-  .brand-mark:after{
-    content:"karma.";
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:#fff;
-    font-size:20px;
-    font-weight:800;
-    line-height:.82;
-    letter-spacing:-1.8px;
+/* ==========================================================
+   DESKTOP SIDEBAR
+   Single source of truth for the compact/expanded rail.
+   The page always reserves 76px. The expanded sidebar overlays
+   the page instead of pushing it.
+   ========================================================== */
+@media (min-width: 761px) {
+  .sidebar {
+    width: 76px !important;
+    min-width: 76px !important;
+    max-width: 76px !important;
+    height: 100vh;
+    position: fixed;
+    inset: 0 auto 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px 14px 16px !important;
+    overflow: hidden;
+    background: #151618;
+    border-right: 1px solid #2a2b2f;
+    color: #fff;
+    z-index: 40;
+    transition: width .2s ease, min-width .2s ease, max-width .2s ease, box-shadow .2s ease;
   }
 
-  .brand>div,.branch-label,.nav-label,.sidebar-bottom>div,.sidebar-bottom .icon-button,.main-nav a span,.sidebar-add span,.app-name{
-    opacity:0;
-    visibility:hidden;
-    pointer-events:none;
-    transition:opacity .15s ease,visibility .15s ease;
+  .sidebar:hover,
+  .sidebar:has(:focus-visible) {
+    width: 228px !important;
+    min-width: 228px !important;
+    max-width: 228px !important;
+    box-shadow: 16px 0 36px rgba(0,0,0,.2);
   }
-  .sidebar:hover .brand>div,.sidebar:hover .branch-label,.sidebar:hover .nav-label,.sidebar:hover .sidebar-bottom>div,.sidebar:hover .sidebar-bottom .icon-button,.sidebar:hover .main-nav a span,.sidebar:hover .sidebar-add span,.sidebar:hover .app-name,
-  .sidebar:has(:focus-visible) .brand>div,.sidebar:has(:focus-visible) .branch-label,.sidebar:has(:focus-visible) .nav-label,.sidebar:has(:focus-visible) .sidebar-bottom>div,.sidebar:has(:focus-visible) .sidebar-bottom .icon-button,.sidebar:has(:focus-visible) .main-nav a span,.sidebar:has(:focus-visible) .sidebar-add span,.sidebar:has(:focus-visible) .app-name{
-    opacity:1;
-    visibility:visible;
-    pointer-events:auto;
-  }
-  .branch-label,.nav-label{height:0;margin:0;padding:0!important;overflow:hidden}
 
-  .app-switch{
-    width:48px!important;
-    min-width:48px!important;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:5px;
-    background:transparent!important;
-    padding:0!important;
-    margin:0 0 24px!important;
-    overflow:hidden;
+  .main-shell {
+    margin-left: 76px !important;
+    width: calc(100% - 76px) !important;
+    min-width: 0;
+    flex: 1;
   }
-  .app-switch a{
-    flex:0 0 36px!important;
-    width:48px!important;
-    height:36px;
-    padding:0!important;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border-radius:7px;
-    color:#a0a2ab;
-    background:transparent;
-    overflow:hidden;
-    white-space:nowrap;
-  }
-  .app-switch a.selected{background:#24262a!important;color:#fff;font-weight:650}
-  .app-short{display:block;font-size:13px;font-weight:700}
-  .sidebar:hover .app-switch,.sidebar:has(:focus-visible) .app-switch{
-    width:200px!important;
-    min-width:200px!important;
-    flex-direction:row;
-    align-items:stretch;
-    background:#1e1f22!important;
-    padding:4px!important;
-  }
-  .sidebar:hover .app-switch a,.sidebar:has(:focus-visible) .app-switch a{width:auto!important;flex:1 1 0!important;height:34px}
-  .sidebar:hover .app-short,.sidebar:has(:focus-visible) .app-short{display:none}
 
-  .main-nav{
-    width:48px!important;
-    min-width:48px!important;
-    display:flex;
-    flex-direction:column;
-    gap:5px;
-    overflow:visible!important;
-  }
-  .main-nav a{
-    width:48px!important;
-    height:44px;
-    min-height:44px;
-    padding:0!important;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:14px;
-    border-radius:7px;
-    color:#a0a2ab;
-    overflow:hidden;
-    white-space:nowrap;
-    flex-shrink:0;
-  }
-  .main-nav a svg{min-width:18px;width:18px;height:18px}
-  .main-nav a.active{background:#24262a!important;color:#fff}
-  .main-nav a:hover{background:#24262a!important;color:#fff;text-decoration:none}
-  .sidebar:hover .main-nav,.sidebar:has(:focus-visible) .main-nav{width:200px!important;min-width:200px!important}
-  .sidebar:hover .main-nav a,.sidebar:has(:focus-visible) .main-nav a{width:200px!important;justify-content:flex-start;padding:0 14px!important}
+  .mobile-only-topbar { display: none !important; }
+  .main-shell > main { min-height: 100vh; }
 
-  .sidebar-add{
-    flex:0 0 auto;
-    width:48px!important;
-    height:48px;
-    margin-top:23px;
-    border:1px solid #34363b;
-    border-radius:8px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:#fff;
-    gap:14px;
-    overflow:hidden;
-    white-space:nowrap;
+  /* Brand */
+  .brand {
+    width: 48px !important;
+    min-width: 48px !important;
+    height: 48px !important;
+    margin: 0 0 34px !important;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+    overflow: hidden;
+    flex: 0 0 48px;
   }
-  .sidebar-add:hover{border-color:#62656b;text-decoration:none;background:#202124}
-  .sidebar:hover .sidebar-add,.sidebar:has(:focus-visible) .sidebar-add{width:200px!important;justify-content:flex-start;padding:0 13px}
 
-  .sidebar-bottom{
-    width:48px!important;
-    min-width:48px!important;
-    border-top:1px solid #2a2b2f;
-    padding-top:16px;
-    margin-top:auto;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:0;
-    overflow:hidden;
+  .sidebar:hover .brand,
+  .sidebar:has(:focus-visible) .brand {
+    width: 200px !important;
   }
-  .sidebar-bottom .avatar{flex:0 0 32px}
-  .sidebar:hover .sidebar-bottom,.sidebar:has(:focus-visible) .sidebar-bottom{width:200px!important;min-width:200px!important;justify-content:flex-start;gap:10px}
-  .avatar{background:#242525;color:#fff}
+
+  .brand-mark {
+    width: 48px !important;
+    min-width: 48px !important;
+    height: 48px !important;
+    flex: 0 0 48px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: transparent !important;
+    font-size: 0 !important;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .brand-mark::after {
+    content: "k.";
+    display: block;
+    color: #fff;
+    font-family: Manrope, sans-serif;
+    font-size: 23px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -2px;
+  }
+
+  .brand > div {
+    flex: 0 0 130px;
+    min-width: 130px;
+    color: #fff;
+    white-space: nowrap;
+  }
+
+  /* Hide desktop labels without letting them affect compact geometry. */
+  .branch-label,
+  .nav-label {
+    display: none !important;
+  }
+
+  .brand > div,
+  .app-name,
+  .main-nav a > span,
+  .sidebar-add > span,
+  .sidebar-bottom > div,
+  .sidebar-bottom .icon-button {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .12s ease;
+  }
+
+  .sidebar:hover .brand > div,
+  .sidebar:hover .app-name,
+  .sidebar:hover .main-nav a > span,
+  .sidebar:hover .sidebar-add > span,
+  .sidebar:hover .sidebar-bottom > div,
+  .sidebar:hover .sidebar-bottom .icon-button,
+  .sidebar:has(:focus-visible) .brand > div,
+  .sidebar:has(:focus-visible) .app-name,
+  .sidebar:has(:focus-visible) .main-nav a > span,
+  .sidebar:has(:focus-visible) .sidebar-add > span,
+  .sidebar:has(:focus-visible) .sidebar-bottom > div,
+  .sidebar:has(:focus-visible) .sidebar-bottom .icon-button {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  /* App selector */
+  .app-switch {
+    width: 48px !important;
+    min-width: 48px !important;
+    margin: 0 0 24px !important;
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+    background: transparent !important;
+    border-radius: 9px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .app-switch a {
+    width: 48px !important;
+    min-width: 48px !important;
+    height: 36px !important;
+    flex: 0 0 36px !important;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    border-radius: 7px;
+    color: #9da0a7;
+    background: transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-decoration: none;
+  }
+
+  .app-switch a.selected {
+    background: #26272a !important;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .app-short {
+    display: block;
+    flex: 0 0 auto;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .app-name { display: none; }
+
+  .sidebar:hover .app-switch,
+  .sidebar:has(:focus-visible) .app-switch {
+    width: 200px !important;
+    min-width: 200px !important;
+    flex-direction: row;
+    padding: 4px !important;
+    gap: 3px;
+    background: #1f2023 !important;
+  }
+
+  .sidebar:hover .app-switch a,
+  .sidebar:has(:focus-visible) .app-switch a {
+    width: auto !important;
+    min-width: 0 !important;
+    height: 34px !important;
+    flex: 1 1 0 !important;
+    gap: 0;
+  }
+
+  .sidebar:hover .app-short,
+  .sidebar:has(:focus-visible) .app-short { display: none; }
+
+  .sidebar:hover .app-name,
+  .sidebar:has(:focus-visible) .app-name {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Navigation */
+  .main-nav {
+    width: 48px !important;
+    min-width: 48px !important;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+    overflow: visible !important;
+    flex-shrink: 0;
+  }
+
+  .main-nav a {
+    width: 48px !important;
+    min-width: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    border-radius: 9px;
+    color: #9da0a7;
+    overflow: hidden;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-decoration: none;
+  }
+
+  .main-nav a svg {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px;
+    flex: 0 0 20px;
+  }
+
+  .main-nav a.active,
+  .main-nav a:hover {
+    background: #26272a !important;
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .sidebar:hover .main-nav,
+  .sidebar:has(:focus-visible) .main-nav {
+    width: 200px !important;
+    min-width: 200px !important;
+  }
+
+  .sidebar:hover .main-nav a,
+  .sidebar:has(:focus-visible) .main-nav a {
+    width: 200px !important;
+    min-width: 200px !important;
+    justify-content: flex-start;
+    padding: 0 14px !important;
+  }
+
+  /* Add button */
+  .sidebar-add {
+    width: 48px !important;
+    min-width: 48px !important;
+    height: 48px !important;
+    flex: 0 0 48px !important;
+    margin: 22px 0 0 !important;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    border: 1px solid #3a3b3f;
+    border-radius: 10px;
+    color: #fff;
+    overflow: hidden;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  .sidebar-add svg {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+  }
+
+  .sidebar-add:hover {
+    background: #202124;
+    border-color: #5b5d63;
+    text-decoration: none;
+  }
+
+  .sidebar:hover .sidebar-add,
+  .sidebar:has(:focus-visible) .sidebar-add {
+    width: 200px !important;
+    min-width: 200px !important;
+    justify-content: flex-start;
+    padding: 0 14px !important;
+  }
+
+  /* Account */
+  .sidebar-bottom {
+    width: 48px !important;
+    min-width: 48px !important;
+    margin: auto 0 0 !important;
+    padding: 16px 0 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-top: 1px solid #2a2b2f;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .sidebar-bottom .avatar {
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    flex: 0 0 32px;
+    background: #26272a;
+    color: #fff;
+  }
+
+  .sidebar-bottom > div {
+    flex: 1 0 105px;
+    min-width: 105px;
+  }
+
+  .sidebar-bottom .icon-button {
+    flex: 0 0 32px;
+    color: #9da0a7;
+  }
+
+  .sidebar-bottom .icon-button:hover {
+    background: #26272a;
+    color: #fff;
+  }
+
+  .sidebar:hover .sidebar-bottom,
+  .sidebar:has(:focus-visible) .sidebar-bottom {
+    width: 200px !important;
+    min-width: 200px !important;
+    justify-content: flex-start;
+  }
 }
 
+/* ==========================================================
+   WORK DASHBOARD
+   ========================================================== */
 .work-dashboard{display:grid;grid-template-columns:minmax(0,4fr) minmax(230px,1fr);gap:18px;align-items:start}.work-kanban{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:10px;overflow-x:auto;padding-bottom:8px}.kanban-column{background:#f1f2f5;border:1px solid #e6e7ec;border-radius:12px;min-height:520px;padding:10px}.kanban-column>header{display:flex;align-items:center;justify-content:space-between;padding:5px 4px 12px;font-size:12px;font-weight:650}.kanban-column>header strong{font-size:11px;background:white;border:1px solid #e3e4e9;border-radius:5px;padding:2px 6px}.kanban-stack{display:flex;flex-direction:column;gap:8px}.kanban-card{display:flex;flex-direction:column;gap:6px;background:white;border:1px solid #e3e4e9;border-radius:9px;padding:13px;cursor:grab;box-shadow:0 2px 7px #22222805}.kanban-card:hover{text-decoration:none;border-color:#cfc9d8}.kanban-card strong{font-size:13px}.kanban-card small{font-size:10px;text-transform:uppercase;letter-spacing:.4px}.loose-tasks{padding:18px;position:sticky;top:18px}.loose-tasks>header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.loose-tasks h2{font-size:18px}.loose-task-list{display:flex;flex-direction:column}.loose-task{flex-direction:row;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #efeff3;font-weight:500}.loose-task:last-child{border:0}.compact-record{padding:10px 12px}.compact-record .record-title{justify-content:flex-start;gap:10px}.task-check{flex:0 0 auto}.text-button.completed{text-decoration:line-through;color:#9a9ca5}.checklist-editor{display:flex;flex-direction:column;gap:8px;margin-top:4px}.checklist-heading{display:flex;align-items:center;justify-content:space-between}.checklist-heading .secondary{padding:7px 10px;font-size:12px}.checklist-edit-row{display:grid;grid-template-columns:22px 1fr 34px;gap:8px;align-items:center}.checklist-edit-row input[type=checkbox]{margin:auto}.checklist-edit-row input[type=text],.checklist-edit-row input:not([type]){width:100%}
 @media(max-width:1100px){.work-dashboard{grid-template-columns:1fr}.loose-tasks{position:static}.work-kanban{grid-template-columns:repeat(5,220px)}}
