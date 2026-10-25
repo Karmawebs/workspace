@@ -1,9 +1,235 @@
 /* ==========================================================
    WORK DASHBOARD
    ========================================================== */
-.work-dashboard{display:grid;grid-template-columns:minmax(0,4fr) minmax(230px,1fr);gap:18px;align-items:start}.work-kanban{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:10px;overflow-x:auto;padding-bottom:8px}.kanban-column{background:#f1f2f5;border:1px solid #e6e7ec;border-radius:12px;min-height:520px;padding:10px}.kanban-column>header{display:flex;align-items:center;justify-content:space-between;padding:5px 4px 12px;font-size:12px;font-weight:650}.kanban-column>header strong{font-size:11px;background:white;border:1px solid #e3e4e9;border-radius:5px;padding:2px 6px}.kanban-stack{display:flex;flex-direction:column;gap:8px}.kanban-card{display:flex;flex-direction:column;gap:6px;background:white;border:1px solid #e3e4e9;border-radius:9px;padding:13px;cursor:grab;box-shadow:0 2px 7px #22222805}.kanban-card:hover{text-decoration:none;border-color:#cfc9d8}.kanban-card strong{font-size:13px}.kanban-card small{font-size:10px;text-transform:uppercase;letter-spacing:.4px}.loose-tasks{padding:18px;position:sticky;top:18px}.loose-tasks>header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.loose-tasks h2{font-size:18px}.loose-task-list{display:flex;flex-direction:column}.loose-task{flex-direction:row;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #efeff3;font-weight:500}.loose-task:last-child{border:0}.compact-record{padding:10px 12px}.compact-record .record-title{justify-content:flex-start;gap:10px}.compact-record .record-actions{display:flex;flex-direction:row;align-items:center;justify-content:flex-end;gap:2px;flex:0 0 auto;white-space:nowrap}.compact-record .record-actions .icon-button{width:32px;height:32px;padding:7px}.task-check{flex:0 0 auto}.text-button.completed{text-decoration:line-through;color:#9a9ca5}.checklist-editor{display:flex;flex-direction:column;gap:8px;margin-top:4px}.checklist-heading{display:flex;align-items:center;justify-content:space-between}.checklist-heading .secondary{padding:7px 10px;font-size:12px}.checklist-edit-row{display:grid;grid-template-columns:22px 1fr 34px;gap:8px;align-items:center}.checklist-edit-row input[type=checkbox]{margin:auto}.checklist-edit-row input[type=text],.checklist-edit-row input:not([type]){width:100%}
+.work-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(230px, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.work-kanban {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(160px, 1fr));
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.kanban-column {
+  background: var(--surface-subtle);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-card);
+  min-height: 520px;
+  padding: 10px;
+}
+.kanban-column > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 4px 12px;
+  font-size: var(--text-sm);
+  font-weight: 650;
+}
+.kanban-column > header strong {
+  font-size: var(--text-xs);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+}
+.kanban-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kanban-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  padding: 13px;
+  cursor: grab;
+  box-shadow: var(--shadow-card);
+}
+.kanban-card:hover {
+  text-decoration: none;
+  border-color: var(--line-hover);
+}
+.kanban-card strong {
+  font-size: var(--text-label);
+}
+.kanban-card small {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.loose-tasks {
+  padding: 18px;
+  position: sticky;
+  top: 18px;
+}
+.loose-tasks > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.loose-tasks h2 {
+  font-size: 18px;
+}
+.loose-task-list {
+  display: flex;
+  flex-direction: column;
+}
+.loose-task {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-weight: 500;
+}
+.loose-task:last-child {
+  border: 0;
+}
+.compact-record {
+  padding: 10px 12px;
+}
+.compact-record .record-title {
+  justify-content: flex-start;
+  gap: 10px;
+}
+.compact-record .record-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.compact-record .record-actions .icon-button {
+  width: 32px;
+  height: 32px;
+  padding: 7px;
+}
+.task-check {
+  flex: 0 0 auto;
+}
+.text-button.completed {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+.checklist-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.checklist-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.checklist-heading .secondary {
+  padding: 7px 10px;
+  font-size: var(--text-sm);
+}
+.checklist-edit-row {
+  display: grid;
+  grid-template-columns: 22px 1fr 34px;
+  gap: 8px;
+  align-items: center;
+}
+.checklist-edit-row input[type="checkbox"] {
+  margin: auto;
+}
+.checklist-edit-row input[type="text"],
+.checklist-edit-row input:not([type]) {
+  width: 100%;
+}
 
 /* WORK PROJECT JOURNAL */
-.work-journal{display:flex;flex-direction:column;min-width:0}.work-journal-header{margin-bottom:16px}.work-journal-header .muted{margin:6px 0 0}.work-journal-input{width:100%;min-height:118px;resize:vertical;border:1px solid #dedfe5;border-radius:12px;background:#fff;padding:16px 18px;font:inherit;line-height:1.55;color:#26262d;outline:none;box-sizing:border-box}.work-journal-input::placeholder{color:#a1a3ac}.work-journal-input:focus{border-color:#a88abb;box-shadow:0 0 0 3px rgba(146,104,169,.08)}.work-journal-compose-actions{display:flex;justify-content:flex-end;margin-top:12px}.work-journal-compose-actions button{display:inline-flex;align-items:center;gap:8px}.work-journal-entries{margin-top:22px;border-top:1px solid #ececf0}.work-journal-entry{padding:20px 0;border-bottom:1px solid #ececf0}.work-journal-entry:last-child{border-bottom:0}.work-journal-entry time{display:block;margin-bottom:10px;color:#8f6ca4;font-size:13px;font-weight:650}.work-journal-entry p{margin:0;white-space:pre-wrap;line-height:1.6;color:#444650}.work-journal-empty{padding:20px 0;margin:0}
+.work-journal {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.work-journal-header {
+  margin-bottom: 16px;
+}
+.work-journal-header .muted {
+  margin: 6px 0 0;
+}
+.work-journal-input {
+  width: 100%;
+  min-height: 118px;
+  resize: vertical;
+  border: 1px solid var(--line-control);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  padding: 16px 18px;
+  font: inherit;
+  line-height: 1.55;
+  color: var(--ink);
+  outline: none;
+  box-sizing: border-box;
+}
+.work-journal-input::placeholder {
+  color: var(--placeholder);
+}
+.work-journal-input:focus {
+  border-color: var(--accent-line);
+  box-shadow: var(--focus-ring);
+}
+.work-journal-compose-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+.work-journal-compose-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.work-journal-entries {
+  margin-top: 22px;
+  border-top: 1px solid var(--line-soft);
+}
+.work-journal-entry {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.work-journal-entry:last-child {
+  border-bottom: 0;
+}
+.work-journal-entry time {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: var(--text-label);
+  font-weight: 650;
+}
+.work-journal-entry p {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: var(--ink-secondary);
+}
+.work-journal-empty {
+  padding: 20px 0;
+  margin: 0;
+}
 
-@media(max-width:1100px){.work-dashboard{grid-template-columns:1fr}.loose-tasks{position:static}.work-kanban{grid-template-columns:repeat(5,220px)}}
+@media (max-width: 1100px) {
+  .work-dashboard {
+    grid-template-columns: 1fr;
+  }
+  .loose-tasks {
+    position: static;
+  }
+  .work-kanban {
+    grid-template-columns: repeat(5, 220px);
+  }
+}

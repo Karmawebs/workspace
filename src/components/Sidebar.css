@@ -19,9 +19,9 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: #151618;
-  color: #a0a2ab;
-  border-right: 1px solid #2a2b2f;
+  background: var(--rail-bg);
+  color: var(--rail-ink);
+  border-right: 1px solid var(--rail-line);
   overflow: hidden;
   transition:
     width 0.22s ease,
@@ -60,7 +60,7 @@
   filter: brightness(0) invert(1);
 }
 .rail-wordmark {
-  font-size: 11px;
+  font-size: var(--text-xs);
   letter-spacing: 1.5px;
 }
 .rail-label {
@@ -87,7 +87,7 @@
 .rail-apps {
   padding-bottom: 12px;
   margin-bottom: 12px;
-  border-bottom: 1px solid #2a2b2f;
+  border-bottom: 1px solid var(--rail-line);
 }
 .workspace-sidebar .rail-row {
   width: 100%;
@@ -96,10 +96,10 @@
   padding: 0;
   gap: 0;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--radius-control);
   background: transparent;
-  color: #a0a2ab;
-  font-size: 13px;
+  color: var(--rail-ink);
+  font-size: var(--text-label);
   font-weight: 500;
   text-align: left;
   text-decoration: none;
@@ -114,24 +114,24 @@
   min-height: 32px;
 }
 .rail-initial {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-heading);
 }
 .workspace-sidebar .rail-row:hover,
 .workspace-sidebar .rail-row.active,
 .workspace-sidebar .rail-row.selected {
   color: white;
-  background: #26272a;
+  background: var(--rail-active);
 }
 .workspace-sidebar .rail-add {
-  border: 1px solid #3a3b3f;
+  border: 1px solid var(--rail-line);
   grid-template-columns: 45px minmax(0, 1fr);
 }
 .rail-account {
   width: 199px;
   grid-template-columns: 47px 118px 34px;
   height: 52px;
-  border-top: 1px solid #2a2b2f;
+  border-top: 1px solid var(--rail-line);
   padding-top: 12px;
 }
 .rail-avatar {
@@ -140,9 +140,9 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #292b30;
+  background: var(--rail-active);
   color: white;
-  font-size: 13px;
+  font-size: var(--text-label);
 }
 .rail-user {
   min-width: 0;
@@ -152,7 +152,7 @@
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: white;
 }
 .rail-user small {
@@ -168,12 +168,12 @@
   place-items: center;
   border: 0;
   background: transparent;
-  color: #a0a2ab;
+  color: var(--rail-ink);
   box-shadow: none;
 }
 .rail-signout:hover,
 .rail-close:hover {
-  background: #26272a;
+  background: var(--rail-active);
   color: white;
 }
 .rail-close,
@@ -181,13 +181,13 @@
   display: none;
 }
 .workspace-sidebar :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-line);
   outline-offset: -2px;
 }
 @media (min-width: 761px) {
   .workspace-sidebar:has(:focus-visible) {
     width: 228px;
-    box-shadow: 16px 0 36px #0003;
+    box-shadow: var(--shadow-rail);
   }
   .workspace-sidebar:has(:focus-visible) .rail-label {
     opacity: 1;
@@ -203,7 +203,7 @@
 @media (min-width: 761px) and (hover: hover) {
   .workspace-sidebar:hover {
     width: 228px;
-    box-shadow: 16px 0 36px #0003;
+    box-shadow: var(--shadow-rail);
   }
   .workspace-sidebar:hover .rail-label {
     opacity: 1;
