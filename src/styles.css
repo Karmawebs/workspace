@@ -1005,3 +1005,46 @@ main {
     font-size: var(--text-sm);
   }
 }
+
+/* Shared project urgency: keep the tabs scrollable alongside the three lights. */
+.project-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 28px 0 24px;
+  border-bottom: 1px solid var(--line);
+}
+.project-toolbar .tabs { flex: 1; min-width: 0; margin: 0; border: 0; }
+.project-urgency { position: relative; flex-shrink: 0; }
+.urgency-lights { display: flex; gap: 2px; }
+.urgency-lights .urgency-light {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 36px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 8px;
+}
+.urgency-light span {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--light-color);
+  opacity: .38;
+  transition: opacity 150ms, box-shadow 150ms;
+}
+.urgency-red { --light-color: #ff5f57; }
+.urgency-yellow { --light-color: #febc2e; }
+.urgency-green { --light-color: #28c840; }
+.urgency-light[aria-pressed="true"] span {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--canvas, #fafafa), 0 0 0 3px var(--light-color);
+}
+.urgency-light:hover span { opacity: 1; }
+.urgency-light:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.urgency-error { position: absolute; right: 0; top: 100%; width: min(280px, 75vw); z-index: 2; }
+@media (prefers-reduced-motion: reduce) { .urgency-light span { transition: none; } }
