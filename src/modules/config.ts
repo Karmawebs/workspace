@@ -8,9 +8,9 @@ export const apps: Record<AppKey,{name:string;color:string;description:string;pa
 export const navigation = [
   {path:"dashboard",name:"Resumen",module:"project_dashboard",apps:["work"]},
   {path:"projects",name:"Proyectos",module:"projects"},
-  {path:"tasks",name:"Tareas",module:"tasks",apps:["social","care"]},
-  {path:"events",name:"Reuniones",module:"meetings",apps:["social","care"]},
-  {path:"journal",name:"Diario",module:"journal",apps:["social","care"]},
+  {path:"tasks",name:"Tareas",module:"tasks",apps:["care"]},
+  {path:"events",name:"Reuniones",module:"meetings",apps:["care"]},
+  {path:"journal",name:"Diario",module:"journal",apps:["care"]},
   {path:"calendar",name:"Calendario",module:"calendar",apps:["social"]},
   {path:"content",name:"Contenido",module:"content_manager",apps:["social"]},
   {path:"milestones",name:"Hitos",module:"milestones",apps:[]},
