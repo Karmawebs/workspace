@@ -233,3 +233,7 @@
     grid-template-columns: repeat(5, 220px);
   }
 }
+
+.kanban-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.kanban-card-heading strong { min-width: 0; overflow-wrap: anywhere; }
+.kanban-urgency { width: 10px; height: 10px; flex: 0 0 10px; border-radius: 50%; background: var(--light-color); }

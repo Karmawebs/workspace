@@ -37,3 +37,5 @@ TypeScript y build limpios. Tests 12/14: persisten únicamente los dos fallos pr
 
 ## Urgencia de proyectos
 Semáforo compartido al extremo derecho de las pestañas en Work, Social y Care: rojo alta, amarillo media y verde baja. Guarda mediante `saveRow` en la prioridad existente (`high`/`normal`/`low`); `urgent` existente se muestra como alta. Selección accesible, bloqueo durante guardado y errores sin perder el estado anterior. Sin migraciones ni cambios en Care legacy. TypeScript/build OK; cuatro pruebas nuevas pasan. Suite: 16/18, con los mismos dos fallos preexistentes de edición/archivo e intervalo de eventos.
+
+El kanban de Work muestra una única bola de urgencia a la derecha de cada tarjeta, derivada de la misma prioridad y correspondencia de colores del semáforo del proyecto.
