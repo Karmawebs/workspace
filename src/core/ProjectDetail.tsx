@@ -14,7 +14,7 @@ export function ProjectDetail({ scope }: { scope: Scope }) {
   const { id = "" } = useParams(),
     [project, setProject] = useState<Row>(),
     [error, setError] = useState(""),
-    [tab, setTab] = useState("activity"),
+    [tab, setTab] = useState(scope.app === "work" ? "journal" : "activity"),
     [edit, setEdit] = useState(false),
     [version, setVersion] = useState(0);
   const panels = useRows(entity("panels"), scope, id),
@@ -57,8 +57,16 @@ export function ProjectDetail({ scope }: { scope: Scope }) {
         }))
     : apps[scope.app].panels.map((p) => ({ ...p, subtitle: "" }));
   const tabs: { key: string; title: string; entity?: EntityKey }[] = [
-    { key: "activity", title: "Actividad" },
-    { key: "journal", title: "Diario", entity: "journal" },
+    ...(scope.app === "work"
+      ? [
+          { key: "journal", title: "Diario", entity: "journal" as const },
+          { key: "activity", title: "Tareas" },
+          { key: "meetings", title: "Reuniones" },
+        ]
+      : [
+          { key: "activity", title: "Actividad" },
+          { key: "journal", title: "Diario", entity: "journal" as const },
+        ]),
     { key: "resources", title: "Recursos", entity: "resources" },
     { key: "information", title: "Información" },
     { key: "members", title: "Equipo" },
@@ -84,7 +92,7 @@ export function ProjectDetail({ scope }: { scope: Scope }) {
         : key === "next_milestone"
           ? "milestones"
           : key === "next_event"
-            ? "activity"
+            ? scope.app === "work" ? "meetings" : "activity"
             : "resources";
   }
   function panelSubtitle(key: string) {
@@ -168,10 +176,16 @@ export function ProjectDetail({ scope }: { scope: Scope }) {
       </div>
       <div role="tabpanel">
         {tab === "activity" ? (
-          <div className="operations-grid">
+          scope.app === "work" ? (
             <EntityView kind="tasks" scope={scope} projectId={id} compact />
-            <EntityView kind="events" scope={scope} projectId={id} compact />
-          </div>
+          ) : (
+            <div className="operations-grid">
+              <EntityView kind="tasks" scope={scope} projectId={id} compact />
+              <EntityView kind="events" scope={scope} projectId={id} compact />
+            </div>
+          )
+        ) : tab === "meetings" && scope.app === "work" ? (
+          <EntityView kind="events" scope={scope} projectId={id} compact />
         ) : tab === "information" ? (
           <section className="card info-panel">
             <h2>Información del proyecto</h2>
