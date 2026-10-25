@@ -17,10 +17,10 @@ Producción `vjsmsekbsjngdtuxfbmu` no fue accedida ni modificada; no hubo migrac
 ## Entorno de prueba publicado
 Disponible en https://workspace.karmawebs.com y https://workspace.infokarmawebs.workers.dev. Cloudflare despliega `main`, publica `dist` con fallback SPA y usa variables Vite de build. Se corrigieron la rama seleccionada y una publishable key rechazada por el backend. El build valida el proyecto autorizado y consulta Auth para evitar publicar una configuración inválida. Sin secretos hardcodeados.
 
-Verificado: build local y Cloudflare, 13 pruebas, rechazo de clave inválida, HTTPS del dominio, bundle público con configuración correcta, login en ambos dominios y recarga de ruta hash en navegador; fallback HTTP 200. Pendiente de que el propietario introduzca su contraseña para comprobar su sesión en el dominio publicado. No se modificaron Supabase de producción, datos ni Care legacy.
+Verificado: build local y Cloudflare, 13 pruebas, rechazo de clave inválida, HTTPS del dominio, bundle público con configuración correcta, login en ambos dominios y recarga de ruta hash en navegador; fallback HTTP 200. Sesión real del propietario confirmada en el dominio publicado: rol owner, proyecto y tarea de prueba cargados desde Supabase y acceso conservado al recargar directamente el detalle del proyecto. No se modificaron Supabase de producción, datos ni Care legacy.
 
 ## Límites reales / siguiente paso
 - `Karmawebs/social` devolvió 404 tanto por conector como por CLI: UI basada en su patrón documentado; falta contrastarla con la referencia real.
 - Care técnico está integrado en lectura. Emparejamiento y ejecución remota permanecen en Care actual: `enqueue_care_action` es SECURITY DEFINER, ejecutable por anon y sin comprobación de identidad en su cuerpo. Revisar esa autorización con el plugin antes de exponer acciones en Workspace. No se ejecutaron acciones remotas ni se modificaron sitios reales.
 - Listados acotados a 1.000 registros; pendientes paginación a escala, validación de recuperación por correo en el dominio definitivo y revisión visual móvil en dispositivo.
-- Confirmar sesión del propietario y recuperación por correo en el dominio publicado; después abordar los puntos anteriores. Migración de datos reales únicamente tras aprobación.
+- Validar recuperación por correo en el dominio publicado; después abordar los puntos anteriores. Migración de datos reales únicamente tras aprobación.
