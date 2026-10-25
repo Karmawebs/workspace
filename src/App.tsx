@@ -22,6 +22,7 @@ import {
   Link as LinkIcon,
   LogOut,
   Menu,
+  Plus,
 } from "lucide-react";
 import { Auth, ResetPassword, useAuth } from "./core/Auth";
 import { apps, branch, navigation } from "./modules/config";
@@ -34,257 +35,31 @@ import { Dashboard } from "./modules/Dashboard";
 import { Care } from "./modules/Care";
 import { Users } from "./core/Users";
 import { db } from "./lib/supabase";
-const icons = [
-  LayoutGrid,
-  Folder,
-  CheckSquare,
-  CalendarDays,
-  BookOpen,
-  CalendarDays,
-  Layers,
-  Flag,
-  Server,
-  LinkIcon,
-  UsersIcon,
-  Bell,
-  UsersIcon,
-];
-export default function App() {
-  return (
-    <HashRouter>
-      <Routes>
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route
-          path="/*"
-          element={
-            <Auth>
-              <Routes>
-                <Route path="/:app/*" element={<Shell />} />
-                <Route
-                  path="*"
-                  element={<Navigate to="/work/dashboard" replace />}
-                />
-              </Routes>
-            </Auth>
-          }
-        />
-      </Routes>
-    </HashRouter>
-  );
-}
-function Shell() {
-  const { app = "work" } = useParams(),
-    { membership, memberships, select, session, signOut } = useAuth(),
-    location = useLocation(),
-    [open, setOpen] = useState(false),
-    [config, setConfig] = useState<{ apps: string[]; disabled: string[] }>(),
-    [error, setError] = useState("");
-  const valid = app in apps;
-  const key = (valid ? app : "work") as AppKey;
-  useEffect(() => {
-    setOpen(false);
-  }, [location.pathname]);
-  useEffect(() => {
-    let alive = true;
-    setConfig(undefined);
-    setError("");
-    Promise.all([
-      db
-        .from("kw_apps")
-        .select("key,enabled")
-        .eq("workspace_id", membership.workspace_id),
-      db
-        .from("kw_app_modules")
-        .select("app_key,module_key,enabled")
-        .eq("workspace_id", membership.workspace_id),
-    ]).then(([a, b]) => {
-      if (!alive) return;
-      if (a.error || b.error)
-        setError(a.error?.message || b.error?.message || "Error");
-      else
-        setConfig({
-          apps: (a.data || []).filter((r) => r.enabled).map((r) => r.key),
-          disabled: (b.data || [])
-            .filter((r) => !r.enabled)
-            .map((r) => `${r.app_key}/${r.module_key}`),
-        });
-    });
-    return () => {
-      alive = false;
-    };
-  }, [membership.workspace_id]);
-  if (!valid) return <Navigate to="/work/dashboard" replace />;
-  const scope = {
-    workspaceId: membership.workspace_id,
-    app: key,
-    userId: session.user.id,
-  };
-  const available = navigation.filter(
-    (n) =>
-      (!n.apps || n.apps.includes(key)) &&
-      !config?.disabled.includes(`${key}/${n.module}`),
-  );
-  const allowed = config?.apps.includes(key);
-  return (
-    <div
-      className="shell"
-      style={{ "--accent": apps[key].color } as CSSProperties}
-    >
-      <aside className={`sidebar ${open ? "open" : ""}`}>
-        <div className="brand">
-          <span className="brand-mark">K</span>
-          <div>
-            karma<span>WORKSPACE</span>
-          </div>
-        </div>
-        <div className="branch-label">{branch.name}</div>
-        <nav className="app-switch" aria-label="Aplicaciones">
-          {(Object.keys(apps) as AppKey[])
-            .filter((a) => !config || config.apps.includes(a))
-            .map((a) => (
-              <NavLink
-                key={a}
-                to={`/${a}/${a === "work" ? "dashboard" : "projects"}`}
-                className={key === a ? "selected" : ""}
-              >
-                {apps[a].name}
-              </NavLink>
-            ))}
-        </nav>
-        <div className="nav-label">{apps[key].name.toUpperCase()}</div>
-        <nav className="main-nav" aria-label="Navegación principal">
-          {available.map((n) => {
-            const Icon = icons[navigation.indexOf(n)];
-            return (
-              <NavLink to={`/${key}/${n.path}`} key={n.path}>
-                <Icon size={18} />
-                {n.name}
-              </NavLink>
-            );
-          })}
-        </nav>
-        <div className="sidebar-bottom">
-          <span className="avatar">
-            {session.user.email?.slice(0, 1).toUpperCase()}
-          </span>
-          <div>
-            <strong>{session.user.email?.split("@")[0]}</strong>
-            <small>{membership.role}</small>
-          </div>
-          <button
-            className="icon-button"
-            aria-label="Cerrar sesión"
-            onClick={signOut}
-          >
-            <LogOut size={17} />
-          </button>
-        </div>
-      </aside>
-      {open && (
-        <button
-          className="sidebar-scrim"
-          aria-label="Cerrar navegación"
-          onClick={() => setOpen(false)}
-        />
-      )}
-      <div className="main-shell">
-        <header className="topbar">
-          <button
-            className="icon-button mobile-menu"
-            aria-label="Abrir navegación"
-            onClick={() => setOpen(!open)}
-          >
-            <Menu />
-          </button>
-          <span>
-            {branch.name} <span className="muted">/ {apps[key].name}</span>
-          </span>
-          {memberships.length > 1 ? (
-            <select
-              aria-label="Workspace"
-              value={membership.workspace_id}
-              onChange={(e) => select(e.target.value)}
-            >
-              {memberships.map((m) => (
-                <option value={m.workspace_id} key={m.workspace_id}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <span className="workspace-name">
-              <i />
-              {membership.name}
-            </span>
-          )}
-        </header>
-        <main key={`${membership.workspace_id}/${key}`}>
-          {error ? (
-            <p className="error" role="alert">
-              {error}
-              <button onClick={() => window.location.reload()}>
-                Reintentar
-              </button>
-            </p>
-          ) : !config ? (
-            <p role="status">Cargando Workspace…</p>
-          ) : !allowed ? (
-            <div className="card info-panel">
-              <h1>Aplicación no habilitada</h1>
-              <p>Selecciona una aplicación disponible en el menú.</p>
-            </div>
-          ) : (
-            <Routes>
-              <Route
-                index
-                element={
-                  <Navigate
-                    to={key === "work" ? "dashboard" : "projects"}
-                    replace
-                  />
-                }
-              />
-              {available.map((n) => (
-                <Route
-                  key={n.path}
-                  path={n.path}
-                  element={
-                    n.path === "dashboard" ? (
-                      <Dashboard scope={scope} />
-                    ) : n.path === "calendar" ? (
-                      <Calendar scope={scope} />
-                    ) : n.path === "sites" ? (
-                      <Care scope={scope} />
-                    ) : n.path === "users" ? (
-                      <Users />
-                    ) : (
-                      <EntityView kind={n.path as EntityKey} scope={scope} />
-                    )
-                  }
-                />
-              ))}
-              {available.some((n) => n.path === "projects") && (
-                <Route
-                  path="projects/:id"
-                  element={<ProjectDetail scope={scope} />}
-                />
-              )}
-              <Route
-                path="*"
-                element={
-                  <div className="card info-panel">
-                    <h1>Página no disponible</h1>
-                    <p>Selecciona una sección del menú.</p>
-                  </div>
-                }
-              />
-            </Routes>
-          )}
-        </main>
-        <footer className="app-footer">
-          KARMA WORKSPACE <span>Work · Social · Care</span>
-        </footer>
-      </div>
-    </div>
-  );
+const icons = [LayoutGrid,Folder,CheckSquare,CalendarDays,BookOpen,CalendarDays,Layers,Flag,Server,LinkIcon,UsersIcon,Bell,UsersIcon];
+export default function App(){return <HashRouter><Routes><Route path="/reset-password" element={<ResetPassword/>}/><Route path="/*" element={<Auth><Routes><Route path="/:app/*" element={<Shell/>}/><Route path="*" element={<Navigate to="/work/dashboard" replace/>}/></Routes></Auth>}/></Routes></HashRouter>}
+function Shell(){
+ const {app="work"}=useParams(),{membership,memberships,select,session,signOut}=useAuth(),location=useLocation(),[open,setOpen]=useState(false),[config,setConfig]=useState<{apps:string[];disabled:string[]}>(),[error,setError]=useState("");
+ const valid=app in apps,key=(valid?app:"work") as AppKey;
+ useEffect(()=>setOpen(false),[location.pathname]);
+ useEffect(()=>{let alive=true;setConfig(undefined);setError("");Promise.all([db.from("kw_apps").select("key,enabled").eq("workspace_id",membership.workspace_id),db.from("kw_app_modules").select("app_key,module_key,enabled").eq("workspace_id",membership.workspace_id)]).then(([a,b])=>{if(!alive)return;if(a.error||b.error)setError(a.error?.message||b.error?.message||"Error");else setConfig({apps:(a.data||[]).filter(r=>r.enabled).map(r=>r.key),disabled:(b.data||[]).filter(r=>!r.enabled).map(r=>`${r.app_key}/${r.module_key}`)});});return()=>{alive=false}},[membership.workspace_id]);
+ if(!valid)return <Navigate to="/work/dashboard" replace/>;
+ const scope={workspaceId:membership.workspace_id,app:key,userId:session.user.id};
+ const available=navigation.filter(n=>(!n.apps||n.apps.includes(key))&&!config?.disabled.includes(`${key}/${n.module}`)),allowed=config?.apps.includes(key);
+ return <div className="shell" style={{"--accent":apps[key].color} as CSSProperties}>
+  <aside className={`sidebar ${open?"open":""}`}>
+   <div className="brand"><span className="brand-mark">K</span><div>karma<span>WORKSPACE</span></div></div>
+   <div className="branch-label">{branch.name}</div>
+   <nav className="app-switch" aria-label="Aplicaciones">{(Object.keys(apps) as AppKey[]).filter(a=>!config||config.apps.includes(a)).map(a=><NavLink key={a} to={`/${a}/${a==="work"?"dashboard":"projects"}`} className={key===a?"selected":""}><span className="app-short">{apps[a].name.slice(0,1)}</span><span className="app-name">{apps[a].name}</span></NavLink>)}</nav>
+   <div className="nav-label">{apps[key].name.toUpperCase()}</div>
+   <nav className="main-nav" aria-label="Navegación principal">{available.map(n=>{const Icon=icons[navigation.indexOf(n)];return <NavLink to={`/${key}/${n.path}`} key={n.path}><Icon size={20}/><span>{n.name}</span></NavLink>})}</nav>
+   {key==="work"&&<NavLink className="sidebar-add" to="/work/projects"><Plus size={24}/><span>Nuevo proyecto</span></NavLink>}
+   <div className="sidebar-bottom"><span className="avatar">{session.user.email?.slice(0,1).toUpperCase()}</span><div><strong>{session.user.email?.split("@")[0]}</strong><small>{membership.role}</small></div><button className="icon-button" aria-label="Cerrar sesión" onClick={signOut}><LogOut size={17}/></button></div>
+  </aside>
+  {open&&<button className="sidebar-scrim" aria-label="Cerrar navegación" onClick={()=>setOpen(false)}/>} 
+  <div className="main-shell">
+   <header className="topbar mobile-only-topbar"><button className="icon-button mobile-menu" aria-label="Abrir navegación" onClick={()=>setOpen(!open)}><Menu/></button>{memberships.length>1?<select aria-label="Workspace" value={membership.workspace_id} onChange={e=>select(e.target.value)}>{memberships.map(m=><option value={m.workspace_id} key={m.workspace_id}>{m.name}</option>)}</select>:<span className="workspace-name"><i/>{membership.name}</span>}</header>
+   <main key={`${membership.workspace_id}/${key}`}>{error?<p className="error" role="alert">{error}<button onClick={()=>window.location.reload()}>Reintentar</button></p>:!config?<p role="status">Cargando Workspace…</p>:!allowed?<div className="card info-panel"><h1>Aplicación no habilitada</h1><p>Selecciona una aplicación disponible en el menú.</p></div>:<Routes><Route index element={<Navigate to={key==="work"?"dashboard":"projects"} replace/>}/>{available.map(n=><Route key={n.path} path={n.path} element={n.path==="dashboard"?<Dashboard scope={scope}/>:n.path==="calendar"?<Calendar scope={scope}/>:n.path==="sites"?<Care scope={scope}/>:n.path==="users"?<Users/>:<EntityView kind={n.path as EntityKey} scope={scope}/>}/>) }{available.some(n=>n.path==="projects")&&<Route path="projects/:id" element={<ProjectDetail scope={scope}/>}/>}<Route path="*" element={<div className="card info-panel"><h1>Página no disponible</h1><p>Selecciona una sección del menú.</p></div>}/></Routes>}</main>
+   <footer className="app-footer">KARMA WORKSPACE <span>Work · Social · Care</span></footer>
+  </div>
+ </div>
 }
