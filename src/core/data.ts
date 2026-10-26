@@ -30,6 +30,8 @@ export async function saveRow(
     payload.workspace_id = scope.workspaceId;
   if (def.appScoped) payload.app_key = scope.app;
   if (projectId && def.project) payload.project_id = projectId;
+  if (def.table === "kw_project_resources")
+    payload.type = original?.type || "access";
   if (def.table === "kw_journal_entries" && !original)
     payload.author_id = scope.userId;
   if (["kw_tasks", "kw_project_milestones"].includes(def.table))
