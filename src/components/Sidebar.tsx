@@ -14,6 +14,8 @@ import {
   LogOut,
   Plus,
   X,
+  Settings,
+  Circle,
   type LucideIcon,
 } from "lucide-react";
 import { apps, navigation } from "../modules/config";
@@ -33,8 +35,10 @@ const icons: Record<string, LucideIcon> = {
   connections: Link,
   clients: Users,
   alerts: Bell,
+  settings: Settings,
   users: Users,
 };
+
 type Props = {
   app: AppKey;
   enabledApps: AppKey[];
@@ -47,6 +51,7 @@ type Props = {
   onCreate: () => void;
   onSignOut: () => void;
 };
+
 export function Sidebar({
   app,
   enabledApps,
@@ -110,7 +115,7 @@ export function Sidebar({
           </nav>
           <nav className="rail-nav" aria-label="Navegación principal">
             {items.map((item) => {
-              const Icon = icons[item.path];
+              const Icon = icons[item.path] ?? Circle;
               return (
                 <NavLink
                   key={item.path}
@@ -127,10 +132,10 @@ export function Sidebar({
             })}
           </nav>
         </div>
-        {app === "work" && canCreate && (
+        {canCreate && (
           <button
             className="rail-row rail-add"
-            aria-label="Nuevo proyecto"
+            aria-label={app === "care" ? "Nuevo proyecto Care" : "Nuevo proyecto"}
             onClick={onCreate}
           >
             <span className="rail-icon">
