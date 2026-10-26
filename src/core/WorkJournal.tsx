@@ -13,9 +13,14 @@ export function WorkJournal({ scope, projectId }: { scope: Scope; projectId: str
   const [failure, setFailure] = useState("");
 
   const entries = [...rows].sort((a, b) => {
-    const ad = text(a.entry_date || a.created_at);
-    const bd = text(b.entry_date || b.created_at);
-    return bd.localeCompare(ad);
+    const aCreated = text(a.created_at);
+    const bCreated = text(b.created_at);
+    const createdOrder = bCreated.localeCompare(aCreated);
+    if (createdOrder !== 0) return createdOrder;
+
+    const aDate = text(a.entry_date);
+    const bDate = text(b.entry_date);
+    return bDate.localeCompare(aDate);
   });
 
   async function addEntry() {
