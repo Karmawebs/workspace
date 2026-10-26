@@ -78,7 +78,7 @@
 .work-task-title::placeholder { color:var(--placeholder); }
 .work-task-tools { display:flex;align-items:center;gap:4px;margin-top:2px; }
 .work-task-tools .icon-button { width:38px;height:38px;padding:8px;color:var(--muted); }
-.work-task-body { display:flex;flex-direction:column;min-height:350px; }
+.work-task-body { display:flex;flex-direction:column; }
 .work-task-description {
   width:100%;
   min-height:185px;
