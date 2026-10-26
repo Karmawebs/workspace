@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { db } from "../lib/supabase";
 import { message, type Scope } from "../core/data";
 import type { Row } from "../core/model";
+import type { TablesInsert } from "../lib/database.types";
 
 export function CareProjectEditor({ scope, onClose, onSave }: { scope: Scope; onClose: () => void; onSave: (row: Row) => void }) {
   const [plans, setPlans] = useState<Row[]>([]);
@@ -38,28 +39,29 @@ export function CareProjectEditor({ scope, onClose, onSave }: { scope: Scope; on
           const planPrice = typeof plan?.monthly_price === "number" || typeof plan?.monthly_price === "string" ? Number(plan.monthly_price) : 0;
           if (!name || !domain) throw new Error("Nombre y dominio son obligatorios.");
 
-          const { data: project, error: projectError } = await db.from("kw_projects").insert({
+          const projectPayload: TablesInsert<"kw_projects"> = {
             workspace_id: scope.workspaceId,
             app_key: "care",
             name,
             status: "producción",
             priority: "normal",
-            category: "Mantenimiento",
             metadata: {
               care_plan_type: planType,
               care_plan_name: planName,
               care_plan_price: planPrice,
             },
-          }).select("*").single();
+          };
+          const { data: project, error: projectError } = await db.from("kw_projects").insert(projectPayload).select("*").single();
           if (projectError) throw projectError;
 
-          const { error: siteError } = await (db as any).from("kw_care_sites").insert({
+          const sitePayload: TablesInsert<"kw_care_sites"> = {
             workspace_id: scope.workspaceId,
-            project_id: String(project.id),
+            project_id: project.id,
             domain,
             status: "pending",
             metadata: { plan_type: planType },
-          });
+          };
+          const { error: siteError } = await db.from("kw_care_sites").insert(sitePayload);
           if (siteError) {
             await db.from("kw_projects").delete().eq("id", project.id);
             throw siteError;
