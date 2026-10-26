@@ -53,9 +53,9 @@ export function CareProjectEditor({ scope, onClose, onSave }: { scope: Scope; on
           }).select("*").single();
           if (projectError) throw projectError;
 
-          const { error: siteError } = await db.from("kw_care_sites").insert({
+          const { error: siteError } = await (db as any).from("kw_care_sites").insert({
             workspace_id: scope.workspaceId,
-            project_id: project.id,
+            project_id: String(project.id),
             domain,
             status: "pending",
             metadata: { plan_type: planType },
