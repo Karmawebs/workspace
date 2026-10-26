@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 import { db } from "../lib/supabase";
 import { message, type Scope } from "../core/data";
 import type { Row } from "../core/model";
@@ -21,9 +22,12 @@ export function CareProjectEditor({ scope, onClose, onSave }: { scope: Scope; on
       });
   }, [scope.workspaceId]);
 
-  return <div className="modal-backdrop" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-    <section className="modal card" role="dialog" aria-modal="true" aria-labelledby="care-new-project-title">
-      <header className="section-header"><div><span className="eyebrow">CARE</span><h2 id="care-new-project-title">Nuevo proyecto</h2></div><button className="ghost" onClick={onClose}>Cerrar</button></header>
+  return <div className="modal-backdrop care-project-modal-backdrop" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    <section className="modal card care-project-modal" role="dialog" aria-modal="true" aria-labelledby="care-new-project-title">
+      <header className="care-project-modal-header">
+        <div><span className="eyebrow">CARE / PROYECTOS</span><h2 id="care-new-project-title">Nuevo proyecto</h2></div>
+        <button type="button" className="icon-button care-project-modal-close" aria-label="Cerrar" onClick={onClose}><X size={20}/></button>
+      </header>
       {error && <p className="error" role="alert">{error}</p>}
       <form className="editor-form" onSubmit={async (e) => {
         e.preventDefault();
