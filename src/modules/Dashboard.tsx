@@ -8,7 +8,7 @@ import { saveRow } from "../core/data";
 import { text,type Row } from "../core/model";
 import { Editor } from "../core/Editor";
 import { projectUrgency } from "../core/urgency";
-const columns=[{key:"presupuesto",label:"Presupuesto"},{key:"diseño",label:"Diseño"},{key:"cliente",label:"Cliente"},{key:"producción",label:"Producción"},{key:"listo",label:"Listo"}];
+const columns=[{key:"presupuesto",label:"Presupuesto"},{key:"diseño",label:"Diseño"},{key:"cliente",label:"Cliente"},{key:"producción",label:"Producción"}];
 export function Dashboard({scope}:{scope:Scope}){
  const projects=useRows(entity("projects"),scope),tasks=useRows(entity("tasks"),scope),[editTask,setEditTask]=useState(false),[busy,setBusy]=useState(false),[failure,setFailure]=useState("");
  const loose=tasks.rows.filter(t=>!t.project_id&&text(t.status)!=="done"&&text(t.status)!=="cancelled");
