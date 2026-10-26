@@ -9,7 +9,7 @@
 }
 .work-kanban {
   display: grid;
-  grid-template-columns: repeat(5, minmax(160px, 1fr));
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
   gap: 10px;
   overflow-x: auto;
   padding-bottom: 8px;
@@ -135,7 +135,7 @@
 @media (max-width:1100px) {
   .work-dashboard { grid-template-columns:1fr; }
   .loose-tasks { position:static; }
-  .work-kanban { grid-template-columns:repeat(5,220px); }
+  .work-kanban { grid-template-columns:repeat(4,220px); }
 }
 @media (max-width:640px) {
   .editor.work-task-editor form { padding:26px 24px 22px; }
