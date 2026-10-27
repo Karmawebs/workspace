@@ -39,3 +39,15 @@ TypeScript y build limpios. Tests 12/14: persisten únicamente los dos fallos pr
 Semáforo compartido al extremo derecho de las pestañas en Work, Social y Care: rojo alta, amarillo media y verde baja. Guarda mediante `saveRow` en la prioridad existente (`high`/`normal`/`low`); `urgent` existente se muestra como alta. Selección accesible, bloqueo durante guardado y errores sin perder el estado anterior. Sin migraciones ni cambios en Care legacy. TypeScript/build OK; cuatro pruebas nuevas pasan. Suite: 16/18, con los mismos dos fallos preexistentes de edición/archivo e intervalo de eventos.
 
 El kanban de Work muestra una única bola de urgencia a la derecha de cada tarjeta, derivada de la misma prioridad y correspondencia de colores del semáforo del proyecto.
+
+## Care — Punto 8 (0.8.0), 2026-10-27
+
+Acciones remotas integradas en el diagnóstico existente: plugin por `plugin_snapshots.slug` (plugin_file), tema por stylesheet y WordPress; confirmación obligatoria, estados de `action_jobs`, polling, cancelación pendiente e historial separado. Botones bloqueados hasta recibir diagnóstico de agente >=0.8.0.
+
+Aplicada `20261027083945_care_remote_actions_080`: RPC de enqueue/cancel con auth y membresía del Workspace/proyecto Care; índice único por sitio activo; RLS de jobs, sites e installations; tokens del agente no accesibles al navegador; vínculo legacy protegido contra apropiación entre workspaces. RPC legacy de enqueue retirada de anon/authenticated. Pair/diagnostic siguen por care-agent service_role. Corregido reset de paired_at al reconectar.
+
+`care-agent` v6 conserva verify_jwt=false para el protocolo del plugin, pero wake valida JWT con getUser, membresía, proyecto Care y trabajo pendiente antes de obtener la credencial; HTTPS y sin redirects con token. Fuente versionada en supabase/functions/care-agent.
+
+Validación: build/TypeScript OK; 7 nuevas pruebas UI y pruebas del manejador Edge OK; prueba SQL transaccional pasa pairing, diagnóstico, Site Kit, alertas, destinos, duplicados, cancelación, aislamiento, protección de credenciales y denegación anon/no miembro. Las acciones de prueba nunca se confirmaron. Suite total 21/25: los mismos cuatro fallos de flows.test.tsx reproducidos en una copia limpia de main 24104eb (navegación/nuevo proyecto, edición-archivo, tareas independientes, rango de evento). Lectura visual del proyecto real tras RLS conserva conexión, diagnóstico, alertas, Site Kit e historial.
+
+Plugin 0.8.0 preparado en Karmawebs/karma-care-plugin con motor reutilizado/corregido y pruebas de WordPress real desechable. No instalado en karmawebs.com; no se ejecutó ninguna actualización real ni se dejó ningún job pending/running. Instalación y primera actualización quedan manualmente al usuario. Ver CARE_REMOTE_ACTIONS.md para límites y pasos.

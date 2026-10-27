@@ -1589,6 +1589,8 @@ export type Database = {
           site_id: string;
         }[];
       };
+      enqueue_workspace_care_action: { Args: { p_care_site_id: string; p_action_type: string; p_target?: string | null }; Returns: string };
+      cancel_workspace_care_action: { Args: { p_action_id: string }; Returns: boolean };
       enqueue_care_action: {
         Args: { p_action_type: string; p_site_id: string; p_targets?: Json };
         Returns: string;
