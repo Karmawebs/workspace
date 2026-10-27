@@ -40,6 +40,9 @@ vi.mock("../src/lib/supabase", () => ({
         },
         order: () => q,
         limit: () => q,
+        gte: () => q,
+        lt: () => q,
+        range: () => q,
         single: () => {
           single = true;
           return q;
@@ -261,22 +264,22 @@ describe("Flujos compartidos", () => {
     await screen.findByRole("alert");
     expect(mock.writes).toHaveLength(0);
   });
-  it("renderiza varios eventos el mismo día", async () => {
+  it("renderiza varias publicaciones el mismo día", async () => {
     const d = new Date();
-    mock.tables.kw_events = [
+    mock.tables.kw_content_items = [
       {
         id: "a",
         workspace_id: "workspace-1",
-        app_key: "social",
+        content_type: "post",
         title: "Sesión A",
-        starts_at: d.toISOString(),
+        scheduled_at: d.toISOString(),
       },
       {
         id: "b",
         workspace_id: "workspace-1",
-        app_key: "social",
+        content_type: "post",
         title: "Sesión B",
-        starts_at: d.toISOString(),
+        scheduled_at: d.toISOString(),
       },
     ];
     render(<Calendar scope={scope} />);

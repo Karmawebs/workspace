@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 vi.mock("../src/lib/supabase", () => ({ db: {} }));
 import { readConfig } from "../src/lib/config";
 import { safeUrl, dayKey, localInput } from "../src/core/model";
-import { eventsForDay } from "../src/modules/Calendar";
+import { itemsForDay } from "../src/modules/socialContent";
 import { entities } from "../src/core/entities";
 describe("Backend y enlaces seguros", () => {
   it("solo admite el proyecto destino y claves públicas", () => {
@@ -32,25 +32,22 @@ describe("Backend y enlaces seguros", () => {
   });
 });
 describe("Calendario y Core", () => {
-  it("conserva todos los eventos del mismo día y ordena por hora", () => {
+  it("conserva todos los contenidos del mismo día y ordena por hora", () => {
     const d = new Date(2026, 9, 24);
     const events = [
-      { id: "b", starts_at: new Date(2026, 9, 24, 16).toISOString() },
-      { id: "a", starts_at: new Date(2026, 9, 24, 9).toISOString() },
-      { id: "c", starts_at: new Date(2026, 9, 25, 9).toISOString() },
+      { id: "b", scheduled_at: new Date(2026, 9, 24, 16).toISOString() },
+      { id: "a", scheduled_at: new Date(2026, 9, 24, 9).toISOString() },
+      { id: "c", scheduled_at: new Date(2026, 9, 25, 9).toISOString() },
     ];
-    expect(eventsForDay(events, d).map((e) => e.id)).toEqual(["a", "b"]);
+    expect(itemsForDay(events, d).map((e) => e.id)).toEqual(["a", "b"]);
   });
-  it("incluye eventos que cruzan medianoche sin añadir un día al finalizar a las 00:00", () => {
-    const e = [
-      {
-        id: "a",
-        starts_at: new Date(2026, 9, 23, 22).toISOString(),
-        ends_at: new Date(2026, 9, 25, 0).toISOString(),
-      },
+  it("asigna publicaciones a su fecha local sin extenderlas a otros días", () => {
+    const rows = [
+      { id: "a", scheduled_at: new Date(2026, 9, 24, 23, 59).toISOString() },
+      { id: "b", scheduled_at: null },
     ];
-    expect(eventsForDay(e, new Date(2026, 9, 24))).toHaveLength(1);
-    expect(eventsForDay(e, new Date(2026, 9, 25))).toHaveLength(0);
+    expect(itemsForDay(rows, new Date(2026, 9, 24))).toHaveLength(1);
+    expect(itemsForDay(rows, new Date(2026, 9, 25))).toHaveLength(0);
   });
   it("mantiene la fecha local al editar", () => {
     const d = new Date(2026, 9, 24, 16, 30);

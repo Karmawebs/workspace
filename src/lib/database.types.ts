@@ -675,6 +675,7 @@ export type Database = {
           content_type: string;
           created_at: string;
           description: string | null;
+          file_urls: Json;
           id: string;
           metadata: Json;
           project_id: string | null;
@@ -692,6 +693,7 @@ export type Database = {
           content_type?: string;
           created_at?: string;
           description?: string | null;
+          file_urls?: Json;
           id?: string;
           metadata?: Json;
           project_id?: string | null;
@@ -709,6 +711,7 @@ export type Database = {
           content_type?: string;
           created_at?: string;
           description?: string | null;
+          file_urls?: Json;
           id?: string;
           metadata?: Json;
           project_id?: string | null;

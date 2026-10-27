@@ -1,3 +1,4 @@
+import { SocialContentEditor } from "../modules/SocialContentEditor";
 import { useEffect,useRef,useState,type FormEvent } from "react";
 import { X,Plus,Paperclip } from "lucide-react";
 import { db } from "../lib/supabase";
@@ -6,7 +7,12 @@ import { newLabel,type Entity,type Field,type Row,dayKey,localInput,pretty,safeU
 type ChecklistItem={id?:string;title:string;completed:boolean};
 type Attachment={id:string;file_name:string;file_url:string;storage_path?:string|null};
 const checklistDb=db as any;
-export function Editor({def,scope,original,projectId,onClose,onSave}:{def:Entity;scope:Scope;original?:Row;projectId?:string;onClose:()=>void;onSave:(row:Row)=>void}){
+type EditorProps={def:Entity;scope:Scope;original?:Row;projectId?:string;onClose:()=>void;onSave:(row:Row)=>void};
+export function Editor(props:EditorProps){
+ if(props.scope.app==="social"&&props.def.table==="kw_content_items")return <SocialContentEditor {...props}/>;
+ return <CoreEditor {...props}/>;
+}
+function CoreEditor({def,scope,original,projectId,onClose,onSave}:EditorProps){
  const dialog=useRef<HTMLDialogElement>(null),fileInput=useRef<HTMLInputElement>(null),[busy,setBusy]=useState(false),[error,setError]=useState(""),[options,setOptions]=useState<Record<string,{id:string;name:string}[]>>({}),[ready,setReady]=useState(false),[checklist,setChecklist]=useState<ChecklistItem[]>([]),[attachments,setAttachments]=useState<Attachment[]>([]),[pendingFiles,setPendingFiles]=useState<File[]>([]);
  const isTask=["work","social","care"].includes(scope.app)&&def.table==="kw_tasks",isWorkEvent=scope.app==="work"&&def.table==="kw_events",isWorkProject=scope.app==="work"&&def.table==="kw_projects",isSocialProject=scope.app==="social"&&def.table==="kw_projects";
  const baseFields:Field[]=[...(def.project&&!projectId?[{key:"project_id",label:"Proyecto",type:"select" as const,relation:"projects" as const,required:def.projectRequired}]:[]),...def.fields];
