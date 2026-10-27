@@ -15,6 +15,7 @@ import { Dashboard } from "./modules/Dashboard";
 import { Care } from "./modules/Care";
 import { CareProjectRoute } from "./modules/CareProject";
 import { CareProjectEditor } from "./modules/CareProjectEditor";
+import { CareProjects } from "./modules/CareProjects";
 import { CareSettings } from "./modules/CareSettings";
 import { Users } from "./core/Users";
 import { db } from "./lib/supabase";
@@ -37,7 +38,7 @@ function Shell() {
       <header className={`topbar mobile-only-topbar${memberships.length>1?" has-workspaces":""}`}><button className="icon-button mobile-menu" aria-label="Abrir navegación" aria-expanded={open} aria-controls="workspace-navigation" onClick={()=>setOpen(!open)}><Menu/></button>{memberships.length>1?<select aria-label="Workspace" value={membership.workspace_id} onChange={e=>select(e.target.value)}>{memberships.map(m=><option value={m.workspace_id} key={m.workspace_id}>{m.name}</option>)}</select>:<span className="workspace-name"><i/>{membership.name}</span>}</header>
       <main key={`${membership.workspace_id}/${key}`}>{error?<p className="error" role="alert">{error}<button onClick={()=>window.location.reload()}>Reintentar</button></p>:!config?<p role="status">Cargando Workspace…</p>:!allowed?<div className="card info-panel"><h1>Aplicación no habilitada</h1><p>Selecciona una aplicación disponible en el menú.</p></div>:<Routes>
         <Route index element={<Navigate to={key==="work"?"dashboard":"projects"} replace/>}/>
-        {available.map(n=><Route key={n.path} path={n.path} element={n.path==="dashboard"?<Dashboard scope={scope}/>:n.path==="calendar"?<Calendar scope={scope}/>:n.path==="sites"?<Care scope={scope}/>:n.path==="settings"&&key==="care"?<CareSettings scope={scope}/>:n.path==="users"?<Users/>:<EntityView kind={n.path as EntityKey} scope={scope}/>}/>) }
+        {available.map(n=><Route key={n.path} path={n.path} element={n.path==="dashboard"?<Dashboard scope={scope}/>:n.path==="calendar"?<Calendar scope={scope}/>:n.path==="sites"?<Care scope={scope}/>:n.path==="projects"&&key==="care"?<CareProjects scope={scope}/>:n.path==="settings"&&key==="care"?<CareSettings scope={scope}/>:n.path==="users"?<Users/>:<EntityView kind={n.path as EntityKey} scope={scope}/>}/>) }
         {available.some(n=>n.path==="projects")&&<Route path="projects/:id" element={key==="care"?<CareProjectRoute scope={scope}/>:<ProjectDetail scope={scope}/>}/>} 
         <Route path="*" element={<div className="card info-panel"><h1>Página no disponible</h1><p>Selecciona una sección del menú.</p></div>}/>
       </Routes>}</main>
