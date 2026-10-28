@@ -1,4 +1,5 @@
 import { db } from "../lib/supabase";
+import { cleanSocialMedia } from "../modules/socialMedia";
 import type { SupabaseClient } from "@supabase/supabase-js";
 // Dynamic entity schemas are validated by the shared form; keep the untyped boundary here.
 const records = db as SupabaseClient;
@@ -84,6 +85,14 @@ export async function removeRow(def: Entity, scope: Scope, row: Row) {
   if (def.appScoped) q = q.eq("app_key", scope.app);
   const { error } = await q.select("id").single();
   if (error) throw error;
+  if (
+    def.table === "kw_content_items" ||
+    (def.table === "kw_projects" && scope.app === "social")
+  ) {
+    void cleanSocialMedia(scope.workspaceId).catch(() => {
+      /* Committed deletions stay queued for retry. */
+    });
+  }
   window.dispatchEvent(
     new CustomEvent("kw-records-changed", {
       detail: { table: def.table, workspaceId: scope.workspaceId },

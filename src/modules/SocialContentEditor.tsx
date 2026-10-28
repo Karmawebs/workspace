@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Plus, X } from "lucide-react";
+import { X } from "lucide-react";
 import { db } from "../lib/supabase";
 import { message, type Scope } from "../core/data";
 import { localInput, safeUrl, text, type Row } from "../core/model";
 
-import type { Database } from "../lib/database.types";
+import { SocialMediaPicker, type MediaItem } from "./SocialMediaPicker";
+import {
+  cleanSocialMedia,
+  getSocialUploadLimit,
+  discardReservation,
+  loadContentFiles,
+  reserveMedia,
+  uploadMedia,
+} from "./socialMedia";
 import {
   fileUrls,
   formats,
@@ -29,10 +37,71 @@ export function SocialContentEditor({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [projects, setProjects] = useState<{ id: string; name: string }[]>([]),
-    [urls, setUrls] = useState<string[]>(() => {
-      const raw = fileUrls(original?.file_urls);
-      return raw.length ? raw : [""];
+    [items, setItems] = useState<MediaItem[]>([]);
+  const [uploadLimit, setUploadLimit] = useState<number>();
+  const [limitError, setLimitError] = useState("");
+  const [filesReady, setFilesReady] = useState(!original?.id);
+  const contentId = useRef(text(original?.id) || crypto.randomUUID());
+  const uploadController = useRef<AbortController | null>(null);
+  const reservations = useRef(new Set<string>());
+  const legacyUrls = fileUrls(original?.file_urls);
+  useEffect(() => {
+    let alive = true;
+    void getSocialUploadLimit()
+      .then((limit) => {
+        if (alive) setUploadLimit(limit);
+      })
+      .catch(() => {
+        if (alive)
+          setLimitError(
+            "No se pudo comprobar el límite de Storage. Recarga para añadir archivos.",
+          );
+      });
+    if (original?.id)
+      void loadContentFiles(scope.workspaceId, text(original.id))
+        .then((files) => {
+          if (alive) {
+            setItems(
+              files.map((record) => ({
+                key: record.id,
+                record,
+                status: "saved",
+                progress: 100,
+              })),
+            );
+            setFilesReady(true);
+          }
+        })
+        .catch((e) => {
+          if (alive) setError(message(e));
+        });
+    void cleanSocialMedia(scope.workspaceId).catch(() => {
+      /* Durable queue retries on the next visit. */
     });
+    return () => {
+      alive = false;
+      uploadController.current?.abort();
+      void Promise.all(
+        [...reservations.current].map((id) =>
+          discardReservation(id, scope.workspaceId),
+        ),
+      )
+        .then(() => cleanSocialMedia(scope.workspaceId))
+        .catch(() => {
+          /* Expiring reservations remain tracked. */
+        });
+    };
+  }, [original?.id, scope.workspaceId]);
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => {
+      if (busy) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [busy]);
   const [selectedProject, setSelectedProject] = useState(
     projectId || text(original?.project_id),
   );
@@ -76,45 +145,82 @@ export function SocialContentEditor({
       setError("El título es obligatorio.");
       return;
     }
-    const cleanUrls = urls.map((v) => v.trim()).filter(Boolean);
-    if (cleanUrls.some((v) => !safeUrl(v))) {
-      setError("Utiliza URLs http(s) válidas para los archivos.");
-      return;
-    }
+    if (!filesReady) return;
     setBusy(true);
+    const controller = new AbortController();
+    uploadController.current = controller;
+    const next = items.map((item) => ({ ...item }));
+    const update = () => setItems(next.map((item) => ({ ...item })));
     try {
-      const payload: Database["public"]["Tables"]["kw_content_items"]["Insert"] =
-        {
-          workspace_id: scope.workspaceId,
-          project_id: selectedProject || null,
+      for (const item of next) {
+        if (!item.file || item.status === "uploaded") continue;
+        if (controller.signal.aborted) break;
+        const recovering = item.status === "error";
+        item.status = "uploading";
+        item.error = undefined;
+        update();
+        try {
+          if (!item.record) {
+            item.record = await reserveMedia(scope.workspaceId, item.file);
+            reservations.current.add(item.record.id);
+          }
+          await uploadMedia(
+            item.file,
+            item.record,
+            (progress) => {
+              item.progress = progress;
+              update();
+            },
+            controller.signal,
+            recovering,
+          );
+          item.status = "uploaded";
+        } catch (e) {
+          item.status = "error";
+          item.error = message(e);
+        }
+        update();
+      }
+      if (
+        controller.signal.aborted ||
+        next.some((item) => !["saved", "uploaded"].includes(item.status))
+      )
+        throw new Error(
+          "No se ha guardado el contenido. Reintenta Guardar o elimina los archivos con error.",
+        );
+      const { data, error } = await db.rpc("kw_save_social_content", {
+        p_workspace_id: scope.workspaceId,
+        p_content_id: contentId.current,
+        p_expected_updated_at: original?.id ? text(original.updated_at) : null,
+        p_values: {
           title,
-          description: description || null,
+          description,
+          project_id: selectedProject || null,
           content_type,
           status,
           scheduled_at: scheduled ? new Date(scheduled).toISOString() : null,
-          file_urls: cleanUrls,
-          published_at:
-            status === "published"
-              ? text(original?.published_at) || new Date().toISOString()
-              : null,
-          updated_at: new Date().toISOString(),
-        };
-      let query = original?.id
-        ? db
-            .from("kw_content_items")
-            .update(payload)
-            .eq("id", text(original.id))
-            .eq("workspace_id", scope.workspaceId)
-        : db.from("kw_content_items").insert(payload);
-      if (original?.updated_at)
-        query = query.eq("updated_at", text(original.updated_at));
-      const { data, error } = await query.select("*").single();
-      if (error)
+        },
+        p_file_ids: next.map((item) => item.record!.id),
+      });
+      if (error) throw new Error(error.message);
+      if (!data)
         throw new Error(
-          error.code === "PGRST116"
-            ? "El registro cambió o ya no tienes acceso. Recarga antes de guardar."
-            : error.message,
+          "No se pudo confirmar el guardado. Recarga antes de reintentar.",
         );
+      for (const item of next)
+        if (item.record) reservations.current.delete(item.record.id);
+      // Removed staged files are also queued, but only after the save commits.
+      for (const id of [...reservations.current]) {
+        try {
+          await discardReservation(id, scope.workspaceId);
+          reservations.current.delete(id);
+        } catch {
+          /* tracked until expiration */
+        }
+      }
+      void cleanSocialMedia(scope.workspaceId).catch(() => {
+        /* The durable queue retains failed deletions. */
+      });
       window.dispatchEvent(
         new CustomEvent("kw-records-changed", {
           detail: { table: "kw_content_items", workspaceId: scope.workspaceId },
@@ -124,6 +230,7 @@ export function SocialContentEditor({
     } catch (e) {
       setError(message(e));
     } finally {
+      uploadController.current = null;
       setBusy(false);
     }
   }
@@ -227,41 +334,40 @@ export function SocialContentEditor({
               defaultValue={localInput(original?.scheduled_at)}
             />
           </label>
-          <div className="social-file-urls">
-            <span className="social-field-label">URL de archivo</span>
-            {urls.map((url, i) => (
-              <div className="social-url-row" key={i}>
-                <input
-                  aria-label={`URL de archivo ${i + 1}${i === 0 ? " (portada)" : ""}`}
-                  type="url"
-                  value={url}
-                  placeholder="https://drive.google.com/…"
-                  onChange={(e) =>
-                    setUrls((v) =>
-                      v.map((x, j) => (j === i ? e.target.value : x)),
-                    )
-                  }
-                />
-                {urls.length > 1 && (
-                  <button
-                    type="button"
-                    className="icon-button danger"
-                    aria-label={`Eliminar URL ${i + 1}`}
-                    onClick={() => setUrls((v) => v.filter((_, j) => j !== i))}
-                  >
-                    <X size={15} />
-                  </button>
-                )}
-              </div>
-            ))}
-            <button
-              type="button"
-              className="social-add-url"
-              onClick={() => setUrls((v) => [...v, ""])}
-            >
-              <Plus size={14} /> Añadir URL
-            </button>
-          </div>
+          {!filesReady && <p role="status">Cargando archivos…</p>}
+          <SocialMediaPicker
+            items={items}
+            onChange={setItems}
+            disabled={busy || !filesReady || !uploadLimit}
+            maximum={uploadLimit}
+          />
+          {limitError && (
+            <p className="error" role="alert">
+              {limitError}
+            </p>
+          )}
+          {legacyUrls.length > 0 && (
+            <details className="social-legacy-files">
+              <summary>Archivos anteriores ({legacyUrls.length})</summary>
+              <p>
+                Se conservan los enlaces existentes. Los archivos nuevos se
+                guardan de forma privada.
+              </p>
+              {legacyUrls.map(
+                (url, i) =>
+                  safeUrl(url) && (
+                    <a
+                      key={i}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Archivo anterior {i + 1}
+                    </a>
+                  ),
+              )}
+            </details>
+          )}
         </fieldset>
         {error && (
           <p className="error" role="alert">
@@ -277,7 +383,16 @@ export function SocialContentEditor({
           >
             Cancelar
           </button>
-          <button disabled={busy || !ready}>
+          {busy && items.some((item) => item.status === "uploading") && (
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => uploadController.current?.abort()}
+            >
+              Detener subida
+            </button>
+          )}
+          <button disabled={busy || !ready || !filesReady}>
             {busy ? "Guardando…" : "Guardar"}
           </button>
         </footer>

@@ -1,8 +1,11 @@
-import { useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ImageOff } from "lucide-react";
 import { text, type Row } from "../core/model";
 import { contentFormat, drivePreview, socialLabels } from "./socialContent";
+
+import { loadContentFiles, type ContentFile } from "./socialMedia";
+import { MediaPreview } from "./SocialMediaPicker";
 
 function Preview({
   row,
@@ -16,6 +19,22 @@ function Preview({
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [failed, setFailed] = useState(false);
+  const [media, setMedia] = useState<ContentFile | null>();
+  useEffect(() => {
+    let active = true;
+    if (row.workspace_id)
+      void loadContentFiles(text(row.workspace_id), text(row.id))
+        .then((files) => {
+          if (active) setMedia(files[0] || null);
+        })
+        .catch(() => {
+          if (active) setMedia(null);
+        });
+    else setMedia(null);
+    return () => {
+      active = false;
+    };
+  }, [row.id, row.workspace_id, row.updated_at]);
   const first = Array.isArray(row.file_urls) ? row.file_urls[0] : undefined;
   const src = drivePreview(first);
   useLayoutEffect(() => {
@@ -57,7 +76,9 @@ function Preview({
       className="social-calendar-preview"
       style={position}
     >
-      {src && !failed ? (
+      {media ? (
+        <MediaPreview record={media} />
+      ) : (media === null || !row.workspace_id) && src && !failed ? (
         <img
           src={src}
           alt="Portada del contenido"

@@ -1,0 +1,119 @@
+.social-media-picker {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.social-media-drop {
+  position: relative;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+  border: 1px dashed var(--border, #d8d5dd);
+  border-radius: 12px;
+  background: #faf9fc;
+  text-align: center;
+  cursor: pointer;
+}
+.social-media-drop.dragging,
+.social-media-drop:focus-within {
+  border-color: #8b78ba;
+  background: #f2edf9;
+}
+.social-media-drop span,
+.social-media-drop small {
+  color: var(--muted, #777);
+}
+.social-media-drop input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+.social-media-list {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.social-media-list li {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--border, #e4e2e7);
+  border-radius: 10px;
+  padding: 10px;
+  min-width: 0;
+}
+.social-media-thumb {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  border-radius: 7px;
+  overflow: hidden;
+  background: #f4f3f6;
+}
+.social-media-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.social-media-thumb .social-preview-placeholder {
+  height: 100%;
+  min-height: 0;
+  padding: 4px;
+  gap: 3px;
+  font-size: 10px;
+}
+.social-media-info {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.social-media-info strong {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.social-media-info small,
+.social-media-info span {
+  font-size: 11px;
+  color: var(--muted, #777);
+}
+.social-media-info progress {
+  width: 100%;
+  height: 5px;
+  accent-color: #8b78ba;
+}
+.social-media-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 96px;
+}
+.social-legacy-files {
+  font-size: 12px;
+  color: var(--muted, #777);
+}
+.social-legacy-files a {
+  display: block;
+  overflow-wrap: anywhere;
+  margin: 6px 0;
+}
+@media (max-width: 480px) {
+  .social-media-thumb {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+  }
+  .social-media-actions {
+    max-width: 32px;
+  }
+  .social-media-drop {
+    padding: 20px 10px;
+  }
+}

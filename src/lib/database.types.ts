@@ -483,6 +483,41 @@ export type Database = {
           },
         ];
       };
+      kw_care_plan_settings: {
+        Row: {
+          active: boolean;
+          display_name: string;
+          monthly_price: number;
+          plan_type: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        Insert: {
+          active?: boolean;
+          display_name: string;
+          monthly_price?: number;
+          plan_type: string;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          active?: boolean;
+          display_name?: string;
+          monthly_price?: number;
+          plan_type?: string;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "kw_care_plan_settings_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "kw_workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       kw_care_sites: {
         Row: {
           created_at: string;
@@ -550,43 +585,61 @@ export type Database = {
       };
       kw_clients: {
         Row: {
+          address: string | null;
           archived: boolean;
+          client_code: number | null;
           company: string | null;
+          contact_name: string | null;
           created_at: string;
           email: string | null;
           id: string;
+          invoice_name: string | null;
+          legacy_client_id: string | null;
           metadata: Json;
           name: string;
           notes: string | null;
           phone: string | null;
+          tax_id: string | null;
           updated_at: string;
           website: string | null;
           workspace_id: string;
         };
         Insert: {
+          address?: string | null;
           archived?: boolean;
+          client_code?: number | null;
           company?: string | null;
+          contact_name?: string | null;
           created_at?: string;
           email?: string | null;
           id?: string;
+          invoice_name?: string | null;
+          legacy_client_id?: string | null;
           metadata?: Json;
           name: string;
           notes?: string | null;
           phone?: string | null;
+          tax_id?: string | null;
           updated_at?: string;
           website?: string | null;
           workspace_id: string;
         };
         Update: {
+          address?: string | null;
           archived?: boolean;
+          client_code?: number | null;
           company?: string | null;
+          contact_name?: string | null;
           created_at?: string;
           email?: string | null;
           id?: string;
+          invoice_name?: string | null;
+          legacy_client_id?: string | null;
           metadata?: Json;
           name?: string;
           notes?: string | null;
           phone?: string | null;
+          tax_id?: string | null;
           updated_at?: string;
           website?: string | null;
           workspace_id?: string;
@@ -661,6 +714,75 @@ export type Database = {
           },
           {
             foreignKeyName: "kw_connections_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "kw_workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      kw_content_files: {
+        Row: {
+          archive_status: string;
+          archived_at: string | null;
+          content_id: string | null;
+          created_at: string;
+          created_by: string;
+          drive_file_id: string | null;
+          drive_url: string | null;
+          id: string;
+          mime_type: string;
+          original_filename: string;
+          preview_storage_path: string | null;
+          size: number;
+          sort_order: number;
+          storage_path: string;
+          workspace_id: string;
+        };
+        Insert: {
+          archive_status?: string;
+          archived_at?: string | null;
+          content_id?: string | null;
+          created_at?: string;
+          created_by?: string;
+          drive_file_id?: string | null;
+          drive_url?: string | null;
+          id?: string;
+          mime_type: string;
+          original_filename: string;
+          preview_storage_path?: string | null;
+          size: number;
+          sort_order?: number;
+          storage_path: string;
+          workspace_id: string;
+        };
+        Update: {
+          archive_status?: string;
+          archived_at?: string | null;
+          content_id?: string | null;
+          created_at?: string;
+          created_by?: string;
+          drive_file_id?: string | null;
+          drive_url?: string | null;
+          id?: string;
+          mime_type?: string;
+          original_filename?: string;
+          preview_storage_path?: string | null;
+          size?: number;
+          sort_order?: number;
+          storage_path?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "kw_content_files_content_id_fkey";
+            columns: ["content_id"];
+            isOneToOne: false;
+            referencedRelation: "kw_content_items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "kw_content_files_workspace_id_fkey";
             columns: ["workspace_id"];
             isOneToOne: false;
             referencedRelation: "kw_workspaces";
@@ -1030,6 +1152,7 @@ export type Database = {
           id: string;
           label: string;
           metadata: Json;
+          private_value: string | null;
           project_id: string;
           secret_ref: string | null;
           sort_order: number;
@@ -1045,6 +1168,7 @@ export type Database = {
           id?: string;
           label: string;
           metadata?: Json;
+          private_value?: string | null;
           project_id: string;
           secret_ref?: string | null;
           sort_order?: number;
@@ -1060,6 +1184,7 @@ export type Database = {
           id?: string;
           label?: string;
           metadata?: Json;
+          private_value?: string | null;
           project_id?: string;
           secret_ref?: string | null;
           sort_order?: number;
@@ -1090,6 +1215,7 @@ export type Database = {
         Row: {
           app_key: string;
           archived: boolean;
+          category: string | null;
           client_id: string | null;
           created_at: string;
           description: string | null;
@@ -1107,6 +1233,7 @@ export type Database = {
         Insert: {
           app_key: string;
           archived?: boolean;
+          category?: string | null;
           client_id?: string | null;
           created_at?: string;
           description?: string | null;
@@ -1124,6 +1251,7 @@ export type Database = {
         Update: {
           app_key?: string;
           archived?: boolean;
+          category?: string | null;
           client_id?: string | null;
           created_at?: string;
           description?: string | null;
@@ -1151,6 +1279,107 @@ export type Database = {
             columns: ["workspace_id"];
             isOneToOne: false;
             referencedRelation: "kw_workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      kw_social_storage_cleanup: {
+        Row: {
+          created_at: string;
+          storage_path: string;
+          workspace_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          storage_path: string;
+          workspace_id: string;
+        };
+        Update: {
+          created_at?: string;
+          storage_path?: string;
+          workspace_id?: string;
+        };
+        Relationships: [];
+      };
+      kw_task_attachments: {
+        Row: {
+          created_at: string;
+          file_name: string;
+          file_url: string;
+          id: string;
+          storage_path: string | null;
+          task_id: string;
+          workspace_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          file_name: string;
+          file_url: string;
+          id?: string;
+          storage_path?: string | null;
+          task_id: string;
+          workspace_id: string;
+        };
+        Update: {
+          created_at?: string;
+          file_name?: string;
+          file_url?: string;
+          id?: string;
+          storage_path?: string | null;
+          task_id?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "kw_task_attachments_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "kw_tasks";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "kw_task_attachments_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "kw_workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      kw_task_checklist_items: {
+        Row: {
+          completed: boolean;
+          created_at: string;
+          id: string;
+          sort_order: number;
+          task_id: string;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          completed?: boolean;
+          created_at?: string;
+          id?: string;
+          sort_order?: number;
+          task_id: string;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          completed?: boolean;
+          created_at?: string;
+          id?: string;
+          sort_order?: number;
+          task_id?: string;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "kw_task_checklist_items_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "kw_tasks";
             referencedColumns: ["id"];
           },
         ];
@@ -1579,6 +1808,10 @@ export type Database = {
         Args: { p_code: string; p_title: string };
         Returns: string;
       };
+      cancel_workspace_care_action: {
+        Args: { p_action_id: string };
+        Returns: boolean;
+      };
       create_site_with_pairing: {
         Args: {
           p_client_name: string;
@@ -1592,18 +1825,133 @@ export type Database = {
           site_id: string;
         }[];
       };
-      enqueue_workspace_care_action: { Args: { p_care_site_id: string; p_action_type: string; p_target?: string | null }; Returns: string };
-      cancel_workspace_care_action: { Args: { p_action_id: string }; Returns: boolean };
       enqueue_care_action: {
         Args: { p_action_type: string; p_site_id: string; p_targets?: Json };
+        Returns: string;
+      };
+      enqueue_workspace_care_action: {
+        Args: {
+          p_action_type: string;
+          p_care_site_id: string;
+          p_target?: string | null;
+        };
         Returns: string;
       };
       ingest_diagnostic: {
         Args: { p_api_token: string; p_payload: Json };
         Returns: boolean;
       };
+      kw_create_project_password: {
+        Args: {
+          p_app_key: string;
+          p_name: string;
+          p_password: string;
+          p_project_id: string;
+          p_username: string;
+          p_workspace_id: string;
+        };
+        Returns: {
+          app_key: string;
+          created_at: string;
+          id: string;
+          label: string;
+          metadata: Json;
+          private_value: string | null;
+          project_id: string;
+          secret_ref: string | null;
+          sort_order: number;
+          type: string;
+          updated_at: string;
+          url: string | null;
+          value: string | null;
+          workspace_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "kw_project_resources";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      kw_delete_project_password: {
+        Args: { p_resource_id: string };
+        Returns: undefined;
+      };
+      kw_get_project_password: {
+        Args: { p_resource_id: string };
+        Returns: string;
+      };
       kw_is_workspace_admin: { Args: { ws: string }; Returns: boolean };
       kw_is_workspace_member: { Args: { ws: string }; Returns: boolean };
+      kw_save_social_content: {
+        Args: {
+          p_content_id: string;
+          // PostgreSQL NULL creates new content; preserve RPC argument nullability.
+          p_expected_updated_at: string | null;
+          p_file_ids: string[];
+          p_values: Json;
+          p_workspace_id: string;
+        };
+        Returns: {
+          assignee_id: string | null;
+          channel: string | null;
+          content_type: string;
+          created_at: string;
+          description: string | null;
+          file_urls: Json;
+          id: string;
+          metadata: Json;
+          project_id: string | null;
+          published_at: string | null;
+          scheduled_at: string | null;
+          sort_order: number;
+          status: string;
+          title: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "kw_content_items";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      kw_social_cleanup_authorized: {
+        Args: { p_token: string };
+        Returns: boolean;
+      };
+      kw_social_upload_limit: { Args: never; Returns: number };
+      kw_update_project_password: {
+        Args: {
+          p_name: string;
+          p_password?: string;
+          p_resource_id: string;
+          p_username: string;
+        };
+        Returns: {
+          app_key: string;
+          created_at: string;
+          id: string;
+          label: string;
+          metadata: Json;
+          private_value: string | null;
+          project_id: string;
+          secret_ref: string | null;
+          sort_order: number;
+          type: string;
+          updated_at: string;
+          url: string | null;
+          value: string | null;
+          workspace_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "kw_project_resources";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       pair_installation: {
         Args: {
           p_home_url: string;
@@ -1613,6 +1961,14 @@ export type Database = {
         };
         Returns: {
           api_token: string;
+          site_id: string;
+        }[];
+      };
+      prepare_care_project_pairing: {
+        Args: { p_project_id: string };
+        Returns: {
+          expires_at: string;
+          pairing_code: string;
           site_id: string;
         }[];
       };

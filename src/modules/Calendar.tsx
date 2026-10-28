@@ -5,6 +5,7 @@ import { dayKey, text, type Row } from "../core/model";
 import { db } from "../lib/supabase";
 import { SocialContentEditor } from "./SocialContentEditor";
 import { SocialContentDot } from "./SocialContentDot";
+import { cleanSocialMedia } from "./socialMedia";
 import { itemsForDay } from "./socialContent";
 
 export function Calendar({ scope }: { scope: Scope }) {
@@ -17,6 +18,11 @@ export function Calendar({ scope }: { scope: Scope }) {
     [projectFilter, setProjectFilter] = useState(""),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
+  useEffect(() => {
+    void cleanSocialMedia(scope.workspaceId).catch(() => {
+      /* Retry retained queue on next visit. */
+    });
+  }, [scope.workspaceId]);
   const [revision, setRevision] = useState(0);
   const days = useMemo(() => {
     const offset = (month.getDay() + 6) % 7;
