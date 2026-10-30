@@ -32,8 +32,15 @@
 .loose-tasks > header { display:flex;justify-content:space-between;align-items:center;margin-bottom:14px; }
 .loose-tasks h2 { font-size:18px; }
 .loose-task-list { display:flex;flex-direction:column; }
-.loose-task { flex-direction:row;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line-soft);font-weight:500; }
+.loose-task { display:flex;flex-direction:row;align-items:center;gap:9px;padding:11px 0;border-bottom:1px solid var(--line-soft);font-weight:500; }
 .loose-task:last-child { border:0; }
+.loose-task-check { flex:0 0 auto; }
+.loose-task-open { flex:1;min-width:0;justify-content:flex-start;padding:0;border:0;background:transparent;color:var(--ink);font:inherit;font-weight:500;text-align:left;box-shadow:none; }
+.loose-task-open:hover { background:transparent;color:var(--ink-secondary); }
+.loose-task-open:focus-visible { outline:2px solid var(--accent-line);outline-offset:4px;border-radius:4px; }
+.loose-task-open span { display:block;overflow-wrap:anywhere; }
+.loose-task.completed .loose-task-open span { color:var(--muted);text-decoration:line-through; }
+.loose-task-delete { flex:0 0 auto;width:30px;height:30px;padding:7px; }
 .compact-record { padding:10px 12px; }
 .compact-record .record-title { justify-content:flex-start;gap:10px; }
 .compact-record .record-actions { display:flex;flex-direction:row;align-items:center;justify-content:flex-end;gap:2px;flex:0 0 auto;white-space:nowrap; }
