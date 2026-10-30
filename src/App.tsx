@@ -17,6 +17,7 @@ import { CareProjectRoute } from "./modules/CareProject";
 import { CareProjectEditor } from "./modules/CareProjectEditor";
 import { CareProjects } from "./modules/CareProjects";
 import { CareSettings } from "./modules/CareSettings";
+import { KarmaInternal } from "./modules/KarmaInternal";
 import { Users } from "./core/Users";
 import { db } from "./lib/supabase";
 
@@ -31,18 +32,20 @@ function Shell() {
   if(!valid)return <Navigate to="/work/dashboard" replace/>;
   const scope={workspaceId:membership.workspace_id,app:key,userId:session.user.id};
   const available=navigation.filter(n=>(!n.apps||n.apps.includes(key))&&!config?.disabled.includes(`${key}/${n.module}`)), allowed=config?.apps.includes(key);
+  const home=key==="work"?"dashboard":key==="karma"?"home":"projects";
   return <div className="shell" style={{"--accent":apps[key].color} as CSSProperties}>
     <Sidebar app={key} enabledApps={(Object.keys(apps) as AppKey[]).filter(a=>!config||config.apps.includes(a))} items={available} email={session.user.email} role={membership.role} open={open} canCreate={!!allowed&&available.some(n=>n.path==="projects")} onClose={()=>setOpen(false)} onCreate={()=>{setOpen(false);setCreating(true);}} onSignOut={signOut}/>
     {creating && (key==="care" ? <CareProjectEditor scope={scope} onClose={()=>setCreating(false)} onSave={(row)=>{setCreating(false);navigate(`/care/projects/${row.id}`);}}/> : <Editor key={membership.workspace_id} def={entities.projects} scope={scope} onClose={()=>setCreating(false)} onSave={(row)=>{setCreating(false);navigate(`/${key}/projects/${row.id}`);}}/>)}
     <div className="main-shell">
       <header className={`topbar mobile-only-topbar${memberships.length>1?" has-workspaces":""}`}><button className="icon-button mobile-menu" aria-label="Abrir navegación" aria-expanded={open} aria-controls="workspace-navigation" onClick={()=>setOpen(!open)}><Menu/></button>{memberships.length>1?<select aria-label="Workspace" value={membership.workspace_id} onChange={e=>select(e.target.value)}>{memberships.map(m=><option value={m.workspace_id} key={m.workspace_id}>{m.name}</option>)}</select>:<span className="workspace-name"><i/>{membership.name}</span>}</header>
       <main key={`${membership.workspace_id}/${key}`}>{error?<p className="error" role="alert">{error}<button onClick={()=>window.location.reload()}>Reintentar</button></p>:!config?<p role="status">Cargando Workspace…</p>:!allowed?<div className="card info-panel"><h1>Aplicación no habilitada</h1><p>Selecciona una aplicación disponible en el menú.</p></div>:<Routes>
-        <Route index element={<Navigate to={key==="work"?"dashboard":"projects"} replace/>}/>
+        <Route index element={<Navigate to={home} replace/>}/>
+        {key==="karma"&&<Route path="home" element={<KarmaInternal scope={scope}/>}/>} 
         {available.map(n=><Route key={n.path} path={n.path} element={n.path==="dashboard"?<Dashboard scope={scope}/>:n.path==="calendar"?<Calendar scope={scope}/>:n.path==="sites"?<Care scope={scope}/>:n.path==="projects"&&key==="care"?<CareProjects scope={scope}/>:n.path==="settings"&&key==="care"?<CareSettings scope={scope}/>:n.path==="users"?<Users/>:<EntityView kind={n.path as EntityKey} scope={scope}/>}/>) }
         {available.some(n=>n.path==="projects")&&<Route path="projects/:id" element={key==="care"?<CareProjectRoute scope={scope}/>:<ProjectDetail scope={scope}/>}/>} 
         <Route path="*" element={<div className="card info-panel"><h1>Página no disponible</h1><p>Selecciona una sección del menú.</p></div>}/>
       </Routes>}</main>
-      <footer className="app-footer">KARMA WORKSPACE <span>Work · Social · Care</span></footer>
+      <footer className="app-footer">KARMA WORKSPACE <span>Work · Social · Care · Karma</span></footer>
     </div>
   </div>;
 }
