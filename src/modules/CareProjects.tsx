@@ -11,6 +11,30 @@ import "./care-projects.css";
 
 type Health = { connected: boolean; total: number; pending: number; loaded: boolean };
 
+function ProjectTaskTag({ projectId }: { projectId: string }) {
+  const [count, setCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      const response = await db
+        .from("kw_tasks")
+        .select("id", { count: "exact", head: true })
+        .eq("project_id", projectId)
+        .eq("app_key", "care")
+        .in("status", ["pending", "in_progress"]);
+      if (response.error) throw response.error;
+      if (alive) setCount(response.count || 0);
+    };
+    void load().catch(() => alive && setCount(0));
+    return () => { alive = false; };
+  }, [projectId]);
+
+  if (count === null) return <span className="care-task-tag care-task-tag--neutral">… tareas</span>;
+  const tone = count === 0 ? "good" : count <= 3 ? "warning" : "danger";
+  return <span className={`care-task-tag care-task-tag--${tone}`}>{count} {count === 1 ? "tarea" : "tareas"}</span>;
+}
+
 function ProjectHealth({ projectId }: { projectId: string }) {
   const [state, setState] = useState<Health>({ connected: false, total: 0, pending: 0, loaded: false });
 
@@ -103,6 +127,7 @@ export function CareProjects({ scope }: { scope: Scope }) {
     {loading ? <p className="empty">Cargando…</p> : visible.length === 0 ? <div className="empty"><div className="empty-symbol">◇</div><h3>Todo empieza aquí</h3><p>Crea un proyecto para empezar.</p></div> : <div className="care-project-list">
       {visible.map((row) => <article className="card care-project-row" key={text(row.id)}>
         <div className="care-project-row__name"><Link to={`/care/projects/${text(row.id)}`}>{text(row.name) || "Sin título"}</Link></div>
+        <ProjectTaskTag projectId={text(row.id)} />
         <ProjectHealth projectId={text(row.id)} />
         <div className="care-project-row__actions">
           <button className="icon-button" aria-label="Editar proyecto" onClick={() => setEdit(row)}><Pencil size={16}/></button>
