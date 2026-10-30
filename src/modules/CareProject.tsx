@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Check, Copy, Link2, Pencil, X } from "lucide-react";
+import { ArrowLeft, Bell, Check, Copy, FileText, KeyRound, Link2, Pencil, Upload, X } from "lucide-react";
 import { db, config } from "../lib/supabase";
 import { EntityView } from "../core/EntityView";
 import { Editor } from "../core/Editor";
@@ -10,6 +10,7 @@ import { dateLabel, text, type Row } from "../core/model";
 import { Care } from "./Care";
 
 type PairingResult = { site_id: string; pairing_code: string; expires_at: string };
+type ProjectFile = { id: string; storage_path: string; original_filename: string; mime_type: string; size: number; created_at: string };
 
 export function CareProjectRoute({ scope }: { scope: Scope }) {
   const { id = "" } = useParams();
@@ -30,20 +31,38 @@ export function CareProjectRoute({ scope }: { scope: Scope }) {
 }
 
 export function CareProject({ scope, project, onProjectChange }: { scope: Scope; project: Row; onProjectChange: () => void }) {
+  const fileInput = useRef<HTMLInputElement>(null);
   const [site, setSite] = useState<Row>();
   const [installation, setInstallation] = useState<Row>();
   const [alerts, setAlerts] = useState<Row[]>([]);
+  const [accessCount, setAccessCount] = useState(0);
+  const [files, setFiles] = useState<ProjectFile[]>([]);
   const [edit, setEdit] = useState(false);
   const [connect, setConnect] = useState(false);
+  const [accessesOpen, setAccessesOpen] = useState(false);
+  const [filesOpen, setFilesOpen] = useState(false);
   const [pairing, setPairing] = useState<PairingResult>();
   const [pairingBusy, setPairingBusy] = useState(false);
+  const [fileBusy, setFileBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
 
+  const loadFiles = async () => {
+    const { data, error } = await db.from("kw_project_files").select("id,storage_path,original_filename,mime_type,size,created_at").eq("workspace_id", scope.workspaceId).eq("project_id", project.id).order("created_at", { ascending: false });
+    if (error) throw error;
+    setFiles((data || []) as ProjectFile[]);
+  };
+
   const load = async () => {
-    const { data: siteData, error: siteError } = await db.from("kw_care_sites").select("*").eq("project_id", project.id).maybeSingle();
-    if (siteError) throw siteError;
-    const s = siteData as Row | null;
+    const [siteResponse, accessResponse, fileResponse] = await Promise.all([
+      db.from("kw_care_sites").select("*").eq("project_id", project.id).maybeSingle(),
+      db.from("kw_project_resources").select("id", { count: "exact", head: true }).eq("workspace_id", scope.workspaceId).eq("project_id", project.id).eq("app_key", "care").eq("type", "access"),
+      db.from("kw_project_files").select("id,storage_path,original_filename,mime_type,size,created_at").eq("workspace_id", scope.workspaceId).eq("project_id", project.id).order("created_at", { ascending: false }),
+    ]);
+    if (siteResponse.error || accessResponse.error || fileResponse.error) throw siteResponse.error || accessResponse.error || fileResponse.error;
+    setAccessCount(accessResponse.count || 0);
+    setFiles((fileResponse.data || []) as ProjectFile[]);
+    const s = siteResponse.data as Row | null;
     setSite(s || undefined);
     const legacySiteId = typeof s?.legacy_site_id === "string" ? s.legacy_site_id : "";
     if (!legacySiteId) { setInstallation(undefined); setAlerts([]); return; }
@@ -93,9 +112,48 @@ export function CareProject({ scope, project, onProjectChange }: { scope: Scope;
     setCopied(true); setTimeout(() => setCopied(false), 1600);
   };
 
+  const uploadFiles = async (selected: FileList | null) => {
+    if (!selected?.length) return;
+    setFileBusy(true); setError("");
+    try {
+      for (const file of Array.from(selected)) {
+        if (file.size > 50 * 1024 * 1024) throw new Error(`${file.name} supera el límite de 50 MB.`);
+        const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+        const path = `${scope.workspaceId}/${project.id}/${crypto.randomUUID()}-${safe}`;
+        const { error: uploadError } = await db.storage.from("care-project-files").upload(path, file, { contentType: file.type || "application/octet-stream" });
+        if (uploadError) throw uploadError;
+        const { error: rowError } = await db.from("kw_project_files").insert({ workspace_id: scope.workspaceId, project_id: project.id, app_key: "care", storage_path: path, original_filename: file.name, mime_type: file.type || "application/octet-stream", size: file.size });
+        if (rowError) {
+          await db.storage.from("care-project-files").remove([path]);
+          throw rowError;
+        }
+      }
+      await loadFiles();
+    } catch (e) { setError(message(e)); }
+    finally { setFileBusy(false); if (fileInput.current) fileInput.current.value = ""; }
+  };
+
+  const openFile = async (file: ProjectFile) => {
+    setError("");
+    const { data, error } = await db.storage.from("care-project-files").createSignedUrl(file.storage_path, 300);
+    if (error) { setError(message(error)); return; }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const deleteFile = async (file: ProjectFile) => {
+    setFileBusy(true); setError("");
+    try {
+      const { error: storageError } = await db.storage.from("care-project-files").remove([file.storage_path]);
+      if (storageError) throw storageError;
+      const { error: rowError } = await db.from("kw_project_files").delete().eq("id", file.id).eq("workspace_id", scope.workspaceId).eq("project_id", project.id);
+      if (rowError) throw rowError;
+      await loadFiles();
+    } catch (e) { setError(message(e)); }
+    finally { setFileBusy(false); }
+  };
+
   const metadata = (project.metadata && typeof project.metadata === "object" ? project.metadata : {}) as Record<string, unknown>;
   const connected = !!installation?.last_seen_at;
-  const lastSeenAt = typeof installation?.last_seen_at === "string" ? installation.last_seen_at : "";
 
   return <>
     <Link className="back-link" to="/care/projects"><ArrowLeft size={16}/>Proyectos</Link>
@@ -104,14 +162,27 @@ export function CareProject({ scope, project, onProjectChange }: { scope: Scope;
       <div className="care-heading-actions"><button className="secondary" onClick={() => setEdit(true)}><Pencil size={16}/>Editar</button><button onClick={openConnection}><Link2 size={16}/>{connected ? "Reconectar" : "Conectar"}</button></div>
     </header>
     {error && <p className="error" role="alert">{error}</p>}
-    <div className="quick-panels care-summary">
-      <div className="card quick-panel"><small>Mantenimiento</small><strong>{text(metadata.care_plan_name) || "Sin plan"}</strong><span>{metadata.care_plan_price !== undefined ? `${Number(metadata.care_plan_price)} €/mes` : "Configurable"}</span></div>
-      <div className="card quick-panel"><small>Estado web</small><strong>{site ? "Activo" : "Pendiente"}</strong><span>{text(site?.domain) || "Se detectará al conectar"}</span></div>
-      <div className="card quick-panel"><small>Alertas</small><strong>{alerts.length}</strong><span>{alerts.length ? "Requieren revisión" : "Todo correcto"}</span></div>
-      <div className="card quick-panel"><small>Conexión</small><strong>{connected ? "Conectado" : "Sin conectar"}</strong><span>{connected && lastSeenAt ? `Último contacto ${dateLabel(lastSeenAt)}` : "Conecta el plugin de WordPress"}</span></div>
+    <div className="care-summary-redesign">
+      <div className="card quick-panel care-summary-main"><small>Mantenimiento</small><strong>{text(metadata.care_plan_name) || "Sin plan"}</strong><span>{metadata.care_plan_price !== undefined ? `${Number(metadata.care_plan_price)} €/mes` : "Configurable"}</span></div>
+      <div className="card quick-panel care-summary-main"><small>Estado web</small><strong>{site ? "Activo" : "Pendiente"}</strong><span>{text(site?.domain) || "Se detectará al conectar"}</span></div>
+      <button className="card care-summary-tool" type="button"><Bell size={20}/><span>Alertas</span><strong>{alerts.length}</strong><small>{alerts.length ? "Revisar" : "Todo correcto"}</small></button>
+      <button className="card care-summary-tool" type="button" onClick={() => setAccessesOpen(true)}><KeyRound size={20}/><span>Accesos</span><strong>{accessCount}</strong><small>Usuarios y claves</small></button>
+      <button className="card care-summary-tool" type="button" onClick={() => setFilesOpen(true)}><FileText size={20}/><span>Archivos</span><strong>{files.length}</strong><small>Documentos adjuntos</small></button>
     </div>
     <div className="operations-grid care-project-columns"><EntityView kind="tasks" scope={scope} projectId={text(project.id)} compact/><EntityView kind="journal" scope={scope} projectId={text(project.id)} compact/></div>
     <section className="care-technical-full"><Care scope={scope} projectId={text(project.id)}/></section>
+
+    {accessesOpen && <div className="care-project-modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setAccessesOpen(false)}><section className="care-project-modal care-project-resource-modal" role="dialog" aria-modal="true">
+      <header className="care-project-modal-header"><div><span className="eyebrow">CARE / ACCESOS</span><h2>Accesos del proyecto</h2></div><button className="care-project-modal-close" onClick={() => { setAccessesOpen(false); void load(); }} aria-label="Cerrar"><X size={20}/></button></header>
+      <EntityView kind="resources" scope={scope} projectId={text(project.id)} compact/>
+    </section></div>}
+
+    {filesOpen && <div className="care-project-modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setFilesOpen(false)}><section className="care-project-modal care-project-resource-modal" role="dialog" aria-modal="true">
+      <header className="care-project-modal-header"><div><span className="eyebrow">CARE / ARCHIVOS</span><h2>Archivos del proyecto</h2></div><button className="care-project-modal-close" onClick={() => setFilesOpen(false)} aria-label="Cerrar"><X size={20}/></button></header>
+      <div className="care-files-toolbar"><input ref={fileInput} type="file" multiple hidden onChange={(e) => void uploadFiles(e.target.files)}/><button onClick={() => fileInput.current?.click()} disabled={fileBusy}><Upload size={16}/>{fileBusy ? "Subiendo…" : "Añadir archivos"}</button></div>
+      <div className="care-file-list">{files.length ? files.map((file) => <div className="care-file-row" key={file.id}><button type="button" className="care-file-open" onClick={() => void openFile(file)}><FileText size={17}/><span>{file.original_filename}</span></button><button type="button" className="icon-button danger" aria-label="Eliminar archivo" title="Eliminar archivo" disabled={fileBusy} onClick={() => void deleteFile(file)}><X size={14}/></button></div>) : <p className="muted">Todavía no hay archivos adjuntos.</p>}</div>
+    </section></div>}
+
     {connect && <div className="care-project-modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setConnect(false)}><section className="care-project-modal care-connect-modal" role="dialog" aria-modal="true">
       <header className="care-project-modal-header"><div><span className="eyebrow">CARE / CONEXIÓN</span><h2>Conectar WordPress</h2></div><button className="care-project-modal-close" onClick={() => setConnect(false)} aria-label="Cerrar"><X size={20}/></button></header>
       {pairingBusy ? <div className="care-pairing-loading">Generando código de conexión…</div> : pairing ? <div className="care-pairing-content">
