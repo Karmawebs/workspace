@@ -1,5 +1,5 @@
 import type { Database } from "../lib/database.types";
-export type AppKey = "work" | "social" | "care";
+export type AppKey = "work" | "social" | "care" | "karma";
 export type Table = keyof Database["public"]["Tables"];
 export type Row = { id: string; [key: string]: unknown };
 export type Field = {
