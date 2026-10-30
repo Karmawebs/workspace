@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Bell, Check, Copy, FileText, KeyRound, Link2, Pencil, Upload, X } from "lucide-react";
+import { ArrowLeft, Bell, Check, Copy, FileText, KeyRound, Link2, Paperclip, Pencil, Trash2, X } from "lucide-react";
 import { db, config } from "../lib/supabase";
 import { EntityView } from "../core/EntityView";
 import { Editor } from "../core/Editor";
 import { entity } from "../core/entities";
 import { message, type Scope } from "../core/data";
-import { dateLabel, text, type Row } from "../core/model";
+import { text, type Row } from "../core/model";
 import { Care } from "./Care";
 
 type PairingResult = { site_id: string; pairing_code: string; expires_at: string };
 type ProjectFile = { id: string; storage_path: string; original_filename: string; mime_type: string; size: number; created_at: string };
+type FilePreview = { file: ProjectFile; url: string };
 const filesDb = db as any;
 
 export function CareProjectRoute({ scope }: { scope: Scope }) {
@@ -38,6 +39,8 @@ export function CareProject({ scope, project, onProjectChange }: { scope: Scope;
   const [alerts, setAlerts] = useState<Row[]>([]);
   const [accessCount, setAccessCount] = useState(0);
   const [files, setFiles] = useState<ProjectFile[]>([]);
+  const [fileUrls, setFileUrls] = useState<Record<string,string>>({});
+  const [filePreview, setFilePreview] = useState<FilePreview>();
   const [edit, setEdit] = useState(false);
   const [connect, setConnect] = useState(false);
   const [accessesOpen, setAccessesOpen] = useState(false);
@@ -77,6 +80,19 @@ export function CareProject({ scope, project, onProjectChange }: { scope: Scope;
   };
 
   useEffect(() => { load().catch((e) => setError(message(e))); }, [project.id]);
+
+  useEffect(() => {
+    if (!filesOpen || !files.length) return;
+    let active = true;
+    Promise.all(files.map(async (file) => {
+      const { data, error } = await db.storage.from("care-project-files").createSignedUrl(file.storage_path, 1800);
+      return error || !data?.signedUrl ? null : [file.id, data.signedUrl] as const;
+    })).then((entries) => {
+      if (!active) return;
+      setFileUrls(Object.fromEntries(entries.filter(Boolean) as readonly (readonly [string,string])[]));
+    }).catch((e) => active && setError(message(e)));
+    return () => { active = false; };
+  }, [filesOpen, files]);
 
   const preparePairing = async () => {
     setPairingBusy(true); setError(""); setCopied(false);
@@ -136,9 +152,12 @@ export function CareProject({ scope, project, onProjectChange }: { scope: Scope;
 
   const openFile = async (file: ProjectFile) => {
     setError("");
-    const { data, error } = await db.storage.from("care-project-files").createSignedUrl(file.storage_path, 300);
+    const existing = fileUrls[file.id];
+    if (existing) { setFilePreview({ file, url: existing }); return; }
+    const { data, error } = await db.storage.from("care-project-files").createSignedUrl(file.storage_path, 1800);
     if (error) { setError(message(error)); return; }
-    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    setFileUrls((current) => ({ ...current, [file.id]: data.signedUrl }));
+    setFilePreview({ file, url: data.signedUrl });
   };
 
   const deleteFile = async (file: ProjectFile) => {
@@ -148,6 +167,7 @@ export function CareProject({ scope, project, onProjectChange }: { scope: Scope;
       if (storageError) throw storageError;
       const { error: rowError } = await filesDb.from("kw_project_files").delete().eq("id", file.id).eq("workspace_id", scope.workspaceId).eq("project_id", project.id);
       if (rowError) throw rowError;
+      if (filePreview?.file.id === file.id) setFilePreview(undefined);
       await loadFiles();
     } catch (e) { setError(message(e)); }
     finally { setFileBusy(false); }
@@ -178,10 +198,19 @@ export function CareProject({ scope, project, onProjectChange }: { scope: Scope;
       <EntityView kind="resources" scope={scope} projectId={text(project.id)} compact/>
     </section></div>}
 
-    {filesOpen && <div className="care-project-modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setFilesOpen(false)}><section className="care-project-modal care-project-resource-modal" role="dialog" aria-modal="true">
-      <header className="care-project-modal-header"><div><span className="eyebrow">CARE / ARCHIVOS</span><h2>Archivos del proyecto</h2></div><button className="care-project-modal-close" onClick={() => setFilesOpen(false)} aria-label="Cerrar"><X size={20}/></button></header>
-      <div className="care-files-toolbar"><input ref={fileInput} type="file" multiple hidden onChange={(e) => void uploadFiles(e.target.files)}/><button onClick={() => fileInput.current?.click()} disabled={fileBusy}><Upload size={16}/>{fileBusy ? "Subiendo…" : "Añadir archivos"}</button></div>
-      <div className="care-file-list">{files.length ? files.map((file) => <div className="care-file-row" key={file.id}><button type="button" className="care-file-open" onClick={() => void openFile(file)}><FileText size={17}/><span>{file.original_filename}</span></button><button type="button" className="icon-button danger" aria-label="Eliminar archivo" title="Eliminar archivo" disabled={fileBusy} onClick={() => void deleteFile(file)}><X size={14}/></button></div>) : <p className="muted">Todavía no hay archivos adjuntos.</p>}</div>
+    {filesOpen && <div className="care-project-modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && !filePreview && setFilesOpen(false)}><section className="care-project-modal care-project-resource-modal care-files-modal" role="dialog" aria-modal="true">
+      <header className="care-project-modal-header care-files-header"><div><span className="eyebrow">CARE / ARCHIVOS</span><h2>Archivos del proyecto</h2></div><div className="care-files-header-actions"><input ref={fileInput} type="file" multiple hidden onChange={(e) => void uploadFiles(e.target.files)}/><button type="button" className="care-file-header-button" onClick={() => fileInput.current?.click()} disabled={fileBusy} aria-label="Adjuntar archivos" title="Adjuntar archivos"><Paperclip size={20}/></button><button type="button" className="care-project-modal-close" onClick={() => { setFilePreview(undefined); setFilesOpen(false); }} aria-label="Cerrar"><X size={20}/></button></div></header>
+      {files.length ? <div className="care-file-wall">{files.map((file) => {
+        const isImage=file.mime_type.startsWith("image/");
+        const signed=fileUrls[file.id];
+        return <article className="care-file-tile" key={file.id}>
+          <button type="button" className="care-file-thumb" onClick={() => void openFile(file)} aria-label={`Abrir ${file.original_filename}`}>
+            {isImage&&signed?<img src={signed} alt={file.original_filename}/>:<span className="care-file-fallback"><FileText size={28}/><small>{file.original_filename}</small></span>}
+          </button>
+          <button type="button" className="care-file-delete" aria-label="Eliminar archivo" title="Eliminar archivo" disabled={fileBusy} onClick={() => void deleteFile(file)}><Trash2 size={15}/></button>
+        </article>;
+      })}</div>:<p className="muted care-files-empty">Todavía no hay archivos adjuntos.</p>}
+      {filePreview&&<div className="care-file-viewer" onMouseDown={(e)=>e.target===e.currentTarget&&setFilePreview(undefined)}><div className="care-file-viewer-panel"><header><strong>{filePreview.file.original_filename}</strong><button type="button" className="care-file-viewer-close" onClick={()=>setFilePreview(undefined)} aria-label="Cerrar vista previa"><X size={20}/></button></header><div className="care-file-viewer-content">{filePreview.file.mime_type.startsWith("image/")?<img src={filePreview.url} alt={filePreview.file.original_filename}/>:filePreview.file.mime_type==="application/pdf"?<iframe src={filePreview.url} title={filePreview.file.original_filename}/>:<div className="care-file-viewer-fallback"><FileText size={42}/><strong>{filePreview.file.original_filename}</strong><span>Vista previa no disponible para este formato.</span></div>}</div></div></div>}
     </section></div>}
 
     {connect && <div className="care-project-modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setConnect(false)}><section className="care-project-modal care-connect-modal" role="dialog" aria-modal="true">
