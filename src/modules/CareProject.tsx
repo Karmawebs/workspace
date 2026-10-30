@@ -11,6 +11,7 @@ import { Care } from "./Care";
 
 type PairingResult = { site_id: string; pairing_code: string; expires_at: string };
 type ProjectFile = { id: string; storage_path: string; original_filename: string; mime_type: string; size: number; created_at: string };
+const filesDb = db as any;
 
 export function CareProjectRoute({ scope }: { scope: Scope }) {
   const { id = "" } = useParams();
@@ -48,7 +49,7 @@ export function CareProject({ scope, project, onProjectChange }: { scope: Scope;
   const [error, setError] = useState("");
 
   const loadFiles = async () => {
-    const { data, error } = await db.from("kw_project_files").select("id,storage_path,original_filename,mime_type,size,created_at").eq("workspace_id", scope.workspaceId).eq("project_id", project.id).order("created_at", { ascending: false });
+    const { data, error } = await filesDb.from("kw_project_files").select("id,storage_path,original_filename,mime_type,size,created_at").eq("workspace_id", scope.workspaceId).eq("project_id", project.id).order("created_at", { ascending: false });
     if (error) throw error;
     setFiles((data || []) as ProjectFile[]);
   };
@@ -57,7 +58,7 @@ export function CareProject({ scope, project, onProjectChange }: { scope: Scope;
     const [siteResponse, accessResponse, fileResponse] = await Promise.all([
       db.from("kw_care_sites").select("*").eq("project_id", project.id).maybeSingle(),
       db.from("kw_project_resources").select("id", { count: "exact", head: true }).eq("workspace_id", scope.workspaceId).eq("project_id", project.id).eq("app_key", "care").eq("type", "access"),
-      db.from("kw_project_files").select("id,storage_path,original_filename,mime_type,size,created_at").eq("workspace_id", scope.workspaceId).eq("project_id", project.id).order("created_at", { ascending: false }),
+      filesDb.from("kw_project_files").select("id,storage_path,original_filename,mime_type,size,created_at").eq("workspace_id", scope.workspaceId).eq("project_id", project.id).order("created_at", { ascending: false }),
     ]);
     if (siteResponse.error || accessResponse.error || fileResponse.error) throw siteResponse.error || accessResponse.error || fileResponse.error;
     setAccessCount(accessResponse.count || 0);
@@ -122,7 +123,7 @@ export function CareProject({ scope, project, onProjectChange }: { scope: Scope;
         const path = `${scope.workspaceId}/${project.id}/${crypto.randomUUID()}-${safe}`;
         const { error: uploadError } = await db.storage.from("care-project-files").upload(path, file, { contentType: file.type || "application/octet-stream" });
         if (uploadError) throw uploadError;
-        const { error: rowError } = await db.from("kw_project_files").insert({ workspace_id: scope.workspaceId, project_id: project.id, app_key: "care", storage_path: path, original_filename: file.name, mime_type: file.type || "application/octet-stream", size: file.size });
+        const { error: rowError } = await filesDb.from("kw_project_files").insert({ workspace_id: scope.workspaceId, project_id: project.id, app_key: "care", storage_path: path, original_filename: file.name, mime_type: file.type || "application/octet-stream", size: file.size });
         if (rowError) {
           await db.storage.from("care-project-files").remove([path]);
           throw rowError;
@@ -145,7 +146,7 @@ export function CareProject({ scope, project, onProjectChange }: { scope: Scope;
     try {
       const { error: storageError } = await db.storage.from("care-project-files").remove([file.storage_path]);
       if (storageError) throw storageError;
-      const { error: rowError } = await db.from("kw_project_files").delete().eq("id", file.id).eq("workspace_id", scope.workspaceId).eq("project_id", project.id);
+      const { error: rowError } = await filesDb.from("kw_project_files").delete().eq("id", file.id).eq("workspace_id", scope.workspaceId).eq("project_id", project.id);
       if (rowError) throw rowError;
       await loadFiles();
     } catch (e) { setError(message(e)); }
