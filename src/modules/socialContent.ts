@@ -1,6 +1,6 @@
 import { dayKey, safeUrl, text, type Row } from "../core/model";
 
-export const formats = ["post", "reel", "story"] as const;
+export const formats = ["post", "carousel", "reel", "story"] as const;
 export const statuses = [
   "idea",
   "draft",
@@ -8,13 +8,19 @@ export const statuses = [
   "approved",
   "scheduled",
   "published",
+  "discarded",
 ] as const;
 export const socialLabels: Record<string, string> = {
   post: "Post",
+  carousel: "Carrusel",
+  discarded: "Descartado",
+  instagram: "Instagram",
+  facebook: "Facebook",
+  instagram_facebook: "Instagram + Facebook",
   reel: "Reel",
   story: "Story",
   idea: "Idea",
-  draft: "Borrador",
+  draft: "Preparando",
   review: "Revisión",
   approved: "Aprobado",
   scheduled: "Programado",
@@ -63,4 +69,54 @@ export function itemsForDay(rows: Row[], date: Date): Row[] {
         Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0) ||
         a.id.localeCompare(b.id),
     );
+}
+
+export const channels = [
+  "instagram",
+  "facebook",
+  "instagram_facebook",
+] as const;
+export type SocialStatus = (typeof statuses)[number];
+export function contentStatus(value: unknown): SocialStatus {
+  return statuses.includes(value as SocialStatus)
+    ? (value as SocialStatus)
+    : "idea";
+}
+export const statusFilters: { value: string; label: string }[] = [
+  { value: "", label: "Todos" },
+  { value: "idea", label: "Ideas" },
+  { value: "draft", label: "Preparando" },
+  { value: "review", label: "Revisión" },
+  { value: "approved", label: "Aprobados" },
+  { value: "scheduled", label: "Programados" },
+  { value: "published", label: "Publicados" },
+  { value: "discarded", label: "Descartados" },
+];
+export function publicationTime(value: unknown): string {
+  if (!value) return "";
+  const date = new Date(text(value));
+  return Number.isNaN(date.getTime())
+    ? ""
+    : new Intl.DateTimeFormat("es", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(date);
+}
+export function publicationTimestamp(
+  date: string,
+  time: string,
+): string | null {
+  if (!date && !time) return null;
+  if (!date || !time)
+    throw new Error("Indica fecha y hora de publicación, o deja ambas vacías.");
+  const value = new Date(`${date}T${time}`);
+  // Reject nonexistent local times during the spring daylight-saving transition.
+  if (
+    Number.isNaN(value.getTime()) ||
+    dayKey(value) !== date ||
+    `${String(value.getHours()).padStart(2, "0")}:${String(value.getMinutes()).padStart(2, "0")}` !==
+      time
+  )
+    throw new Error("La fecha u hora no existe en tu zona horaria.");
+  return value.toISOString();
 }

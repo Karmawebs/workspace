@@ -794,11 +794,13 @@ export type Database = {
         Row: {
           assignee_id: string | null;
           channel: string | null;
+          client_approved: boolean;
           content_type: string;
           created_at: string;
           description: string | null;
           file_urls: Json;
           id: string;
+          internal_notes: string;
           metadata: Json;
           project_id: string | null;
           published_at: string | null;
@@ -812,11 +814,13 @@ export type Database = {
         Insert: {
           assignee_id?: string | null;
           channel?: string | null;
+          client_approved?: boolean;
           content_type?: string;
           created_at?: string;
           description?: string | null;
           file_urls?: Json;
           id?: string;
+          internal_notes?: string;
           metadata?: Json;
           project_id?: string | null;
           published_at?: string | null;
@@ -830,11 +834,13 @@ export type Database = {
         Update: {
           assignee_id?: string | null;
           channel?: string | null;
+          client_approved?: boolean;
           content_type?: string;
           created_at?: string;
           description?: string | null;
           file_urls?: Json;
           id?: string;
+          internal_notes?: string;
           metadata?: Json;
           project_id?: string | null;
           published_at?: string | null;
@@ -1895,11 +1901,13 @@ export type Database = {
         Returns: {
           assignee_id: string | null;
           channel: string | null;
+          client_approved: boolean;
           content_type: string;
           created_at: string;
           description: string | null;
           file_urls: Json;
           id: string;
+          internal_notes: string;
           metadata: Json;
           project_id: string | null;
           published_at: string | null;

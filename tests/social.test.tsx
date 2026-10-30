@@ -172,7 +172,7 @@ describe("URLs externas de Social", () => {
     ]);
   });
 });
-it("muestra solo círculos; popup en portal, primera imagen, fallback y edición", () => {
+it("muestra contenido compacto; popup en portal, primera imagen, fallback y edición", () => {
   const edit = vi.fn();
   const { container } = render(
     <div style={{ overflow: "hidden" }}>
@@ -188,7 +188,7 @@ it("muestra solo círculos; popup en portal, primera imagen, fallback y edición
     </div>,
   );
   const dot = screen.getByRole("button", { name: "Reel: Publicación" });
-  expect(dot.textContent).toBe("");
+  expect(dot.textContent).toContain("Publicación");
   expect(screen.queryByRole("img")).toBeNull();
   fireEvent.mouseEnter(dot);
   const popup = screen.getByRole("tooltip");
@@ -198,7 +198,7 @@ it("muestra solo círculos; popup en portal, primera imagen, fallback y edición
   );
   fireEvent.error(screen.getByRole("img"));
   expect(screen.getByText("Sin vista previa")).toBeTruthy();
-  expect(screen.getByText("Publicación")).toBeTruthy();
+  expect(screen.getAllByText("Publicación")).toHaveLength(2);
   fireEvent.keyDown(dot, { key: "Escape" });
   expect(screen.queryByRole("tooltip")).toBeNull();
   fireEvent.focus(dot);
@@ -249,7 +249,7 @@ it("unifica el editor y conserva los datos y enlaces antiguos sin ofrecer URLs c
     (screen.getByLabelText("Cliente / proyecto") as HTMLSelectElement).value,
   ).toBe("p2");
   expect(screen.queryByLabelText("Responsable")).toBeNull();
-  expect(screen.queryByLabelText("Canal")).toBeNull();
+  expect(screen.getByLabelText("Canal")).toHaveProperty("value", "instagram");
   expect(screen.queryByRole("button", { name: "Añadir URL" })).toBeNull();
   expect(screen.getByText("Archivos anteriores (2)")).toBeTruthy();
   await user.click(screen.getByRole("button", { name: "Guardar" }));
@@ -260,7 +260,7 @@ it("unifica el editor y conserva los datos y enlaces antiguos sin ofrecer URLs c
     p_file_ids: [],
   });
   expect(mock.writes[0].p_values).not.toHaveProperty("file_urls");
-  expect(mock.writes[0].p_values).not.toHaveProperty("channel");
+  expect(mock.writes[0].p_values).toHaveProperty("channel", "instagram");
   expect(mock.writes[0].p_values).not.toHaveProperty("assignee_id");
 });
 it("mantiene datos del formulario cuando otro usuario ha modificado el registro", async () => {
@@ -354,7 +354,7 @@ it.each([
   fireEvent.change(screen.getByLabelText("Título *"), {
     target: { value: "Local" },
   });
-  fireEvent.change(screen.getByLabelText("Formato"), {
+  fireEvent.change(screen.getByLabelText("Tipo de contenido"), {
     target: { value: format },
   });
   await waitFor(() =>
@@ -504,4 +504,216 @@ it("prioriza portada privada sobre URLs antiguas en calendario", async () => {
   );
   fireEvent.error(screen.getByRole("img"));
   expect(screen.getByText("Sin vista previa")).toBeTruthy();
+});
+
+const openEditor = (original?: Record<string, unknown>) =>
+  render(
+    <Editor
+      def={entities.content}
+      scope={scope}
+      original={
+        original ? { id: "a", title: "Existente", ...original } : undefined
+      }
+      onClose={() => {}}
+      onSave={() => {}}
+    />,
+  );
+it("crea todos los campos de la fase 2 sin multimedia", async () => {
+  openEditor();
+  await screen.findByRole("option", { name: "Cliente Uno" });
+  const values = {
+    "Título *": "Campaña",
+    "Cliente / proyecto": "p1",
+    "Fecha de publicación": "2026-11-02",
+    "Hora de publicación": "20:00",
+    Canal: "instagram_facebook",
+    "Tipo de contenido": "carousel",
+    Estado: "review",
+    Copy: "Texto público",
+    "Notas internas": "Pendiente de feedback",
+  };
+  for (const [label, value] of Object.entries(values))
+    fireEvent.change(screen.getByLabelText(label), { target: { value } });
+  fireEvent.click(screen.getByLabelText("Aprobado por cliente"));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  await waitFor(() => expect(mock.writes).toHaveLength(1));
+  expect(mock.writes[0]).toMatchObject({
+    p_values: {
+      title: "Campaña",
+      project_id: "p1",
+      scheduled_at: new Date("2026-11-02T20:00").toISOString(),
+      channel: "instagram_facebook",
+      content_type: "carousel",
+      status: "review",
+      description: "Texto público",
+      internal_notes: "Pendiente de feedback",
+      client_approved: true,
+    },
+    p_file_ids: [],
+  });
+});
+it.each([
+  "idea",
+  "draft",
+  "review",
+  "approved",
+  "scheduled",
+  "published",
+  "discarded",
+])("edita a estado manual %s sin alterar aprobación", async (status) => {
+  openEditor({
+    status: "idea",
+    client_approved: true,
+    internal_notes: "Nota",
+    channel: "facebook",
+    scheduled_at: new Date("2026-11-02T20:00").toISOString(),
+    updated_at: "2026-10-30",
+  });
+  await screen.findByRole("option", { name: "Cliente Uno" });
+  expect(screen.getByLabelText("Notas internas")).toHaveProperty(
+    "value",
+    "Nota",
+  );
+  expect(screen.getByLabelText("Canal")).toHaveProperty("value", "facebook");
+  expect(screen.getByLabelText("Hora de publicación")).toHaveProperty(
+    "value",
+    "20:00",
+  );
+  fireEvent.change(screen.getByLabelText("Estado"), {
+    target: { value: status },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  await waitFor(() => expect(mock.writes).toHaveLength(1));
+  expect(mock.writes[0]).toMatchObject({
+    p_values: {
+      status,
+      client_approved: true,
+      internal_notes: "Nota",
+      channel: "facebook",
+    },
+    p_expected_updated_at: "2026-10-30",
+  });
+});
+it("desactiva aprobación sin cambiar el estado y conserva un canal heredado", async () => {
+  openEditor({
+    status: "approved",
+    client_approved: true,
+    channel: "linkedin",
+  });
+  await screen.findByRole("option", { name: "Cliente Uno" });
+  fireEvent.click(screen.getByLabelText("Aprobado por cliente"));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  await waitFor(() => expect(mock.writes).toHaveLength(1));
+  expect(mock.writes[0]).toMatchObject({
+    p_values: {
+      status: "approved",
+      client_approved: false,
+      channel: "linkedin",
+    },
+  });
+});
+it("aplica defaults seguros al contenido antiguo", async () => {
+  openEditor({ channel: null });
+  await screen.findByRole("option", { name: "Cliente Uno" });
+  expect(screen.getByLabelText("Estado")).toHaveProperty("value", "idea");
+  expect(screen.getByLabelText("Aprobado por cliente")).toHaveProperty(
+    "checked",
+    false,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  await waitFor(() => expect(mock.writes).toHaveLength(1));
+  expect(mock.writes[0]).toMatchObject({
+    p_values: {
+      status: "idea",
+      client_approved: false,
+      internal_notes: "",
+      scheduled_at: null,
+      channel: "instagram",
+    },
+  });
+});
+it("requiere fecha y hora juntas y no inicia subida con fecha incompleta", async () => {
+  openEditor();
+  await screen.findByRole("option", { name: "Cliente Uno" });
+  fireEvent.change(screen.getByLabelText("Título *"), {
+    target: { value: "Fecha" },
+  });
+  fireEvent.change(screen.getByLabelText("Fecha de publicación"), {
+    target: { value: "2026-11-01" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  expect(await screen.findByRole("alert")).toHaveProperty(
+    "textContent",
+    expect.stringContaining("fecha y hora"),
+  );
+  expect(mock.writes).toHaveLength(0);
+  expect(mock.uploads).toHaveLength(0);
+});
+it("combina estado y proyecto conservando múltiples publicaciones del día", async () => {
+  mock.content = [
+    {
+      id: "a",
+      workspace_id: "w",
+      project_id: "p1",
+      title: "A",
+      content_type: "reel",
+      status: "approved",
+      scheduled_at: new Date().toISOString(),
+    },
+    {
+      id: "b",
+      workspace_id: "w",
+      project_id: "p1",
+      title: "B",
+      content_type: "post",
+      status: "review",
+      scheduled_at: new Date().toISOString(),
+    },
+    {
+      id: "c",
+      workspace_id: "w",
+      project_id: "p2",
+      title: "C",
+      content_type: "post",
+      status: "approved",
+      scheduled_at: new Date().toISOString(),
+    },
+    {
+      id: "d",
+      workspace_id: "w",
+      project_id: "p1",
+      title: "D",
+      content_type: "post",
+      status: "discarded",
+      scheduled_at: new Date().toISOString(),
+    },
+  ];
+  render(<Calendar scope={scope} />);
+  await screen.findByRole("button", { name: "Reel: A" });
+  expect(screen.getAllByRole("button", { name: /^(Reel|Post):/ })).toHaveLength(
+    4,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Aprobados" }));
+  expect(screen.getAllByRole("button", { name: /^(Reel|Post):/ })).toHaveLength(
+    2,
+  );
+  fireEvent.change(screen.getByLabelText("Cliente / proyecto"), {
+    target: { value: "p1" },
+  });
+  await waitFor(() =>
+    expect(
+      screen.getAllByRole("button", { name: /^(Reel|Post):/ }),
+    ).toHaveLength(1),
+  );
+  expect(screen.getByRole("button", { name: "Reel: A" }).textContent).toContain(
+    "Aprobado",
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Revisión" }));
+  expect(screen.getByRole("button", { name: "Post: B" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Descartados" }));
+  expect(screen.getByRole("button", { name: "Post: D" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Todos", exact: true }));
+  expect(screen.getAllByRole("button", { name: /^(Reel|Post):/ })).toHaveLength(
+    3,
+  );
 });

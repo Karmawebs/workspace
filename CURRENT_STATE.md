@@ -68,3 +68,11 @@ Bucket privado `social-media`, `kw_content_files`, reservas, guardado atómico c
 Tres migraciones aplicadas: `20261027221638_social_private_media`, `20261028081818_social_media_cleanup_worker`, `20261028094130_social_upload_limit`. Tipos regenerados; sin secretos cliente. **Usuario acepta 50 MiB por archivo por Supabase Free**; cap consultado desde el bucket y validado antes de subir. Modelo preparado a 2 GiB tras ampliar plan/límite, sin contratarlo en esta fase.
 
 25 pruebas Social, SQL transaccional y API real con dos workspaces temporales verifican subida, orden, permisos y limpieza. MP4 12 MiB y MOV pasan; 64 MiB rechazado por el plan, informado. Cron verificó 4 borrados con HTTP 200. Navegador real verificó carrusel/portadas privadas. Persisten solo los cuatro fallos globales previamente documentados de flows. Detalles, límites y validación: `SOCIAL_MEDIA_PHASE1.md`. Siguiente fase: conexión oficial Instagram; originales ya identificados y accesibles temporalmente desde backend.
+
+## Social — flujo editorial Fase 2, 2026-10-30
+
+Editor ampliado sin sustituir multimedia: siete estados manuales (draft = Preparando), canal extensible, Carrusel, fecha/hora, notas y aprobación independiente. Calendario compacto con hora/tipo/proyecto/título/pill y filtros de estado combinables con proyecto. Contenido sin fecha disponible en Gestor. Programado/Publicado no ejecutan publicación y no escriben published_at.
+
+Aplicada `20261030004429_social_workflow_phase2`: dos columnas en kw_content_items y ampliación SECURITY INVOKER de la RPC atómica. RLS, bucket, rutas, outbox y worker intactos; límite 50 MiB conservado. Tipos Social sincronizados. Payloads de Fase 1 preservan campos nuevos.
+
+37 tests Social y SQL de Fase 1/Fase 2 pasan. Suite 58/62: solo cuatro fallos preexistentes de flows. Build/TypeScript y navegador real (crear/editar, carrusel privado, vídeo placeholder, filtros y móvil 390×844) verificados. Detalles: SOCIAL_WORKFLOW_PHASE2.md. No avanzar a Meta sin nueva petición; reemplaza el siguiente paso sugerido en Fase 1.

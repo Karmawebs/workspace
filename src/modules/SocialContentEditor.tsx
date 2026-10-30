@@ -14,6 +14,9 @@ import {
   uploadMedia,
 } from "./socialMedia";
 import {
+  channels,
+  contentStatus,
+  publicationTimestamp,
   fileUrls,
   formats,
   statuses,
@@ -106,6 +109,10 @@ export function SocialContentEditor({
     projectId || text(original?.project_id),
   );
   const [format, setFormat] = useState(text(original?.content_type) || "post");
+  const [status, setStatus] = useState(contentStatus(original?.status));
+  const [channel, setChannel] = useState(
+    text(original?.channel) || "instagram",
+  );
   const [ready, setReady] = useState(!!projectId);
   useEffect(() => {
     const before = document.activeElement as HTMLElement | null;
@@ -139,8 +146,17 @@ export function SocialContentEditor({
     const title = text(fd.get("title")).trim(),
       description = text(fd.get("description")).trim(),
       content_type = text(fd.get("content_type")) || "post",
-      status = text(fd.get("status")) || "draft",
-      scheduled = text(fd.get("scheduled_at")).trim();
+      status = text(fd.get("status")) || "idea";
+    let scheduled: string | null;
+    try {
+      scheduled = publicationTimestamp(
+        text(fd.get("publication_date")),
+        text(fd.get("publication_time")),
+      );
+    } catch (e) {
+      setError(message(e));
+      return;
+    }
     if (!title) {
       setError("El título es obligatorio.");
       return;
@@ -198,7 +214,10 @@ export function SocialContentEditor({
           project_id: selectedProject || null,
           content_type,
           status,
-          scheduled_at: scheduled ? new Date(scheduled).toISOString() : null,
+          scheduled_at: scheduled,
+          channel,
+          internal_notes: text(fd.get("internal_notes")).trim(),
+          client_approved: fd.get("client_approved") === "on",
         },
         p_file_ids: next.map((item) => item.record!.id),
       });
@@ -260,6 +279,10 @@ export function SocialContentEditor({
           </button>
         </header>
         <fieldset className="form-fields social-content-fields" disabled={busy}>
+          <label>
+            Título *
+            <input name="title" defaultValue={text(original?.title)} required />
+          </label>
           {!projectId && (
             <label>
               Cliente / proyecto
@@ -277,48 +300,69 @@ export function SocialContentEditor({
               </select>
             </label>
           )}
-          <label>
-            Título *
-            <input name="title" defaultValue={text(original?.title)} required />
-          </label>
-          <label>
-            Copy
-            <textarea
-              name="description"
-              defaultValue={text(original?.description)}
-              rows={6}
-            />
-          </label>
-          <label>
-            Formato
-            <select
-              className={`social-format-select ${format}`}
-              name="content_type"
-              value={format}
-              onChange={(e) => setFormat(e.target.value)}
-            >
-              {!formats.some((v) => v === format) && (
-                <option value={format}>{format}</option>
-              )}
-              {formats.map((v) => (
-                <option key={v} value={v}>
-                  {labels[v]}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="social-field-pair">
+            <label>
+              Fecha de publicación
+              <input
+                name="publication_date"
+                type="date"
+                defaultValue={localInput(original?.scheduled_at).slice(0, 10)}
+              />
+            </label>
+            <label>
+              Hora de publicación
+              <input
+                name="publication_time"
+                type="time"
+                defaultValue={localInput(original?.scheduled_at).slice(11, 16)}
+              />
+            </label>
+          </div>
+          <div className="social-field-pair social-channel-pair">
+            <label>
+              Canal
+              <select
+                name="channel"
+                value={channel}
+                onChange={(e) => setChannel(e.target.value)}
+              >
+                {!channels.some((v) => v === channel) && (
+                  <option value={channel}>{channel}</option>
+                )}
+                {channels.map((v) => (
+                  <option key={v} value={v}>
+                    {labels[v]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Tipo de contenido
+              <select
+                className={`social-format-select ${format}`}
+                name="content_type"
+                value={format}
+                onChange={(e) => setFormat(e.target.value)}
+              >
+                {!formats.some((v) => v === format) && (
+                  <option value={format}>{format}</option>
+                )}
+                {formats.map((v) => (
+                  <option key={v} value={v}>
+                    {labels[v]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <label>
             Estado
             <select
+              className={`social-status-select ${status}`}
               name="status"
-              defaultValue={text(original?.status) || "draft"}
+              value={status}
+              onChange={(e) => setStatus(contentStatus(e.target.value))}
             >
-              {Boolean(original?.status) &&
-                !statuses.some((v) => v === original?.status) && (
-                  <option value={text(original?.status)}>
-                    {text(original?.status)}
-                  </option>
-                )}
               {statuses.map((v) => (
                 <option key={v} value={v}>
                   {labels[v]}
@@ -326,12 +370,17 @@ export function SocialContentEditor({
               ))}
             </select>
           </label>
+          {(status === "scheduled" || status === "published") && (
+            <p className="social-manual-note">
+              Estado interno manual. No publica en redes sociales.
+            </p>
+          )}
           <label>
-            Publicación prevista
-            <input
-              name="scheduled_at"
-              type="datetime-local"
-              defaultValue={localInput(original?.scheduled_at)}
+            Copy
+            <textarea
+              name="description"
+              defaultValue={text(original?.description)}
+              rows={4}
             />
           </label>
           {!filesReady && <p role="status">Cargando archivos…</p>}
@@ -368,6 +417,22 @@ export function SocialContentEditor({
               )}
             </details>
           )}
+          <label>
+            Notas internas
+            <textarea
+              name="internal_notes"
+              defaultValue={text(original?.internal_notes)}
+              rows={3}
+            />
+          </label>
+          <label className="check social-client-approval">
+            <input
+              type="checkbox"
+              name="client_approved"
+              defaultChecked={original?.client_approved === true}
+            />
+            Aprobado por cliente
+          </label>
         </fieldset>
         {error && (
           <p className="error" role="alert">

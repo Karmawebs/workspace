@@ -2,7 +2,13 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ImageOff } from "lucide-react";
 import { text, type Row } from "../core/model";
-import { contentFormat, drivePreview, socialLabels } from "./socialContent";
+import {
+  contentFormat,
+  contentStatus,
+  publicationTime,
+  drivePreview,
+  socialLabels,
+} from "./socialContent";
 
 import { loadContentFiles, type ContentFile } from "./socialMedia";
 import { MediaPreview } from "./SocialMediaPicker";
@@ -102,9 +108,11 @@ function Preview({
 export function SocialContentDot({
   row,
   onEdit,
+  projectName,
 }: {
   row: Row;
   onEdit: () => void;
+  projectName?: string;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -114,7 +122,7 @@ export function SocialContentDot({
     <>
       <button
         ref={ref}
-        className={`social-calendar-dot ${contentFormat(row.content_type)}`}
+        className={`social-calendar-entry ${contentFormat(row.content_type)}`}
         aria-label={`${label}: ${text(row.title)}`}
         aria-describedby={open ? id : undefined}
         onMouseEnter={() => setOpen(true)}
@@ -128,7 +136,21 @@ export function SocialContentDot({
           setOpen(false);
           onEdit();
         }}
-      />
+      >
+        <span className="social-entry-meta">
+          <i className={`social-dot ${contentFormat(row.content_type)}`} />
+          {publicationTime(row.scheduled_at)}
+          {row.scheduled_at ? " · " : ""}
+          {label || "Post"}
+        </span>
+        {projectName && (
+          <span className="social-entry-project">{projectName}</span>
+        )}
+        <span className="social-entry-title">{text(row.title)}</span>
+        <span className={`social-status-pill ${contentStatus(row.status)}`}>
+          {socialLabels[contentStatus(row.status)]}
+        </span>
+      </button>
       {open && ref.current && (
         <Preview
           key={text(row.file_urls)}

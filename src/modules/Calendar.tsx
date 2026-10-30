@@ -6,7 +6,7 @@ import { db } from "../lib/supabase";
 import { SocialContentEditor } from "./SocialContentEditor";
 import { SocialContentDot } from "./SocialContentDot";
 import { cleanSocialMedia } from "./socialMedia";
-import { itemsForDay } from "./socialContent";
+import { itemsForDay, contentStatus, statusFilters } from "./socialContent";
 
 export function Calendar({ scope }: { scope: Scope }) {
   const [month, setMonth] = useState(
@@ -16,6 +16,7 @@ export function Calendar({ scope }: { scope: Scope }) {
     [rows, setRows] = useState<Row[]>([]),
     [projects, setProjects] = useState<{ id: string; name: string }[]>([]),
     [projectFilter, setProjectFilter] = useState(""),
+    [statusFilter, setStatusFilter] = useState(""),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
   useEffect(() => {
@@ -136,6 +137,10 @@ export function Calendar({ scope }: { scope: Scope }) {
             Post
           </span>
           <span>
+            <i className="social-dot carousel" />
+            Carrusel
+          </span>
+          <span>
             <i className="social-dot reel" />
             Reel
           </span>
@@ -144,6 +149,23 @@ export function Calendar({ scope }: { scope: Scope }) {
             Story
           </span>
         </div>
+      </div>
+      <div
+        className="social-status-filters"
+        role="group"
+        aria-label="Filtrar por estado"
+      >
+        {statusFilters.map((filter) => (
+          <button
+            key={filter.value}
+            type="button"
+            className="ghost"
+            aria-pressed={statusFilter === filter.value}
+            onClick={() => setStatusFilter(filter.value)}
+          >
+            {filter.label}
+          </button>
+        ))}
       </div>
       <div className="calendar-toolbar">
         <h2>
@@ -205,10 +227,20 @@ export function Calendar({ scope }: { scope: Scope }) {
               >
                 <span className="day-number">{d.getDate()}</span>
                 <div className="social-day-dots">
-                  {itemsForDay(rows, d).map((r) => (
+                  {itemsForDay(
+                    rows.filter(
+                      (row) =>
+                        !statusFilter ||
+                        contentStatus(row.status) === statusFilter,
+                    ),
+                    d,
+                  ).map((r) => (
                     <SocialContentDot
                       key={r.id}
                       row={r}
+                      projectName={
+                        projects.find((p) => p.id === r.project_id)?.name
+                      }
                       onEdit={() => setEdit(r)}
                     />
                   ))}
