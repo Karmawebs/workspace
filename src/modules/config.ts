@@ -4,10 +4,11 @@ export const apps: Record<AppKey,{name:string;color:string;description:string;pa
   work:{name:"Work",color:"#b8d5a6",description:"De la idea a la entrega.",panels:[{key:"access",title:"Accesos"},{key:"files",title:"Archivos"},{key:"next_milestone",title:"Próximo hito"},{key:"information",title:"Información"}]},
   social:{name:"Social",color:"#d5bce8",description:"Ideas que se convierten en contenido.",panels:[{key:"access",title:"Accesos"},{key:"references",title:"Referencias visuales"},{key:"next_event",title:"Próximo evento"},{key:"information",title:"Información"}]},
   care:{name:"Care",color:"#a8ceda",description:"Cada proyecto, bien cuidado.",panels:[{key:"hosting",title:"Mantenimiento"},{key:"connections",title:"Conexión"},{key:"information",title:"Información"},{key:"access",title:"Accesos"}]},
+  karma:{name:"Karma",color:"#d6d0c5",description:"Gestión interna de Karma.",panels:[]},
 };
 export const navigation = [
   {path:"dashboard",name:"Resumen",module:"project_dashboard",apps:["work"]},
-  {path:"projects",name:"Proyectos",module:"projects"},
+  {path:"projects",name:"Proyectos",module:"projects",apps:["work","social","care"]},
   {path:"calendar",name:"Calendario",module:"calendar",apps:["social"]},
   {path:"content",name:"Contenido",module:"content_manager",apps:["social"]},
   {path:"milestones",name:"Hitos",module:"milestones",apps:[]},
