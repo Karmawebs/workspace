@@ -58,7 +58,7 @@ function CareSiteProgress({row}:{row:Row}){
 export function EntityView({kind,scope,projectId,compact=false,extra}:{kind:EntityKey;scope:Scope;projectId?:string;compact?:boolean;extra?:(row:Row)=>ReactNode}){
  if((scope.app==="work"||scope.app==="care")&&kind==="journal"&&projectId&&compact)return <WorkJournal scope={scope} projectId={projectId}/>;
  const def=entity(kind),{rows,loading,error,reload}=useRows(def,scope,projectId),[edit,setEdit]=useState<Row|null|undefined>(),[query,setQuery]=useState(""),[archived,setArchived]=useState(false),[failure,setFailure]=useState(""),[busy,setBusy]=useState(false),[status,setStatus]=useState(""),[projectFilter,setProjectFilter]=useState("");
- const projectCompact=compact&&!!projectId&&(((scope.app==="work"||scope.app==="care")&&(kind==="tasks"||kind==="events"))||(scope.app==="social"&&kind==="tasks"));
+ const projectCompact=compact&&!!projectId&&(((scope.app==="work"||scope.app==="care"||scope.app==="karma")&&(kind==="tasks"||kind==="events"))||(scope.app==="social"&&kind==="tasks"));
  const socialEventCompact=compact&&!!projectId&&scope.app==="social"&&kind==="events";
  const careSite=scope.app==="care"&&kind==="sites";
  const visible=rows.filter(r=>(!def.archive||!!r.archived===archived)&&(!status||text(r.status)===status)&&(!projectFilter||(projectFilter==="none"?!r.project_id:text(r.project_id)===projectFilter))&&[r[def.primary],r.description,r.body,r.company].some(v=>text(v).toLowerCase().includes(query.toLowerCase())));
