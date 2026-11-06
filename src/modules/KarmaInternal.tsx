@@ -159,20 +159,25 @@ export function KarmaInternal({ scope }: { scope: Scope }) {
     <header className="page-heading karma-internal-heading"><div><span className="eyebrow">WORKSPACE / INTERNO</span><h1>Karma</h1></div></header>
     {error && <p className="error" role="alert">{error}</p>}
 
-    <div className="karma-internal-layout">
-      <div className="karma-internal-main">
-        <div className="karma-shortcuts">
-          <button className="card karma-shortcut" type="button" onClick={() => setModal("files")}><FileText size={20}/><span>Adjuntos</span><strong>{files.length}</strong></button>
-          <button className="card karma-shortcut" type="button" onClick={() => setModal("credentials")}><KeyRound size={20}/><span>Credenciales</span><strong>{accessCount}</strong></button>
-          <div className="karma-placeholder" aria-hidden="true" />
-        </div>
-        <EntityView kind="tasks" scope={scope} projectId={text(project.id)} compact />
-      </div>
-      <aside className="karma-internal-side">
-        <div className="karma-placeholder karma-placeholder-side" aria-hidden="true" />
-        <button className="card karma-shortcut karma-contact-shortcut" type="button" onClick={() => setModal("contacts")}><Users size={20}/><span>Contactos</span><strong>{contacts.length}</strong></button>
-        <WorkJournal scope={scope} projectId={text(project.id)} />
-      </aside>
+    <div className="karma-shortcuts" aria-label="Accesos rápidos de Karma">
+      <button className="card quick-panel karma-shortcut" type="button" onClick={() => setModal("files")}>
+        <div><span className="panel-icon"><FileText size={19}/></span><span className="karma-shortcut-count">{files.length}</span></div>
+        <strong>Adjuntos</strong><small>Ver y gestionar archivos</small>
+      </button>
+      <button className="card quick-panel karma-shortcut" type="button" onClick={() => setModal("credentials")}>
+        <div><span className="panel-icon"><KeyRound size={19}/></span><span className="karma-shortcut-count">{accessCount}</span></div>
+        <strong>Credenciales</strong><small>Ver y gestionar accesos</small>
+      </button>
+      <div className="karma-placeholder" aria-hidden="true"/>
+      <div className="karma-placeholder" aria-hidden="true"/>
+      <button className="card quick-panel karma-shortcut" type="button" onClick={() => setModal("contacts")}>
+        <div><span className="panel-icon"><Users size={19}/></span><span className="karma-shortcut-count">{contacts.length}</span></div>
+        <strong>Contactos</strong><small>Ofertas, CV y colaboradores</small>
+      </button>
+    </div>
+    <div className="operations-grid karma-internal-operations">
+      <EntityView kind="tasks" scope={scope} projectId={text(project.id)} compact />
+      <WorkJournal scope={scope} projectId={text(project.id)} />
     </div>
 
     {modal === "credentials" && <div className="care-project-modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setModal(null)}><section className="care-project-modal care-project-resource-modal" role="dialog" aria-modal="true">
