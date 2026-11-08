@@ -43,6 +43,7 @@ export function SocialContentEditor({
     [projects, setProjects] = useState<{ id: string; name: string }[]>([]),
     [items, setItems] = useState<MediaItem[]>([]);
   const [uploadLimit, setUploadLimit] = useState<number>();
+  const [driveOpen, setDriveOpen] = useState(false);
   const [limitError, setLimitError] = useState("");
   const [filesReady, setFilesReady] = useState(!original?.id);
   const contentId = useRef(text(original?.id) || crypto.randomUUID());
@@ -392,9 +393,9 @@ export function SocialContentEditor({
             maximum={uploadLimit}
           />
           {selectedProject && filesReady && uploadLimit && (
-            <details className="social-drive-panel">
+            <details className="social-drive-panel" onToggle={(event) => setDriveOpen(event.currentTarget.open)}>
               <summary>Explorar Google Drive (vista previa)</summary>
-              <SocialDriveBrowser projectId={selectedProject} onImport={(files) => {
+              {driveOpen && <SocialDriveBrowser projectId={selectedProject} onImport={(files) => {
                 if (busy) return;
                 if (items.length + files.length > 100) {
                   setError("Máximo 100 archivos por contenido.");
@@ -415,7 +416,7 @@ export function SocialContentEditor({
                     progress: 0,
                   })),
                 ]);
-              }} />
+              }} />}
             </details>
           )}
           {limitError && (
