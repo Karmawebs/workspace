@@ -1,34 +1,28 @@
-# Social — Google Drive: plan de implementación (rama feature/social-google-drive)
+# Google Drive en Social
 
-## Estado
-Preparación técnica. No hay OAuth ni conexión real todavía. No desplegar a main hasta validar permisos, pruebas y experiencia.
+Desde el editor de un proyecto, abre **Google Drive**, conecta la cuenta y selecciona una raíz en **Elegir carpeta**. La autorización se abre en otra ventana para conservar el borrador. Después de vincular la raíz, puedes navegar, seleccionar e importar JPG, PNG, WebP, MP4 y MOV de hasta 50 MiB por archivo. El guardado continúa mediante la reserva, la subida privada y la operación atómica del editor. Una publicación guardada conserva su copia al desconectar Drive.
 
-## Objetivo
-Usar Drive como biblioteca principal de medios por proyecto Social, manteniendo el editor actual y el bucket privado social-media para compatibilidad y staging de publicación.
+## Acceso
 
-## Arquitectura
-- UI: explorador Drive dentro de SocialMediaPicker; navegación por carpetas, búsqueda, selección múltiple, orden y portada. Mantener selector local existente.
-- Backend: Edge Functions autenticadas para OAuth y consultas Drive; tokens y refresh token exclusivamente en servidor (Vault/almacenamiento cifrado, nunca en cliente ni kw_connections sin cifrar).
-- OAuth: flujo Google OAuth 2.0 con state ligado a sesión, PKCE cuando corresponda, callback autorizado, scope mínimo necesario. Distinguir la conexión OAuth de ChatGPT de la conexión propia de Workspace.
-- Datos: conexión Drive por workspace; carpeta raíz por proyecto; referencia por publicación a Drive file id, nombre, mime, versión (md5Checksum o revision/headRevisionId si disponible), tamaño, orden y portada. Reutilizar columnas drive_file_id y drive_url de kw_content_files solo después de revisar restricciones actuales que exigen storage_path y originales.
-- Seguridad: acceso de empleados por membresía interna; nunca permitir que cliente externo herede kw_is_workspace_member. RLS específica por proyecto para el futuro portal, sin lectura de tokens ni acceso a carpetas arbitrarias.
-- Previews: proxy autenticado o URLs de acceso corto desde backend. No almacenar enlaces de descarga públicos como fuente de verdad.
-- Publicación: en el momento de preparar el job, comprobar que la versión seleccionada no cambió; copiar a staging privado con retención y limpieza programada. Los medios de Meta deben cumplir formato/tamaño de API. No depender de enlaces compartidos de Drive.
-- Resiliencia: paginación de archivos, rate limits 429, refresh token revocado, carpeta movida, archivo eliminado, acceso denegado y caducidad de preview.
+La cuenta y la raíz se vinculan por proyecto. Solo los roles owner y admin del workspace pueden acceder a esta integración. La RLS actual de Core permite que cualquier miembro modifique las asignaciones de equipo. Usarlas como autorización permitiría autoasignarse. Solo el usuario que autorizó Google puede explorar su cuenta para elegir la raíz. El resto de las consultas comprueba la ascendencia del ID solicitado. Las copias importadas heredan los permisos existentes del Media Manager de Social.
 
-## Orden de implementación
-1. Auditar SQL de kw_content_files, kw_content_items y RLS, y el selector actual.
-2. Añadir esquema de conexiones/carpeta por proyecto con migración reversible, sin tocar datos existentes.
-3. Implementar OAuth servidor y revocación; pruebas de state, aislamiento y secretos.
-4. Explorador Drive en Social, selector de archivos y previsualización.
-5. Persistencia atómica de selección, versión y orden en el editor.
-6. Pruebas UI, SQL con rollback, permisos entre workspaces y regresión Work/Care.
-7. Conectar staging y Meta en su fase específica.
+El callback del navegador devuelve un código de un solo uso al servidor autenticado. El servidor comprueba proyecto, usuario, sesión, state, expiración de diez minutos y PKCE S256. El intercambio, el cifrado AES-256-GCM asociado al proyecto y la renovación se realizan en Edge. Reautorizar sustituye la credencial y borra la vinculación anterior en una transacción. Desconectar invalida solicitudes pendientes y elimina la credencial y la raíz del proyecto. La revocación global en Google puede afectar a otros proyectos vinculados con la misma cuenta y se gestiona desde la cuenta Google.
 
-## Bloqueos previos a conexión real
-- Crear/configurar proyecto Google Cloud OAuth para la aplicación Karma Workspace; consent screen, redirect URI real y scopes aprobados.
-- Confirmar cuenta Google propietaria de la biblioteca y estructura de carpetas.
-- Ejecutar npm run build y npm run test en checkout de la rama.
+## Ensayo local pendiente
 
-## No hacer
-No colocar client_secret ni refresh_token en VITE_*; no compartir carpetas públicamente; no conceder rol de miembro interno a clientes externos; no reescribir archivos originales; no modificar el Supabase legacy vjsmsekbsjngdtuxfbmu.
+Google Cloud confirmó la URI de prueba `http://localhost:5173/social/drive/callback` para el cliente web Karma Workspace - Google Drive. El proyecto karma-workspace muestra drive.readonly y la cuenta de Dani como usuario de prueba.
+
+En el archivo local ignorado `supabase/functions/.env.local`, Dani debe completar GOOGLE_OAUTH_CLIENT_SECRET mediante su gestor de contraseñas. El ID público, WORKSPACE_ORIGIN y una clave local SOCIAL_DRIVE_ENCRYPTION_KEY de 32 bytes en base64 ya se prepararon en este equipo. La clave debe conservarse mientras se utilicen credenciales cifradas con ella. Ninguna variable privada lleva prefijo VITE_.
+
+Para el ensayo integral se necesita una instancia local de Supabase con el esquema de Workspace, el bucket y las RPC de Social, dos proyectos sintéticos y un usuario owner. El repositorio solo contiene parte del historial remoto de Core. Usar un esquema de prueba sin datos de clientes. Servir las funciones localmente con el archivo de entorno anterior. Configurar el frontend en `.env.development.local` con la URL local `http://127.0.0.1:54321` y la clave pública local. Abrir Vite en `http://localhost:5173`. El build sigue exigiendo el proyecto autorizado.
+
+Comprobar con la cuenta de prueba el consentimiento, la elección de raíz, el rechazo de un ID de la otra raíz, la importación de una imagen y un vídeo y la reapertura de la publicación guardada. Revocar el acceso en la cuenta Google de prueba para comprobar la reautorización. La prueba debe usar una cuenta sin otras conexiones que dependan del mismo consentimiento.
+
+## Verificación de la rama
+
+- Vitest incluye validación del callback, consumo único en navegador, importación de vídeo y restricción del backend de pruebas.
+- Deno ejecuta los tres handlers con transporte simulado para Auth, PostgREST y Google. Comprueba autenticación, rol, PKCE, state, repetición, cifrado, renovación, rechazo de una raíz distinta, vídeo y revocación.
+- La migración se ejecutó en PostgreSQL embebido con un esquema Core mínimo y roles de prueba. Se comprobaron privilegios de navegador, vínculo cruzado, sustitución y borrado de credenciales.
+- La migración Drive sigue pendiente en el proyecto autorizado. Las únicas Edge Functions remotas observadas fueron care-agent y social-media-cleanup. Los identificadores históricos de varias migraciones de Care difieren entre el repositorio y el historial remoto. Evitar aplicar el historial en bloque.
+
+Resultado local del 8 de noviembre de 2026. Build TypeScript/Vite correcto. Vitest pasó 62 de 66 pruebas, incluidas las cuatro nuevas de Drive. Los cuatro fallos de flows.test.tsx corresponden a flujos ya documentados de proyecto, archivo, tarea y evento. Pasaron el escenario Deno de los tres handlers y las comprobaciones SQL aisladas. El consentimiento real y el guardado de una publicación con datos procedentes de Google quedan pendientes.

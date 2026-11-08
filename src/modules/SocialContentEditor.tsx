@@ -394,8 +394,8 @@ export function SocialContentEditor({
           />
           {selectedProject && filesReady && uploadLimit && (
             <details className="social-drive-panel" onToggle={(event) => setDriveOpen(event.currentTarget.open)}>
-              <summary>Explorar Google Drive (vista previa)</summary>
-              {driveOpen && <SocialDriveBrowser projectId={selectedProject} onImport={(files) => {
+              <summary>Explorar Google Drive</summary>
+              {driveOpen && !busy && <SocialDriveBrowser key={selectedProject} projectId={selectedProject} onImport={(files) => {
                 if (busy) return;
                 if (items.length + files.length > 100) {
                   setError("Máximo 100 archivos por contenido.");

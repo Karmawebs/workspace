@@ -5,6 +5,9 @@ on:
       - 'src/modules/Social*'
       - 'supabase/functions/social-drive-*/**'
       - 'supabase/migrations/*social_drive*'
+      - 'supabase/functions/_shared/social-drive.ts'
+      - 'supabase/tests/drive/**'
+      - 'src/main.tsx'
       - 'tests/**'
       - '.github/workflows/social-drive-check.yml'
   push:
@@ -23,4 +26,8 @@ jobs:
       # Vite build requires authorized Cloudflare build credentials and a live Supabase check.
       # Typecheck independently without exposing deployment secrets to CI.
       - run: npx tsc -b
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno test --allow-env --no-lock --node-modules-dir=none supabase/tests/drive/edge_test.ts
       - run: npm test -- --reporter=default

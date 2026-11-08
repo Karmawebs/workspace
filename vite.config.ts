@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import { readConfig } from "./src/lib/config.ts";
 
 export default defineConfig(async ({ command, mode }) => {
-  const config = readConfig(loadEnv(mode, process.cwd(), "VITE_"));
+  const config = readConfig(loadEnv(mode, process.cwd(), "VITE_"), command === "serve" && mode === "development");
   if (command === "build") {
     const response = await fetch(`${config.url}/auth/v1/settings`, {
       headers: { apikey: config.key },
