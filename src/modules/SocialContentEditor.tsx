@@ -391,13 +391,24 @@ export function SocialContentEditor({
             disabled={busy || !filesReady || !uploadLimit}
             maximum={uploadLimit}
           />
-          {selectedProject && (
+          {selectedProject && filesReady && uploadLimit && (
             <details className="social-drive-panel">
               <summary>Explorar Google Drive (vista previa)</summary>
               <SocialDriveBrowser projectId={selectedProject} onImport={(files) => {
+                if (busy) return;
+                if (items.length + files.length > 100) {
+                  setError("Máximo 100 archivos por contenido.");
+                  return;
+                }
+                for (const file of files) {
+                  if (file.size > uploadLimit) {
+                    setError(`El archivo ${file.name} supera el límite de subida.`);
+                    return;
+                  }
+                }
                 setItems((current) => [
                   ...current,
-                  ...files.slice(0, Math.max(0, 100 - current.length)).map((file) => ({
+                  ...files.map((file) => ({
                     key: crypto.randomUUID(),
                     file,
                     status: "pending" as const,
