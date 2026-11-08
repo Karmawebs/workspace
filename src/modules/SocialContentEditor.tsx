@@ -5,6 +5,7 @@ import { message, type Scope } from "../core/data";
 import { localInput, safeUrl, text, type Row } from "../core/model";
 
 import { SocialMediaPicker, type MediaItem } from "./SocialMediaPicker";
+import { SocialDriveBrowser } from "./SocialDriveBrowser";
 import {
   cleanSocialMedia,
   getSocialUploadLimit,
@@ -390,6 +391,12 @@ export function SocialContentEditor({
             disabled={busy || !filesReady || !uploadLimit}
             maximum={uploadLimit}
           />
+          {selectedProject && (
+            <details className="social-drive-panel">
+              <summary>Explorar Google Drive (vista previa)</summary>
+              <SocialDriveBrowser projectId={selectedProject} />
+            </details>
+          )}
           {limitError && (
             <p className="error" role="alert">
               {limitError}
