@@ -394,7 +394,17 @@ export function SocialContentEditor({
           {selectedProject && (
             <details className="social-drive-panel">
               <summary>Explorar Google Drive (vista previa)</summary>
-              <SocialDriveBrowser projectId={selectedProject} />
+              <SocialDriveBrowser projectId={selectedProject} onImport={(files) => {
+                setItems((current) => [
+                  ...current,
+                  ...files.slice(0, Math.max(0, 100 - current.length)).map((file) => ({
+                    key: crypto.randomUUID(),
+                    file,
+                    status: "pending" as const,
+                    progress: 0,
+                  })),
+                ]);
+              }} />
             </details>
           )}
           {limitError && (
