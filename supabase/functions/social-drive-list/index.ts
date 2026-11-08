@@ -6,7 +6,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 
 const headers = {
-  "Access-Control-Allow-Origin": Deno.env.get("WORKSPACE_ORIGIN") ?? "https://workspace.karmawebs.com",
+  "Access-Control-Allow-Origin": Deno.env.get("WORKSPACE_ORIGIN") ?? "https://work.karmawebs.com",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Content-Type": "application/json",
