@@ -20,5 +20,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npm run build
+      # Vite build requires authorized Cloudflare build credentials and a live Supabase check.
+      # Typecheck independently without exposing deployment secrets to CI.
+      - run: npx tsc -b
       - run: npm test -- --reporter=default
