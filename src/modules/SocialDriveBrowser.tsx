@@ -16,7 +16,7 @@ type DriveResponse = {
 };
 const FOLDER = "application/vnd.google-apps.folder";
 
-export function SocialDriveBrowser({ projectId }: { projectId: string }) {
+export function SocialDriveBrowser({ projectId, onImport }: { projectId: string; onImport: (files: File[]) => void }) {
   const [path, setPath] = useState<{ id?: string; name: string }[]>([{ name: "Carpeta del proyecto" }]);
   const [files, setFiles] = useState<DriveFile[]>([]);
   const [nextPage, setNextPage] = useState<string | null>(null);
@@ -24,6 +24,7 @@ export function SocialDriveBrowser({ projectId }: { projectId: string }) {
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [revision, setRevision] = useState(0);
+  const [importing, setImporting] = useState(false);
   const current = path[path.length - 1];
 
   useEffect(() => {
@@ -63,6 +64,31 @@ export function SocialDriveBrowser({ projectId }: { projectId: string }) {
     setLoading(false);
   }
 
+  async function importSelected() {
+    if (!selected.length || importing) return;
+    setImporting(true);
+    setError("");
+    const imported: File[] = [];
+    try {
+      for (const id of selected) {
+        const file = files.find((entry) => entry.id === id);
+        if (!file || !["image/jpeg", "image/png", "image/webp"].includes(file.mimeType)) {
+          throw new Error("Por ahora solo se pueden importar imágenes JPG, PNG y WEBP de hasta 10 MB.");
+        }
+        const { data, error: downloadError } = await db.functions.invoke<Blob>("social-drive-download", {
+          body: { projectId, fileId: id },
+        });
+        if (downloadError || !(data instanceof Blob)) throw new Error("No se pudo descargar " + file.name);
+        imported.push(new File([data], file.name, { type: file.mimeType }));
+      }
+      onImport(imported);
+      setSelected([]);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "No se pudieron importar los archivos.");
+    } finally {
+      setImporting(false);
+    }
+  }
   return (
     <section aria-label="Explorador de Google Drive" className="social-drive-browser">
       <div className="social-drive-toolbar">
@@ -98,7 +124,7 @@ export function SocialDriveBrowser({ projectId }: { projectId: string }) {
         ))}
       </ul>
       {nextPage && <button type="button" disabled={loading} onClick={() => void more()}>Cargar más</button>}
-      {selected.length > 0 && <p role="status">{selected.length} archivo(s) marcado(s). La importación al editor estará disponible al completar la conexión y el guardado seguro.</p>}
+      {selected.length > 0 && <div><p role="status">{selected.length} archivo(s) seleccionado(s). Importación inicial: imágenes de hasta 10 MB.</p><button type="button" disabled={importing || loading} onClick={() => void importSelected()}>{importing ? "Importando…" : "Añadir al contenido"}</button></div>}
     </section>
   );
 }
