@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { InstagramActions } from "./InstagramConnection";
 import { Link2, X } from "lucide-react";
 import { db } from "../lib/supabase";
 import {
@@ -53,7 +54,13 @@ function useAccounts(workspaceId: string, projectId?: string) {
 }
 const date = (value: string) =>
   new Date(value).toLocaleDateString("es-ES", { dateStyle: "medium" });
-function AccountDetails({ account }: { account: Account }) {
+function AccountDetails({
+  account,
+  reload,
+}: {
+  account: Account;
+  reload: () => void;
+}) {
   return (
     <div className="social-account">
       <strong>@{account.username.replace(/^@/, "")}</strong>
@@ -74,6 +81,13 @@ function AccountDetails({ account }: { account: Account }) {
             </>
           )}
         </dl>
+        {account.platform === "instagram" && (
+          <InstagramActions
+            projectId={account.project_id}
+            connectionId={account.id}
+            reload={reload}
+          />
+        )}
       </details>
     </div>
   );
@@ -101,24 +115,23 @@ function Accounts({
       <div className="social-platforms">
         {(Object.keys(platforms) as Platform[]).map((platform) => {
           const accounts = rows.filter((a) => a.platform === platform);
-          const upcoming = platforms[platform].availability === "next_stage";
+          const available = platform === "instagram";
           return (
             <section key={platform}>
               <h3>{platforms[platform].name}</h3>
               {accounts.length ? (
                 accounts.map((account) => (
-                  <AccountDetails key={account.id} account={account} />
+                  <AccountDetails
+                    key={account.id}
+                    account={account}
+                    reload={reload}
+                  />
                 ))
               ) : (
                 <>
-                  <p>{upcoming ? "Sin conectar" : "Próximamente"}</p>
-                  {upcoming && (
-                    <div>
-                      <button type="button" disabled>
-                        Conectar
-                      </button>
-                      <small>Disponible en la etapa 2.2.</small>
-                    </div>
+                  <p>{available ? "Sin conectar" : "Próximamente"}</p>
+                  {available && (
+                    <InstagramActions projectId={projectId} reload={reload} />
                   )}
                 </>
               )}
@@ -156,7 +169,7 @@ function Accounts({
           {accounts.map((account) => (
             <div key={account.id}>
               <h3>{platforms[account.platform].name}</h3>
-              <AccountDetails account={account} />
+              <AccountDetails account={account} reload={reload} />
               <small>Conectada el {date(account.connected_at)}</small>
             </div>
           ))}
