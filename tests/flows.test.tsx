@@ -150,13 +150,13 @@ describe("Acceso y navegación", () => {
     render(<App />);
     await screen.findByRole("heading", { name: "Tu espacio de trabajo" });
     await user.click(screen.getByRole("link", { name: "Social", exact: true }));
-    await screen.findByRole("button", { name: "Nuevo proyecto" });
+    await within(screen.getByRole("main")).findByRole("button", { name: "Nuevo proyecto" });
     await user.click(
       screen.getByRole("link", { name: "Calendario", exact: true }),
     );
     await screen.findByRole("heading", { name: "Calendario" });
     await user.click(screen.getByRole("link", { name: "Care", exact: true }));
-    await screen.findByRole("button", { name: "Nuevo proyecto" });
+    await within(screen.getByRole("main")).findByRole("button", { name: "Nuevo proyecto" });
     await user.click(
       screen.getByRole("link", { name: "Área técnica", exact: true }),
     );

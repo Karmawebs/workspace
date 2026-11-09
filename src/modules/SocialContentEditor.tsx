@@ -5,6 +5,7 @@ import { message, type Scope } from "../core/data";
 import { localInput, safeUrl, text, type Row } from "../core/model";
 
 import { SocialMediaPicker, type MediaItem } from "./SocialMediaPicker";
+import { SocialDriveBrowser } from "./SocialDriveBrowser";
 import {
   cleanSocialMedia,
   getSocialUploadLimit,
@@ -42,6 +43,7 @@ export function SocialContentEditor({
     [projects, setProjects] = useState<{ id: string; name: string }[]>([]),
     [items, setItems] = useState<MediaItem[]>([]);
   const [uploadLimit, setUploadLimit] = useState<number>();
+  const [driveOpen, setDriveOpen] = useState(false);
   const [limitError, setLimitError] = useState("");
   const [filesReady, setFilesReady] = useState(!original?.id);
   const contentId = useRef(text(original?.id) || crypto.randomUUID());
@@ -390,6 +392,33 @@ export function SocialContentEditor({
             disabled={busy || !filesReady || !uploadLimit}
             maximum={uploadLimit}
           />
+          {selectedProject && filesReady && uploadLimit && (
+            <details className="social-drive-panel" onToggle={(event) => setDriveOpen(event.currentTarget.open)}>
+              <summary>Explorar Google Drive</summary>
+              {driveOpen && !busy && <SocialDriveBrowser key={selectedProject} projectId={selectedProject} onImport={(files) => {
+                if (busy) return;
+                if (items.length + files.length > 100) {
+                  setError("Máximo 100 archivos por contenido.");
+                  return;
+                }
+                for (const file of files) {
+                  if (file.size > uploadLimit) {
+                    setError(`El archivo ${file.name} supera el límite de subida.`);
+                    return;
+                  }
+                }
+                setItems((current) => [
+                  ...current,
+                  ...files.map((file) => ({
+                    key: crypto.randomUUID(),
+                    file,
+                    status: "pending" as const,
+                    progress: 0,
+                  })),
+                ]);
+              }} />}
+            </details>
+          )}
           {limitError && (
             <p className="error" role="alert">
               {limitError}

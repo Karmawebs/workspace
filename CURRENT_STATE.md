@@ -76,3 +76,9 @@ Editor ampliado sin sustituir multimedia: siete estados manuales (draft = Prepar
 Aplicada `20261030004429_social_workflow_phase2`: dos columnas en kw_content_items y ampliación SECURITY INVOKER de la RPC atómica. RLS, bucket, rutas, outbox y worker intactos; límite 50 MiB conservado. Tipos Social sincronizados. Payloads de Fase 1 preservan campos nuevos.
 
 37 tests Social y SQL de Fase 1/Fase 2 pasan. Suite 58/62: solo cuatro fallos preexistentes de flows. Build/TypeScript y navegador real (crear/editar, carrusel privado, vídeo placeholder, filtros y móvil 390×844) verificados. Detalles: SOCIAL_WORKFLOW_PHASE2.md. No avanzar a Meta sin nueva petición; reemplaza el siguiente paso sugerido en Fase 1.
+
+## Social — integración Drive en rama de desarrollo, 2026-11-08
+OAuth por proyecto con PKCE y refresh cifrado, selector de raíz e importación de imágenes/vídeos al Media Manager. Callback local registrado. Migración y funciones pendientes de despliegue. Falta probar el consentimiento y el guardado reales con el secreto renovado y un backend aislado. Ver SOCIAL_GOOGLE_DRIVE_IMPLEMENTATION.md.
+
+## Social — preparación de producción, 2026-11-09
+Destino confirmado: workspace.karmawebs.com. Migración social_drive_metadata aplicada y tres funciones social-drive desplegadas en wrkoskqfjuefgrwhymqu. Secretos de producción configurados. Compilación, 66 pruebas frontend y escenario Deno correctos. Pendiente verificar un borrador real con imagen y vídeo tras el consentimiento de Google.

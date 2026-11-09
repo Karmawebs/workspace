@@ -1,0 +1,9 @@
+project_id = "wrkoskqfjuefgrwhymqu"
+
+# Each handler authenticates the caller with Supabase Auth getUser(jwt).
+[functions.social-drive-oauth]
+verify_jwt = false
+[functions.social-drive-list]
+verify_jwt = false
+[functions.social-drive-download]
+verify_jwt = false
