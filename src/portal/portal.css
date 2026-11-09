@@ -65,3 +65,39 @@
  .portal-legend{gap:10px}
 }
 @media(prefers-reduced-motion:reduce){.client-portal aside,.client-portal aside .portal-shortcut span,.client-portal button{transition:none}}
+
+
+/* Portal refinement: visible collapsed icons, restrained actions and type tags */
+@media(min-width:901px){
+ .client-portal aside:not(:hover):not(:focus-within){width:76px;min-width:76px}
+ .client-portal aside .portal-shortcut{position:relative;justify-content:flex-start;overflow:visible}
+ .client-portal aside .portal-shortcut svg{display:block;flex:0 0 20px;width:20px;height:20px;min-width:20px;min-height:20px;opacity:1;visibility:visible;color:#e8e8eb;stroke:currentColor}
+ .client-portal aside:not(:hover):not(:focus-within) .portal-shortcut{padding-left:13px;padding-right:13px;gap:0}
+ .client-portal aside:not(:hover):not(:focus-within) .portal-shortcut span{position:absolute;left:50px;pointer-events:none}
+ .client-portal aside:hover .portal-shortcut,.client-portal aside:focus-within .portal-shortcut{gap:17px}
+ .client-portal aside:hover .portal-shortcut span,.client-portal aside:focus-within .portal-shortcut span{position:static}
+ .client-portal aside>button:last-child svg{display:block;opacity:1;visibility:visible;color:#e8e8eb}
+}
+.client-portal .portal-review-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}
+.client-portal .portal-review-actions button{width:100%;min-width:0;min-height:42px;padding:10px 12px;border-radius:9px;font-size:12px;font-weight:550;letter-spacing:-.01em;line-height:1.35}
+.client-portal .portal-review-actions button:first-child{background:transparent;border:1px solid #724347;color:#e6a0a4}
+.client-portal .portal-review-actions button:first-child:hover:not(:disabled){background:#332023;border-color:#a76065}
+.client-portal .portal-review-actions button:last-child{background:#24442e;border:1px solid #365941;color:#c5e6cd}
+.client-portal .portal-review-actions button:last-child:hover:not(:disabled){background:#2b5738;border-color:#558865}
+.client-portal .portal-row{gap:12px;padding:17px 0}
+.client-portal .portal-row .portal-type-tag{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:66px;padding:4px 9px;border-radius:6px;font-size:11px;line-height:1.3;font-weight:550;background:#1e3345;color:#b6d9f5;border:1px solid #30485d}
+.client-portal .portal-row .portal-type-tag.carousel{background:#203629;color:#b6dfc0;border-color:#31503b}
+.client-portal .portal-row .portal-type-tag.reel{background:#30263c;color:#dbc1f4;border-color:#49375d}
+.client-portal .portal-row .portal-type-tag.story{background:#392630;color:#efb9d0;border-color:#563645}
+.client-portal .portal-row>b{min-width:120px;font-size:13px;font-weight:540}
+.client-portal .portal-row>span:not(.portal-type-tag){font-size:12px;color:#a0a0a8}
+.client-portal .portal-row .portal-view-action,.client-portal .portal-row .portal-approve-action{min-height:34px;padding:7px 11px;border-radius:8px;font-size:11px;font-weight:530;white-space:nowrap}
+.client-portal .portal-row .portal-view-action{background:transparent;border-color:#37373c;color:#d2d2d8}
+.client-portal .portal-row .portal-approve-action{background:#1d3023;border-color:#34523d;color:#c2e4ca}
+.client-portal .portal-row .portal-approve-action.is-approved{background:#1b1b1e;border-color:#29292d;color:#888891}
+@media(max-width:600px){
+ .client-portal .portal-review-actions{grid-template-columns:1fr}
+ .client-portal .portal-row{gap:8px}
+ .client-portal .portal-row>b{flex:1 1 calc(100% - 90px);min-width:0}
+ .client-portal .portal-row>span:not(.portal-type-tag){margin-right:auto}
+}
