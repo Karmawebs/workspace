@@ -59,13 +59,13 @@ export function itemsForDay(rows: Row[], date: Date): Row[] {
   return rows
     .filter(
       (row) =>
-        row.scheduled_at &&
-        dayKey(new Date(text(row.scheduled_at))) === dayKey(date),
+        (row.calendar_at || row.scheduled_at) &&
+        dayKey(new Date(text(row.calendar_at || row.scheduled_at))) === dayKey(date),
     )
     .sort(
       (a, b) =>
-        new Date(text(a.scheduled_at)).getTime() -
-          new Date(text(b.scheduled_at)).getTime() ||
+        new Date(text(a.calendar_at || a.scheduled_at)).getTime() -
+          new Date(text(b.calendar_at || b.scheduled_at)).getTime() ||
         Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0) ||
         a.id.localeCompare(b.id),
     );

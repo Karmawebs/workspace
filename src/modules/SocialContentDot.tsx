@@ -1,3 +1,4 @@
+import { InstagramDelivery } from "./InstagramDelivery";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ImageOff } from "lucide-react";
@@ -139,8 +140,8 @@ export function SocialContentDot({
       >
         <span className="social-entry-meta">
           <i className={`social-dot ${contentFormat(row.content_type)}`} />
-          {publicationTime(row.scheduled_at)}
-          {row.scheduled_at ? " · " : ""}
+          {publicationTime(row.calendar_at || row.scheduled_at)}
+          {(row.calendar_at || row.scheduled_at) ? " · " : ""}
           {label || "Post"}
         </span>
         {projectName && (
@@ -150,6 +151,7 @@ export function SocialContentDot({
         <span className={`social-status-pill ${contentStatus(row.status)}`}>
           {socialLabels[contentStatus(row.status)]}
         </span>
+        <InstagramDelivery row={row} compact />
       </button>
       {open && ref.current && (
         <Preview

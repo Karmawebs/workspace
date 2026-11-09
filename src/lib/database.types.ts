@@ -1752,6 +1752,17 @@ export type Database = {
       };
     };
     Views: {
+      kw_social_content_delivery: {
+        Row: Database["public"]["Tables"]["kw_content_items"]["Row"] & {
+          publication_state: string | null;
+          publication_error: string | null;
+          instagram_published_at: string | null;
+          permalink: string | null;
+          send_started: boolean | null;
+          calendar_at: string | null;
+        };
+        Relationships: [];
+      };
       site_overview: {
         Row: {
           active: boolean | null;

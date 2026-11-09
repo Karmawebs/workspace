@@ -88,3 +88,5 @@ Registro de cuentas separado de Drive, por proyecto y plataforma. El resumen y e
 
 ## Social · Instagram Unified Login
 Conector para la configuración de Meta 2271522993798663. Usa un SUAT, identifica el negocio y la cuenta profesional asignada y cifra la credencial en servidor. Ante caducidad o revocación permite comprobar y volver a autorizar. El consentimiento incluye instagram_manage_messages obligatorio en Meta; Workspace no utiliza la API de mensajes. Prueba real pendiente de autorización de @karma.webs.
+
+Instagram 4.3 adds explicit confirmation in the Social editor, server-side container processing, and independent delivery status in content and calendar. A durable dispatch fence prevents repeating an ambiguous media_publish. Cron only resumes already confirmed attempts. The first real publication requires approval in Workspace.

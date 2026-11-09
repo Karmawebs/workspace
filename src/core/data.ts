@@ -6,7 +6,7 @@ const records = db as SupabaseClient;
 import type { AppKey, Entity, Row } from "./model";
 export type Scope = { workspaceId: string; app: AppKey; userId: string };
 export async function listRows(def: Entity, scope: Scope, projectId?: string) {
-  let q = records.from(def.table).select("*");
+  let q = records.from(def.table === "kw_content_items" && scope.app === "social" ? "kw_social_content_delivery" : def.table).select("*");
   if (def.table === "kw_project_panels") {
     if (!projectId) return [];
     q = q.eq("project_id", projectId);

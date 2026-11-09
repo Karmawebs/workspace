@@ -1,3 +1,8 @@
+import {
+  InstagramPublishControls,
+  publishAction,
+  type Confirmation,
+} from "./InstagramPublishControls";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { X } from "lucide-react";
 import { db } from "../lib/supabase";
@@ -47,6 +52,10 @@ export function SocialContentEditor({
   const [limitError, setLimitError] = useState("");
   const [filesReady, setFilesReady] = useState(!original?.id);
   const contentId = useRef(text(original?.id) || crypto.randomUUID());
+  const [caption, setCaption] = useState(text(original?.description));
+  const form = useRef<HTMLFormElement>(null);
+  const confirmation = useRef<Confirmation | null>(null);
+  const version = useRef(original?.id ? text(original.updated_at) : null);
   const uploadController = useRef<AbortController | null>(null);
   const reservations = useRef(new Set<string>());
   const legacyUrls = fileUrls(original?.file_urls);
@@ -143,6 +152,8 @@ export function SocialContentEditor({
   }, [scope.workspaceId, projectId]);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const publish = confirmation.current;
+    confirmation.current = null;
     setError("");
     const fd = new FormData(e.currentTarget);
     const title = text(fd.get("title")).trim(),
@@ -209,7 +220,7 @@ export function SocialContentEditor({
       const { data, error } = await db.rpc("kw_save_social_content", {
         p_workspace_id: scope.workspaceId,
         p_content_id: contentId.current,
-        p_expected_updated_at: original?.id ? text(original.updated_at) : null,
+        p_expected_updated_at: version.current,
         p_values: {
           title,
           description,
@@ -247,6 +258,22 @@ export function SocialContentEditor({
           detail: { table: "kw_content_items", workspaceId: scope.workspaceId },
         }),
       );
+      version.current = text(data.updated_at);
+      if (publish) {
+        setItems(
+          next.map((item) => ({ ...item, file: undefined, status: "saved" })),
+        );
+        const result = await publishAction({
+          action: "confirm",
+          ...publish,
+          contentId: contentId.current,
+          projectId: selectedProject,
+          version: version.current,
+          fileIds: next.map((i) => i.record!.id),
+        });
+        if (!result?.attempt)
+          throw new Error("Reabre el contenido para comprobar el envío.");
+      }
       onSave(data);
     } catch (e) {
       setError(message(e));
@@ -264,7 +291,7 @@ export function SocialContentEditor({
         if (!busy) onClose();
       }}
     >
-      <form onSubmit={submit}>
+      <form ref={form} onSubmit={submit}>
         <header>
           <div>
             <span className="eyebrow">SOCIAL / CONTENIDO</span>
@@ -381,7 +408,8 @@ export function SocialContentEditor({
             Copy
             <textarea
               name="description"
-              defaultValue={text(original?.description)}
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
               rows={4}
             />
           </label>
@@ -393,30 +421,41 @@ export function SocialContentEditor({
             maximum={uploadLimit}
           />
           {selectedProject && filesReady && uploadLimit && (
-            <details className="social-drive-panel" onToggle={(event) => setDriveOpen(event.currentTarget.open)}>
+            <details
+              className="social-drive-panel"
+              onToggle={(event) => setDriveOpen(event.currentTarget.open)}
+            >
               <summary>Explorar Google Drive</summary>
-              {driveOpen && !busy && <SocialDriveBrowser key={selectedProject} projectId={selectedProject} onImport={(files) => {
-                if (busy) return;
-                if (items.length + files.length > 100) {
-                  setError("Máximo 100 archivos por contenido.");
-                  return;
-                }
-                for (const file of files) {
-                  if (file.size > uploadLimit) {
-                    setError(`El archivo ${file.name} supera el límite de subida.`);
-                    return;
-                  }
-                }
-                setItems((current) => [
-                  ...current,
-                  ...files.map((file) => ({
-                    key: crypto.randomUUID(),
-                    file,
-                    status: "pending" as const,
-                    progress: 0,
-                  })),
-                ]);
-              }} />}
+              {driveOpen && !busy && (
+                <SocialDriveBrowser
+                  key={selectedProject}
+                  projectId={selectedProject}
+                  onImport={(files) => {
+                    if (busy) return;
+                    if (items.length + files.length > 100) {
+                      setError("Máximo 100 archivos por contenido.");
+                      return;
+                    }
+                    for (const file of files) {
+                      if (file.size > uploadLimit) {
+                        setError(
+                          `El archivo ${file.name} supera el límite de subida.`,
+                        );
+                        return;
+                      }
+                    }
+                    setItems((current) => [
+                      ...current,
+                      ...files.map((file) => ({
+                        key: crypto.randomUUID(),
+                        file,
+                        status: "pending" as const,
+                        progress: 0,
+                      })),
+                    ]);
+                  }}
+                />
+              )}
             </details>
           )}
           {limitError && (
@@ -467,6 +506,30 @@ export function SocialContentEditor({
           <p className="error" role="alert">
             {error}
           </p>
+        )}
+        {channel === "instagram" && (
+          <InstagramPublishControls
+            projectId={selectedProject}
+            contentId={contentId.current}
+            format={format}
+            caption={caption}
+            items={items}
+            failed={original?.publication_state === "error"}
+            blocked={
+              busy ||
+              !ready ||
+              !filesReady ||
+              original?.publication_state === "published" ||
+              original?.publication_state === "publishing" ||
+              original?.send_started === true
+            }
+            onConfirm={(value) => {
+              if (form.current?.reportValidity()) {
+                confirmation.current = value;
+                form.current.requestSubmit();
+              }
+            }}
+          />
         )}
         <footer>
           <button

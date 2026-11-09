@@ -164,3 +164,13 @@
 .social-drive-notice { margin: 0; }
 .social-drive-browser button:focus-visible, .social-drive-file-row:focus-within { outline: 2px solid #8574ab; outline-offset: 2px; }
 @media (max-width: 560px) { .social-drive-browser { padding: 10px; } .social-drive-import { align-items: stretch; } .social-drive-import .social-drive-primary { width: 100%; } }
+
+.ig-publish {display:grid;gap:.5rem;margin:1rem;min-width:0}
+.ig-publish label {display:grid;gap:.3rem}
+.ig-publish select {max-width:100%}
+.ig-confirm {width:min(560px,92vw);max-height:86vh;overflow:auto;padding:1.25rem}
+.ig-preview {display:flex;gap:.5rem;overflow-x:auto}
+.ig-preview :is(img,video) {max-width:100%;max-height:38vh;object-fit:contain}
+.ig-delivery {display:inline-flex;flex-wrap:wrap;gap:.5em;font-size:.8em;color:#54545a}
+.ig-delivery.published {color:#146138}
+.ig-delivery.error {color:#9b2537}

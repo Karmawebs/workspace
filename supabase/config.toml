@@ -10,3 +10,6 @@ verify_jwt = false
 
 [functions.social-instagram]
 verify_jwt = false
+
+[functions.social-instagram-publish]
+verify_jwt = false
