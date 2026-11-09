@@ -6,7 +6,7 @@ import { db } from "../lib/supabase";
 import { SocialContentEditor } from "./SocialContentEditor";
 import { SocialContentDot } from "./SocialContentDot";
 import { cleanSocialMedia } from "./socialMedia";
-import { itemsForDay, contentStatus, statusFilters } from "./socialContent";
+import { itemsForDay, mainState, statusFilters } from "./socialContent";
 
 export function Calendar({ scope }: { scope: Scope }) {
   const [month, setMonth] = useState(
@@ -25,11 +25,16 @@ export function Calendar({ scope }: { scope: Scope }) {
     });
   }, [scope.workspaceId]);
   const [revision, setRevision] = useState(0);
-  useEffect(()=>{
-    if(!rows.some(row=>row.publication_state==="publishing"))return;
-    const timer=window.setTimeout(()=>setRevision(v=>v+1),15000);
-    return ()=>clearTimeout(timer);
-  },[rows]);
+  useEffect(() => {
+    if (
+      !rows.some((row) =>
+        ["scheduled", "publishing"].includes(text(row.publication_state)),
+      )
+    )
+      return;
+    const timer = window.setTimeout(() => setRevision((v) => v + 1), 15000);
+    return () => clearTimeout(timer);
+  }, [rows]);
   const days = useMemo(() => {
     const offset = (month.getDay() + 6) % 7;
     return Array.from(
@@ -234,9 +239,7 @@ export function Calendar({ scope }: { scope: Scope }) {
                 <div className="social-day-dots">
                   {itemsForDay(
                     rows.filter(
-                      (row) =>
-                        !statusFilter ||
-                        contentStatus(row.status) === statusFilter,
+                      (row) => !statusFilter || mainState(row) === statusFilter,
                     ),
                     d,
                   ).map((r) => (

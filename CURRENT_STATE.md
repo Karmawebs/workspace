@@ -92,3 +92,5 @@ Conector para la configuración de Meta 2271522993798663. Usa un SUAT, identific
 Instagram 4.3 adds explicit confirmation in the Social editor, server-side container processing, and independent delivery status in content and calendar. A durable dispatch fence prevents repeating an ambiguous media_publish. Cron only resumes already confirmed attempts. The first real publication requires approval in Workspace.
 
 Unified Login IGUser does not expose account_type. Stories are gated on verified Business metadata in the server-managed connection. The owner verified @karma.webs as Creator. Stories are disabled for this account.
+
+Social 4.4 derives a single delivery state from confirmed attempts. Old editorial dates remain planning data. Scheduling, validated edits and rescheduling commit atomically. The minute worker claims only confirmed due attempts and resumes the existing Instagram publisher. UTC instants retain the selected occurrence at a daylight-saving overlap. Issue #9 remains open for 3:4 media; originals can be saved for manual use.

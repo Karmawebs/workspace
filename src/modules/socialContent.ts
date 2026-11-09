@@ -60,7 +60,8 @@ export function itemsForDay(rows: Row[], date: Date): Row[] {
     .filter(
       (row) =>
         (row.calendar_at || row.scheduled_at) &&
-        dayKey(new Date(text(row.calendar_at || row.scheduled_at))) === dayKey(date),
+        dayKey(new Date(text(row.calendar_at || row.scheduled_at))) ===
+          dayKey(date),
     )
     .sort(
       (a, b) =>
@@ -82,15 +83,25 @@ export function contentStatus(value: unknown): SocialStatus {
     ? (value as SocialStatus)
     : "idea";
 }
-export const statusFilters: { value: string; label: string }[] = [
+export const deliveryLabels: Record<string, string> = {
+  draft: "Borrador",
+  ready: "Listo",
+  scheduled: "Programado",
+  publishing: "Publicando",
+  published: "Publicado",
+  error: "Error",
+  cancelled: "Cancelado",
+};
+export function mainState(row: Row) {
+  return text(
+    row.main_state ||
+      row.publication_state ||
+      (row.status === "approved" ? "ready" : "draft"),
+  );
+}
+export const statusFilters = [
   { value: "", label: "Todos" },
-  { value: "idea", label: "Ideas" },
-  { value: "draft", label: "Preparando" },
-  { value: "review", label: "Revisión" },
-  { value: "approved", label: "Aprobados" },
-  { value: "scheduled", label: "Programados" },
-  { value: "published", label: "Publicados" },
-  { value: "discarded", label: "Descartados" },
+  ...Object.entries(deliveryLabels).map(([value, label]) => ({ value, label })),
 ];
 export function publicationTime(value: unknown): string {
   if (!value) return "";
@@ -102,21 +113,4 @@ export function publicationTime(value: unknown): string {
         minute: "2-digit",
       }).format(date);
 }
-export function publicationTimestamp(
-  date: string,
-  time: string,
-): string | null {
-  if (!date && !time) return null;
-  if (!date || !time)
-    throw new Error("Indica fecha y hora de publicación, o deja ambas vacías.");
-  const value = new Date(`${date}T${time}`);
-  // Reject nonexistent local times during the spring daylight-saving transition.
-  if (
-    Number.isNaN(value.getTime()) ||
-    dayKey(value) !== date ||
-    `${String(value.getHours()).padStart(2, "0")}:${String(value.getMinutes()).padStart(2, "0")}` !==
-      time
-  )
-    throw new Error("La fecha u hora no existe en tu zona horaria.");
-  return value.toISOString();
-}
+export { publicationTimestamp, scheduleInstants } from "./socialScheduleTime";

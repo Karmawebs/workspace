@@ -1,3 +1,4 @@
+import { mainState, deliveryLabels } from "./socialContent";
 import { text, type Row } from "../core/model";
 export function InstagramDelivery({
   row,
@@ -6,19 +7,10 @@ export function InstagramDelivery({
   row: Row;
   compact?: boolean;
 }) {
-  const state = text(row.publication_state);
-  const label: Record<string, string> = {
-    published: "Publicado",
-    publishing: "Publicando",
-    error: "Error",
-  };
+  const state = mainState(row);
   return (
     <span className={"ig-delivery " + state}>
-      Instagram · {label[state] || "Sin publicar"}
-      {!compact && row.instagram_published_at
-        ? " · " +
-          new Date(text(row.instagram_published_at)).toLocaleString("es")
-        : null}
+      <strong>{deliveryLabels[state]}</strong>
       {!compact && row.publication_error
         ? " · " + text(row.publication_error)
         : null}

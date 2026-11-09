@@ -1,3 +1,4 @@
+import { InstagramDelivery } from "./InstagramDelivery";
 import {
   InstagramPublishControls,
   publishAction,
@@ -21,11 +22,11 @@ import {
 } from "./socialMedia";
 import {
   channels,
-  contentStatus,
+  mainState,
+  scheduleInstants,
   publicationTimestamp,
   fileUrls,
   formats,
-  statuses,
   socialLabels as labels,
 } from "./socialContent";
 
@@ -120,7 +121,56 @@ export function SocialContentEditor({
     projectId || text(original?.project_id),
   );
   const [format, setFormat] = useState(text(original?.content_type) || "post");
-  const [status, setStatus] = useState(contentStatus(original?.status));
+  const currentState = original ? mainState(original) : "draft";
+  const scheduledJob = currentState === "scheduled";
+  const locked =
+    currentState === "publishing" ||
+    currentState === "published" ||
+    original?.send_started === true;
+  const initialInstant = original?.automatic_at || original?.scheduled_at;
+  const [day, setDay] = useState(localInput(initialInstant).slice(0, 10));
+  const [time, setTime] = useState(localInput(initialInstant).slice(11, 16));
+  const [occurrence, setOccurrence] = useState(
+    text(initialInstant) ? new Date(text(initialInstant)).toISOString() : "",
+  );
+  let options: string[] = [];
+  let dateError = "";
+  try {
+    options = scheduleInstants(day, time);
+  } catch (e) {
+    dateError = message(e);
+  }
+  const due =
+    options.length === 1 ? options[0] : options.find((v) => v === occurrence);
+  async function cancelSchedule() {
+    if (
+      !original ||
+      !window.confirm(
+        "¿Cancelar la publicación programada? Se conservarán el contenido y los archivos.",
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      await publishAction({
+        action: "cancel",
+        contentId: original.id,
+        projectId: original.project_id,
+        existing: original.attempt_id,
+        revision: original.attempt_revision,
+      });
+      window.dispatchEvent(
+        new CustomEvent("kw-records-changed", {
+          detail: { table: "kw_content_items", workspaceId: scope.workspaceId },
+        }),
+      );
+      onSave(original);
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      setBusy(false);
+    }
+  }
   const [channel, setChannel] = useState(
     text(original?.channel) || "instagram",
   );
@@ -159,13 +209,20 @@ export function SocialContentEditor({
     const title = text(fd.get("title")).trim(),
       description = text(fd.get("description")).trim(),
       content_type = text(fd.get("content_type")) || "post",
-      status = text(fd.get("status")) || "idea";
+      status =
+        publish ||
+        ((e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null)
+          ?.value === "ready"
+          ? "approved"
+          : "draft";
     let scheduled: string | null;
     try {
-      scheduled = publicationTimestamp(
-        text(fd.get("publication_date")),
-        text(fd.get("publication_time")),
-      );
+      scheduled =
+        due ||
+        publicationTimestamp(
+          text(fd.get("publication_date")),
+          text(fd.get("publication_time")),
+        );
     } catch (e) {
       setError(message(e));
       return;
@@ -174,7 +231,11 @@ export function SocialContentEditor({
       setError("El título es obligatorio.");
       return;
     }
-    if (!filesReady) return;
+    if (!filesReady || locked || (scheduledJob && !publish?.due)) return;
+    if (publish?.due && Date.parse(publish.due) <= Date.now()) {
+      setError("Selecciona una fecha futura.");
+      return;
+    }
     setBusy(true);
     const controller = new AbortController();
     uploadController.current = controller;
@@ -217,7 +278,7 @@ export function SocialContentEditor({
         throw new Error(
           "No se ha guardado el contenido. Reintenta Guardar o elimina los archivos con error.",
         );
-      const { data, error } = await db.rpc("kw_save_social_content", {
+      const args = {
         p_workspace_id: scope.workspaceId,
         p_content_id: contentId.current,
         p_expected_updated_at: version.current,
@@ -233,7 +294,28 @@ export function SocialContentEditor({
           client_approved: fd.get("client_approved") === "on",
         },
         p_file_ids: next.map((item) => item.record!.id),
-      });
+      };
+      const { data, error } = publish?.due
+        ? {
+            data: (
+              await publishAction({
+                action: "schedule",
+                ...publish,
+                contentId: contentId.current,
+                projectId: selectedProject,
+                version: version.current,
+                values: args.p_values,
+                fileIds: args.p_file_ids,
+                existing:
+                  original?.attempt_id && scheduledJob
+                    ? original.attempt_id
+                    : null,
+                revision: original?.attempt_revision,
+              })
+            ).content,
+            error: null,
+          }
+        : await db.rpc("kw_save_social_content", args);
       if (error) throw new Error(error.message);
       if (!data)
         throw new Error(
@@ -259,7 +341,7 @@ export function SocialContentEditor({
         }),
       );
       version.current = text(data.updated_at);
-      if (publish) {
+      if (publish && !publish.due) {
         setItems(
           next.map((item) => ({ ...item, file: undefined, status: "saved" })),
         );
@@ -307,7 +389,10 @@ export function SocialContentEditor({
             <X size={20} />
           </button>
         </header>
-        <fieldset className="form-fields social-content-fields" disabled={busy}>
+        <fieldset
+          className="form-fields social-content-fields"
+          disabled={busy || locked}
+        >
           <label>
             Título *
             <input name="title" defaultValue={text(original?.title)} required />
@@ -317,6 +402,7 @@ export function SocialContentEditor({
               Cliente / proyecto
               <select
                 name="project_id"
+                disabled={scheduledJob}
                 value={selectedProject}
                 onChange={(e) => setSelectedProject(e.target.value)}
               >
@@ -335,7 +421,8 @@ export function SocialContentEditor({
               <input
                 name="publication_date"
                 type="date"
-                defaultValue={localInput(original?.scheduled_at).slice(0, 10)}
+                value={day}
+                onChange={(e) => setDay(e.target.value)}
               />
             </label>
             <label>
@@ -343,15 +430,44 @@ export function SocialContentEditor({
               <input
                 name="publication_time"
                 type="time"
-                defaultValue={localInput(original?.scheduled_at).slice(11, 16)}
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
               />
             </label>
           </div>
+          <small>
+            Hora local · {Intl.DateTimeFormat().resolvedOptions().timeZone}
+          </small>
+          {options.length > 1 && (
+            <label>
+              Esta hora se repite. Elige el instante
+              <select
+                value={due || ""}
+                onChange={(e) => setOccurrence(e.target.value)}
+              >
+                <option value="">Seleccionar</option>
+                {options.map((v) => (
+                  <option key={v} value={v}>
+                    {new Date(v).toLocaleTimeString("es", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZoneName: "shortOffset",
+                    })}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {dateError && <small>{dateError}</small>}
+          {due && Date.parse(due) <= Date.now() && (
+            <small>Para programar elige una fecha futura.</small>
+          )}
           <div className="social-field-pair social-channel-pair">
             <label>
               Canal
               <select
                 name="channel"
+                disabled={scheduledJob}
                 value={channel}
                 onChange={(e) => setChannel(e.target.value)}
               >
@@ -384,26 +500,7 @@ export function SocialContentEditor({
               </select>
             </label>
           </div>
-          <label>
-            Estado
-            <select
-              className={`social-status-select ${status}`}
-              name="status"
-              value={status}
-              onChange={(e) => setStatus(contentStatus(e.target.value))}
-            >
-              {statuses.map((v) => (
-                <option key={v} value={v}>
-                  {labels[v]}
-                </option>
-              ))}
-            </select>
-          </label>
-          {(status === "scheduled" || status === "published") && (
-            <p className="social-manual-note">
-              Estado interno manual. No publica en redes sociales.
-            </p>
-          )}
+          <InstagramDelivery row={original || { id: "" }} compact />
           <label>
             Copy
             <textarea
@@ -514,6 +611,9 @@ export function SocialContentEditor({
             format={format}
             caption={caption}
             items={items}
+            due={due}
+            rescheduling={scheduledJob}
+            initialAccount={text(original?.destination_id)}
             failed={original?.publication_state === "error"}
             blocked={
               busy ||
@@ -549,9 +649,29 @@ export function SocialContentEditor({
               Detener subida
             </button>
           )}
-          <button disabled={busy || !ready || !filesReady}>
-            {busy ? "Guardando…" : "Guardar"}
-          </button>
+          {scheduledJob && (
+            <button type="button" disabled={busy} onClick={cancelSchedule}>
+              Cancelar programación
+            </button>
+          )}
+          {!scheduledJob && !locked && (
+            <>
+              <button
+                type="submit"
+                value="draft"
+                disabled={busy || !ready || !filesReady}
+              >
+                {busy ? "Guardando…" : "Guardar borrador"}
+              </button>
+              <button
+                type="submit"
+                value="ready"
+                disabled={busy || !ready || !filesReady}
+              >
+                Marcar como listo
+              </button>
+            </>
+          )}
         </footer>
       </form>
     </dialog>

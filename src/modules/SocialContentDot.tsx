@@ -5,7 +5,6 @@ import { ImageOff } from "lucide-react";
 import { text, type Row } from "../core/model";
 import {
   contentFormat,
-  contentStatus,
   publicationTime,
   drivePreview,
   socialLabels,
@@ -141,16 +140,13 @@ export function SocialContentDot({
         <span className="social-entry-meta">
           <i className={`social-dot ${contentFormat(row.content_type)}`} />
           {publicationTime(row.calendar_at || row.scheduled_at)}
-          {(row.calendar_at || row.scheduled_at) ? " · " : ""}
+          {row.calendar_at || row.scheduled_at ? " · " : ""}
           {label || "Post"}
         </span>
         {projectName && (
           <span className="social-entry-project">{projectName}</span>
         )}
         <span className="social-entry-title">{text(row.title)}</span>
-        <span className={`social-status-pill ${contentStatus(row.status)}`}>
-          {socialLabels[contentStatus(row.status)]}
-        </span>
         <InstagramDelivery row={row} compact />
       </button>
       {open && ref.current && (

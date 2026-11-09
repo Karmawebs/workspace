@@ -252,10 +252,10 @@ it("unifica el editor y conserva los datos y enlaces antiguos sin ofrecer URLs c
   expect(screen.getByLabelText("Canal")).toHaveProperty("value", "instagram");
   expect(screen.queryByRole("button", { name: "Añadir URL" })).toBeNull();
   expect(screen.getByText("Archivos anteriores (2)")).toBeTruthy();
-  await user.click(screen.getByRole("button", { name: "Guardar" }));
+  await user.click(screen.getByRole("button", { name: "Guardar borrador" }));
   await waitFor(() => expect(save).toHaveBeenCalledOnce());
   expect(mock.writes[0]).toMatchObject({
-    p_values: { project_id: "p2", status: "idea", content_type: "carousel" },
+    p_values: { project_id: "p2", status: "draft", content_type: "carousel" },
     p_expected_updated_at: "2026-10-01",
     p_file_ids: [],
   });
@@ -277,12 +277,11 @@ it("mantiene datos del formulario cuando otro usuario ha modificado el registro"
     />,
   );
   await waitFor(() =>
-    expect(screen.getByRole("button", { name: "Guardar" })).toHaveProperty(
-      "disabled",
-      false,
-    ),
+    expect(
+      screen.getByRole("button", { name: "Guardar borrador" }),
+    ).toHaveProperty("disabled", false),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
   expect(await screen.findByRole("alert")).toHaveProperty(
     "textContent",
     expect.stringContaining("El registro cambió"),
@@ -366,7 +365,7 @@ it.each([
   fireEvent.change(screen.getByLabelText("Seleccionar fotos o vídeos"), {
     target: { files: [new File(["fixture"], name, { type })] },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
   await waitFor(() => expect(save).toHaveBeenCalledOnce());
   expect(mock.uploads).toEqual([name]);
   expect(mock.writes[0]).toMatchObject({
@@ -403,7 +402,7 @@ it("arrastra un carrusel, cambia portada, elimina y persiste el orden", async ()
   fireEvent.click(screen.getByRole("button", { name: "Subir archivo 3" }));
   fireEvent.click(screen.getByRole("button", { name: "Subir archivo 2" }));
   fireEvent.click(screen.getByRole("button", { name: "Eliminar archivo 3" }));
-  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
   await waitFor(() => expect(save).toHaveBeenCalledOnce());
   expect(mock.writes[0].p_file_ids).toEqual(["3.jpg", "1.jpg"]);
 });
@@ -436,7 +435,7 @@ it("no confirma contenido con subida parcial y reintenta solo el archivo fallido
       ],
     },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
   expect(await screen.findByRole("alert")).toHaveProperty(
     "textContent",
     expect.stringContaining("No se ha guardado"),
@@ -445,7 +444,7 @@ it("no confirma contenido con subida parcial y reintenta solo el archivo fallido
   expect(mock.writes).toHaveLength(0);
   expect(save).not.toHaveBeenCalled();
   mock.uploadFails = false;
-  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
   await waitFor(() => expect(save).toHaveBeenCalledOnce());
   expect(mock.uploads).toEqual(["foto.jpg", "reel.mp4", "reel.mp4"]);
 });
@@ -472,7 +471,7 @@ it("edita archivos actuales conservando los no modificados", async () => {
     />,
   );
   await screen.findByText("existing.jpg");
-  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
   await waitFor(() => expect(save).toHaveBeenCalledOnce());
   expect(mock.uploads).toHaveLength(0);
   expect(mock.writes[0].p_file_ids).toEqual(["existing"]);
@@ -528,14 +527,14 @@ it("crea todos los campos de la fase 2 sin multimedia", async () => {
     "Hora de publicación": "20:00",
     Canal: "instagram_facebook",
     "Tipo de contenido": "carousel",
-    Estado: "review",
+
     Copy: "Texto público",
     "Notas internas": "Pendiente de feedback",
   };
   for (const [label, value] of Object.entries(values))
     fireEvent.change(screen.getByLabelText(label), { target: { value } });
   fireEvent.click(screen.getByLabelText("Aprobado por cliente"));
-  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
   await waitFor(() => expect(mock.writes).toHaveLength(1));
   expect(mock.writes[0]).toMatchObject({
     p_values: {
@@ -544,7 +543,7 @@ it("crea todos los campos de la fase 2 sin multimedia", async () => {
       scheduled_at: new Date("2026-11-02T20:00").toISOString(),
       channel: "instagram_facebook",
       content_type: "carousel",
-      status: "review",
+      status: "draft",
       description: "Texto público",
       internal_notes: "Pendiente de feedback",
       client_approved: true,
@@ -560,41 +559,42 @@ it.each([
   "scheduled",
   "published",
   "discarded",
-])("edita a estado manual %s sin alterar aprobación", async (status) => {
-  openEditor({
-    status: "idea",
-    client_approved: true,
-    internal_notes: "Nota",
-    channel: "facebook",
-    scheduled_at: new Date("2026-11-02T20:00").toISOString(),
-    updated_at: "2026-10-30",
-  });
-  await screen.findByRole("option", { name: "Cliente Uno" });
-  expect(screen.getByLabelText("Notas internas")).toHaveProperty(
-    "value",
-    "Nota",
-  );
-  expect(screen.getByLabelText("Canal")).toHaveProperty("value", "facebook");
-  expect(screen.getByLabelText("Hora de publicación")).toHaveProperty(
-    "value",
-    "20:00",
-  );
-  fireEvent.change(screen.getByLabelText("Estado"), {
-    target: { value: status },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
-  await waitFor(() => expect(mock.writes).toHaveLength(1));
-  expect(mock.writes[0]).toMatchObject({
-    p_values: {
+])(
+  "conserva campos de contenido heredado %s al marcarlo listo",
+  async (status) => {
+    openEditor({
       status,
       client_approved: true,
       internal_notes: "Nota",
       channel: "facebook",
-    },
-    p_expected_updated_at: "2026-10-30",
-  });
-});
-it("desactiva aprobación sin cambiar el estado y conserva un canal heredado", async () => {
+      scheduled_at: new Date("2026-11-02T20:00").toISOString(),
+      updated_at: "2026-10-30",
+    });
+    await screen.findByRole("option", { name: "Cliente Uno" });
+    expect(screen.getByLabelText("Notas internas")).toHaveProperty(
+      "value",
+      "Nota",
+    );
+    expect(screen.getByLabelText("Canal")).toHaveProperty("value", "facebook");
+    expect(screen.getByLabelText("Hora de publicación")).toHaveProperty(
+      "value",
+      "20:00",
+    );
+    expect(screen.queryByLabelText("Estado")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Marcar como listo" }));
+    await waitFor(() => expect(mock.writes).toHaveLength(1));
+    expect(mock.writes[0]).toMatchObject({
+      p_values: {
+        status: "approved",
+        client_approved: true,
+        internal_notes: "Nota",
+        channel: "facebook",
+      },
+      p_expected_updated_at: "2026-10-30",
+    });
+  },
+);
+it("guarda borrador sin aprobación y conserva un canal heredado", async () => {
   openEditor({
     status: "approved",
     client_approved: true,
@@ -602,11 +602,11 @@ it("desactiva aprobación sin cambiar el estado y conserva un canal heredado", a
   });
   await screen.findByRole("option", { name: "Cliente Uno" });
   fireEvent.click(screen.getByLabelText("Aprobado por cliente"));
-  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
   await waitFor(() => expect(mock.writes).toHaveLength(1));
   expect(mock.writes[0]).toMatchObject({
     p_values: {
-      status: "approved",
+      status: "draft",
       client_approved: false,
       channel: "linkedin",
     },
@@ -615,16 +615,16 @@ it("desactiva aprobación sin cambiar el estado y conserva un canal heredado", a
 it("aplica defaults seguros al contenido antiguo", async () => {
   openEditor({ channel: null });
   await screen.findByRole("option", { name: "Cliente Uno" });
-  expect(screen.getByLabelText("Estado")).toHaveProperty("value", "idea");
+  expect(screen.getByText("Borrador")).toBeTruthy();
   expect(screen.getByLabelText("Aprobado por cliente")).toHaveProperty(
     "checked",
     false,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
   await waitFor(() => expect(mock.writes).toHaveLength(1));
   expect(mock.writes[0]).toMatchObject({
     p_values: {
-      status: "idea",
+      status: "draft",
       client_approved: false,
       internal_notes: "",
       scheduled_at: null,
@@ -641,7 +641,7 @@ it("requiere fecha y hora juntas y no inicia subida con fecha incompleta", async
   fireEvent.change(screen.getByLabelText("Fecha de publicación"), {
     target: { value: "2026-11-01" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
   expect(await screen.findByRole("alert")).toHaveProperty(
     "textContent",
     expect.stringContaining("fecha y hora"),
@@ -693,7 +693,7 @@ it("combina estado y proyecto conservando múltiples publicaciones del día", as
   expect(screen.getAllByRole("button", { name: /^(Reel|Post):/ })).toHaveLength(
     4,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Aprobados" }));
+  fireEvent.click(screen.getByRole("button", { name: "Listo" }));
   expect(screen.getAllByRole("button", { name: /^(Reel|Post):/ })).toHaveLength(
     2,
   );
@@ -706,11 +706,11 @@ it("combina estado y proyecto conservando múltiples publicaciones del día", as
     ).toHaveLength(1),
   );
   expect(screen.getByRole("button", { name: "Reel: A" }).textContent).toContain(
-    "Aprobado",
+    "Listo",
   );
-  fireEvent.click(screen.getByRole("button", { name: "Revisión" }));
+  fireEvent.click(screen.getByRole("button", { name: "Borrador" }));
   expect(screen.getByRole("button", { name: "Post: B" })).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name: "Descartados" }));
+
   expect(screen.getByRole("button", { name: "Post: D" })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Todos", exact: true }));
   expect(screen.getAllByRole("button", { name: /^(Reel|Post):/ })).toHaveLength(
