@@ -1,3 +1,13 @@
+import { schedule } from "./schedule.ts";
+class TemporaryFailure extends Error {}
+class MetaRejection extends Rejection {
+  constructor(
+    message: string,
+    readonly code: number,
+  ) {
+    super(message);
+  }
+}
 import { inspectOriginal, readRange } from "./inspect.ts";
 import {
   admin,
@@ -63,13 +73,15 @@ async function connection(
     });
     if (!r.ok) {
       const code = (await r.json().catch(() => null))?.error?.code;
-      if (r.status >= 500) throw new Error("Meta temporalmente inaccesible.");
-      throw new Rejection(
+      if (r.status >= 500 || r.status === 429)
+        throw new TemporaryFailure("Meta temporalmente inaccesible.");
+      throw new MetaRejection(
         code === 190
           ? "La autorización ha caducado. Reconecta Instagram."
           : code === 10 || code === 200
             ? "Meta no ha autorizado esta operación. Revisa el acceso de la aplicación."
             : "Meta rechazó la solicitud. Comprueba el archivo y los límites de la cuenta.",
+        Number.isInteger(code) ? code : 0,
       );
     }
     return await r.json();
@@ -117,7 +129,7 @@ async function run(
     }
     let delay = 0;
     try {
-      if (Date.now() - Date.parse(a.created_at) > 86400000) {
+      if (Date.now() - Date.parse(a.started_at || a.created_at) > 86400000) {
         await save({
           state: "error",
           error_message: fenced
@@ -139,7 +151,25 @@ async function run(
             "El contenido ya no pertenece al proyecto confirmado.",
           );
       }
+      if (a.requested_by && !fenced) {
+        const { data: member } = await s.db
+          .from("kw_workspace_members")
+          .select("role")
+          .eq("workspace_id", s.workspace)
+          .eq("user_id", a.requested_by)
+          .maybeSingle();
+        if (!member || !["admin", "owner"].includes(member.role))
+          throw new Rejection(
+            "La persona que confirmó la programación ya no tiene permiso para publicar.",
+          );
+      }
       const { graph, account } = await connection(s, a.connection_id);
+      if (
+        !fenced &&
+        a.format === "story" &&
+        !verifiedBusiness(account.account_type)
+      )
+        throw new Rejection("Las historias requieren una cuenta de Empresa.");
       if (account.external_account_id !== a.external_account_id)
         throw new Rejection("Cuenta no disponible.");
       const outcome = await advance(a, {
@@ -163,12 +193,30 @@ async function run(
       if (outcome === "done") return;
       if (outcome === "wait") delay = 60000;
     } catch (e) {
+      if (!fenced && e instanceof TemporaryFailure && a.transient_retries < 2) {
+        await save({
+          transient_retries: a.transient_retries + 1,
+          error_kind: "META_TEMPORARY",
+          lease_until: new Date(
+            Date.now() + 60000 * (a.transient_retries + 1),
+          ).toISOString(),
+        });
+        return;
+      }
       // Rejection before dispatch can be retried. Ambiguous dispatch can only be reconciled.
       await save(
         fenced
           ? { error_message: "Envío pendiente de confirmar por Meta." }
           : {
               state: "error",
+              error_kind:
+                e instanceof TemporaryFailure
+                  ? "META_TEMPORARY"
+                  : e instanceof MetaRejection
+                    ? "META_" + e.code
+                    : e instanceof Rejection
+                      ? "REJECTED"
+                      : "PREPARATION_FAILED",
               error_message:
                 e instanceof Rejection
                   ? e.message
@@ -211,6 +259,31 @@ Deno.serve(async (req) => {
     if (!uuid(b.projectId) || !uuid(b.contentId))
       throw new Failure("Contenido inválido.", 400);
     const s = await scope(req, b.projectId);
+    if (b.action === "cancel") {
+      const { data, error } = await s.db
+        .from(table)
+        .update({ state: "cancelled" })
+        .eq("id", b.existing)
+        .eq("content_id", b.contentId)
+        .eq("project_id", s.projectId)
+        .eq("workspace_id", s.workspace)
+        .eq("revision", b.revision)
+        .eq("state", "scheduled")
+        .select("id")
+        .maybeSingle();
+      if (error || !data)
+        throw new Failure(
+          "Ya se ha modificado o iniciado la publicación. Recarga el contenido.",
+          409,
+        );
+      return json({ cancelled: true });
+    }
+    if (b.action === "schedule") {
+      if (!uuid(b.attemptId) || !uuid(b.connectionId))
+        throw new Failure("Programación inválida.", 400);
+      const { account } = await connection(s, b.connectionId);
+      return json({ content: await schedule(s, b, account) });
+    }
     if (b.action === "storyEligibility" && uuid(b.connectionId)) {
       const { account, graph } = await connection(s, b.connectionId);
       return json({
@@ -252,10 +325,15 @@ Deno.serve(async (req) => {
     if (b.action !== "confirm" || !uuid(b.connectionId) || !uuid(b.attemptId))
       throw new Failure("Falta confirmar la publicación.", 400);
     const existing = await latest();
+    if (existing?.state === "scheduled")
+      throw new Failure(
+        "Cancela la programación antes de publicar ahora.",
+        409,
+      );
     if (
       existing &&
       (existing.id === b.attemptId ||
-        existing.state !== "error" ||
+        !["error", "cancelled"].includes(existing.state) ||
         existing.send_started)
     )
       return json({ attempt: existing });
@@ -302,6 +380,8 @@ Deno.serve(async (req) => {
     });
     if (write && write.code !== "23505") throw write;
     const attempt = await latest();
+    if (attempt?.state === "scheduled")
+      throw new Failure("El contenido ya tiene una programación activa.", 409);
     if (attempt?.state === "publishing")
       EdgeRuntime.waitUntil(run(s, attempt.id));
     return json({ attempt });

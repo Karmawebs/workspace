@@ -174,3 +174,12 @@
 .ig-delivery {display:inline-flex;flex-wrap:wrap;gap:.5em;font-size:.8em;color:#54545a}
 .ig-delivery.published {color:#146138}
 .ig-delivery.error {color:#9b2537}
+
+.ig-delivery strong {display:inline-block;border-radius:999px;padding:3px 9px;color:#4d5058;background:#eceef1}
+.ig-delivery.ready strong {color:#184f96;background:#e5efff}
+.ig-delivery.scheduled strong {color:#653a93;background:#f0e5ff}
+.ig-delivery.publishing strong {color:#755400;background:#fff1b8}
+.ig-delivery.published strong {color:#146138;background:#def5e7}
+.ig-delivery.error strong {color:#95243d;background:#ffe3e8}
+.ig-delivery.cancelled strong {color:white;background:#53565d}
+.social-content-editor footer {flex-wrap:wrap}

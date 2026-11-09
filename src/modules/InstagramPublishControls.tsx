@@ -10,7 +10,11 @@ import { socialLabels } from "./socialContent";
 
 type Account = { id: string; username: string; project_id: string };
 type Preview = { url: string; video: boolean };
-export type Confirmation = { connectionId: string; attemptId: string };
+export type Confirmation = {
+  connectionId: string;
+  attemptId: string;
+  due?: string;
+};
 export async function publishAction(body: Record<string, unknown>) {
   const { data, error } = await db.functions.invoke(
     "social-instagram-publish",
@@ -72,6 +76,9 @@ export function InstagramPublishControls({
   blocked,
   onConfirm,
   failed,
+  due,
+  rescheduling = false,
+  initialAccount,
 }: {
   projectId: string;
   contentId: string;
@@ -80,6 +87,9 @@ export function InstagramPublishControls({
   caption: string;
   blocked: boolean;
   failed: boolean;
+  due?: string;
+  rescheduling?: boolean;
+  initialAccount?: string;
   onConfirm: (v: Confirmation) => void;
 }) {
   const [accounts, setAccounts] = useState<Account[]>([]),
@@ -93,6 +103,7 @@ export function InstagramPublishControls({
     }>();
   const [business, setBusiness] = useState(""),
     [storyError, setStoryError] = useState("");
+  const [scheduling, setScheduling] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     let active = true;
@@ -118,12 +129,16 @@ export function InstagramPublishControls({
             (!a.expires_at || Date.parse(a.expires_at) > Date.now()),
         );
         setAccounts(valid);
-        choose(valid[0]?.id || "");
+        choose(
+          valid.some((a) => a.id === initialAccount)
+            ? initialAccount!
+            : valid[0]?.id || "",
+        );
       })();
     return () => {
       active = false;
     };
-  }, [projectId]);
+  }, [projectId, initialAccount]);
   const account = accounts.find(
     (a) => a.id === chosen && a.project_id === projectId,
   );
@@ -206,6 +221,8 @@ export function InstagramPublishControls({
   }, [items, format, compatibleFiles, account]);
   const current =
     media?.items === items && media?.format === format ? media : undefined;
+  const manualOnly =
+    !!current?.error && current.error.includes("proporción entre 4:5");
   const problem = !account
     ? accountError ||
       "Selecciona un proyecto con una cuenta de Instagram conectada."
@@ -234,16 +251,45 @@ export function InstagramPublishControls({
             ))}
         </select>
       </label>
-      {problem && <small>{problem}</small>}
+      {rescheduling && (
+        <small>
+          Confirma los cambios para actualizar la hora y el contenido que se
+          enviará.
+        </small>
+      )}
+      {problem && <small role="status">{problem}</small>}
+      {manualOnly && (
+        <p className="ig-manual-notice" role="status">
+          Puedes guardar este diseño original en Workspace y publicarlo
+          manualmente desde Instagram. La publicación automática permanecerá
+          deshabilitada para evitar errores; no se recortará ni modificará la
+          imagen.
+        </p>
+      )}
+      {!rescheduling && (
+        <button
+          type="button"
+          disabled={blocked || !!problem}
+          onClick={(e) => {
+            setScheduling(false);
+            if (e.currentTarget.form?.reportValidity())
+              dialog.current?.showModal();
+          }}
+        >
+          {failed ? "Reintentar publicación" : "Publicar ahora"}
+        </button>
+      )}
       <button
         type="button"
-        disabled={blocked || !!problem}
+        disabled={blocked || !!problem || !due || Date.parse(due) <= Date.now()}
         onClick={(e) => {
-          if (e.currentTarget.form?.reportValidity())
+          if (e.currentTarget.form?.reportValidity()) {
+            setScheduling(true);
             dialog.current?.showModal();
+          }
         }}
       >
-        {failed ? "Reintentar publicación" : "Publicar ahora"}
+        {rescheduling ? "Guardar programación" : "Programar publicación"}
       </button>
       <dialog
         ref={dialog}
@@ -251,7 +297,17 @@ export function InstagramPublishControls({
         aria-label="Confirmar publicación"
         onCancel={(e) => e.stopPropagation()}
       >
-        <h2>Publicar en Instagram</h2>
+        <h2>
+          {scheduling ? "Programar en Instagram" : "Publicar en Instagram"}
+        </h2>
+        {scheduling && due && (
+          <p>
+            {new Date(due).toLocaleString("es", {
+              dateStyle: "full",
+              timeStyle: "long",
+            })}
+          </p>
+        )}
         <p>
           @{account?.username} · {socialLabels[format]}
         </p>
@@ -286,13 +342,14 @@ export function InstagramPublishControls({
               if (account) {
                 dialog.current?.close();
                 onConfirm({
+                  ...(scheduling ? { due } : {}),
                   connectionId: account.id,
                   attemptId: crypto.randomUUID(),
                 });
               }
             }}
           >
-            Confirmar publicación
+            {scheduling ? "Confirmar programación" : "Confirmar publicación"}
           </button>
         </footer>
       </dialog>

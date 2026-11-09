@@ -1754,6 +1754,12 @@ export type Database = {
     Views: {
       kw_social_content_delivery: {
         Row: Database["public"]["Tables"]["kw_content_items"]["Row"] & {
+          main_state: string;
+          attempt_id: string | null;
+          attempt_revision: number | null;
+          destination_id: string | null;
+          automatic_at: string | null;
+          social_project_name: string | null;
           publication_state: string | null;
           publication_error: string | null;
           instagram_published_at: string | null;

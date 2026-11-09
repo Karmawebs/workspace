@@ -44,7 +44,7 @@ describe("editor publication consent", () => {
       status: "saved",
     },
   ] as MediaItem[];
-  function mount() {
+  function mount(due?: string) {
     const confirm = vi.fn();
     render(
       <form>
@@ -52,6 +52,7 @@ describe("editor publication consent", () => {
           projectId="project"
           contentId="content"
           items={items}
+          due={due}
           format="post"
           caption="Un copy"
           blocked={false}
@@ -96,43 +97,54 @@ describe("editor publication consent", () => {
       expect(fixture.invoke).not.toHaveBeenCalled();
     },
   );
-  it("requires explicit confirmation after preview and lets the user cancel", async () => {
-    fixture.accounts = [account];
-    const image = vi.spyOn(window, "Image").mockImplementation(function () {
-      const el = document.createElement("img");
-      Object.defineProperties(el, {
-        naturalWidth: { value: 1080 },
-        naturalHeight: { value: 1080 },
-        src: {
-          set() {
-            queueMicrotask(() => el.dispatchEvent(new Event("load")));
+  it.each([false, true])(
+    "requires explicit confirmation after preview, scheduled=%s",
+    async (scheduling) => {
+      const due = scheduling
+        ? new Date(Date.now() + 3600000).toISOString()
+        : undefined;
+      fixture.accounts = [account];
+      const image = vi.spyOn(window, "Image").mockImplementation(function () {
+        const el = document.createElement("img");
+        Object.defineProperties(el, {
+          naturalWidth: { value: 1080 },
+          naturalHeight: { value: 1080 },
+          src: {
+            set() {
+              queueMicrotask(() => el.dispatchEvent(new Event("load")));
+            },
           },
-        },
-      });
-      return el;
-    } as typeof Image);
-    try {
-      const confirm = mount(),
-        start = screen.getByRole("button", {
-          name: "Publicar ahora",
-        }) as HTMLButtonElement;
-      await waitFor(() => expect(start.disabled).toBe(false));
-      fireEvent.click(start);
-      let dialog = within(screen.getByRole("dialog"));
-      expect(dialog.getByText("Un copy")).toBeTruthy();
-      fireEvent.click(dialog.getByText("Cancelar"));
-      expect(confirm).not.toHaveBeenCalled();
-      fireEvent.click(start);
-      dialog = within(screen.getByRole("dialog"));
-      fireEvent.click(
-        dialog.getByRole("button", { name: "Confirmar publicación" }),
-      );
-      expect(confirm).toHaveBeenCalledWith({
-        connectionId: "instagram",
-        attemptId: expect.any(String),
-      });
-    } finally {
-      image.mockRestore();
-    }
-  });
+        });
+        return el;
+      } as typeof Image);
+      try {
+        const confirm = mount(due),
+          start = screen.getByRole("button", {
+            name: scheduling ? "Programar publicación" : "Publicar ahora",
+          }) as HTMLButtonElement;
+        await waitFor(() => expect(start.disabled).toBe(false));
+        fireEvent.click(start);
+        let dialog = within(screen.getByRole("dialog"));
+        expect(dialog.getByText("Un copy")).toBeTruthy();
+        fireEvent.click(dialog.getByText("Cancelar"));
+        expect(confirm).not.toHaveBeenCalled();
+        fireEvent.click(start);
+        dialog = within(screen.getByRole("dialog"));
+        fireEvent.click(
+          dialog.getByRole("button", {
+            name: scheduling
+              ? "Confirmar programación"
+              : "Confirmar publicación",
+          }),
+        );
+        expect(confirm).toHaveBeenCalledWith({
+          ...(scheduling ? { due } : {}),
+          connectionId: "instagram",
+          attemptId: expect.any(String),
+        });
+      } finally {
+        image.mockRestore();
+      }
+    },
+  );
 });
