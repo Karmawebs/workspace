@@ -25,6 +25,11 @@ export function Calendar({ scope }: { scope: Scope }) {
     });
   }, [scope.workspaceId]);
   const [revision, setRevision] = useState(0);
+  useEffect(()=>{
+    if(!rows.some(row=>row.publication_state==="publishing"))return;
+    const timer=window.setTimeout(()=>setRevision(v=>v+1),15000);
+    return ()=>clearTimeout(timer);
+  },[rows]);
   const days = useMemo(() => {
     const offset = (month.getDay() + 6) % 7;
     return Array.from(
@@ -56,12 +61,12 @@ export function Calendar({ scope }: { scope: Scope }) {
       // Supabase caps each response. Page within the visible local-date interval.
       for (let start = 0; ; start += 1000) {
         let query = db
-          .from("kw_content_items")
+          .from("kw_social_content_delivery")
           .select("*")
           .eq("workspace_id", scope.workspaceId)
-          .gte("scheduled_at", days[0].toISOString())
-          .lt("scheduled_at", end.toISOString())
-          .order("scheduled_at")
+          .gte("calendar_at", days[0].toISOString())
+          .lt("calendar_at", end.toISOString())
+          .order("calendar_at")
           .order("sort_order")
           .order("id")
           .range(start, start + 999);

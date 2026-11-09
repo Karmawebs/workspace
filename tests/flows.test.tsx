@@ -266,13 +266,14 @@ describe("Flujos compartidos", () => {
   });
   it("renderiza varias publicaciones el mismo día", async () => {
     const d = new Date();
-    mock.tables.kw_content_items = [
+    mock.tables.kw_social_content_delivery = [
       {
         id: "a",
         workspace_id: "workspace-1",
         content_type: "post",
         title: "Sesión A",
-        scheduled_at: d.toISOString(),
+        publication_state: "published",
+        calendar_at: d.toISOString(),
       },
       {
         id: "b",

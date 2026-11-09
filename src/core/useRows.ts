@@ -32,5 +32,10 @@ export function useRows(def: Entity, scope: Scope, projectId?: string) {
       alive = false;
     };
   }, [def, scope.workspaceId, scope.app, projectId, revision]);
+  useEffect(() => {
+    if(def.table !== "kw_content_items" || !rows.some(row=>row.publication_state==="publishing"))return;
+    const timer=window.setTimeout(reload,15000);
+    return ()=>clearTimeout(timer);
+  },[rows,def.table,reload]);
   return { rows, loading, error, reload };
 }
