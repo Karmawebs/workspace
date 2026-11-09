@@ -169,7 +169,7 @@ function Login({ externalError }: { externalError: string }) {
         );
       } else {
         const { error } = await db.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + "/#/reset-password",
+          redirectTo: window.location.origin + "/recuperar.html",
         });
         if (error) throw error;
         setNotice(
@@ -227,7 +227,7 @@ function Login({ externalError }: { externalError: string }) {
                 autoComplete={
                   mode === "signup" ? "new-password" : "current-password"
                 }
-                minLength={8}
+                minLength={mode === "signup" ? 8 : undefined}
                 required
               />
             </label>

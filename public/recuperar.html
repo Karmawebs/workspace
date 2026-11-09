@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer"><title>Recuperar acceso · Karma Workspace</title>
+<style>body{font:1rem system-ui;background:#f5f5f3;color:#191919;margin:0}main{max-width:24rem;margin:10vh auto;padding:2rem;background:white;border-radius:1rem}input,button{display:block;box-sizing:border-box;width:100%;font:inherit;padding:.8rem;margin:.6rem 0 1rem}button{cursor:pointer}a{color:inherit}</style></head>
+<body><main><p>Karma Workspace</p><h1>Recuperar acceso</h1><form id="request" hidden><label>Correo electrónico<input type="email" autocomplete="email" required></label><button>Enviar enlace</button></form>
+<form id="change" hidden><label>Nueva contraseña<input type="password" autocomplete="new-password" minlength="8" required></label><label>Repite la contraseña<input type="password" autocomplete="new-password" required></label><button>Guardar contraseña</button></form>
+<p id="notice" role="status"></p><a href="/" target="_top">Volver al inicio de sesión</a></main>
+<script type="module">
+const fragment = new URLSearchParams(location.hash.slice(1));
+const token = fragment.get('type') === 'recovery' && fragment.get('access_token');
+const hadCallback = Boolean(location.hash || location.search);
+history.replaceState(null, '', location.pathname);
+const request = document.querySelector('#request');
+const change = document.querySelector('#change');
+const notice = document.querySelector('#notice');
+request.hidden = Boolean(token);
+change.hidden = !token;
+if (!token && hadCallback) notice.textContent = 'El enlace ha caducado o es inválido. Solicita otro.';
+async function submit(form, path, method, body, accessToken) {
+  const button = form.querySelector('button');
+  button.disabled = true;
+  try {
+    const headers = {apikey: 'sb_publishable_IpLrhrAkW4gz45ayzyjRsA_MimyqUkZ', 'Content-Type': 'application/json'};
+    if (accessToken) headers.Authorization = 'Bearer ' + accessToken;
+    const response = await fetch('https://wrkoskqfjuefgrwhymqu.supabase.co/auth/v1/' + path, {method, headers, body: JSON.stringify(body)});
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.msg || error.message || 'No se ha podido completar la operación.');
+    }
+    return true;
+  } catch (error) { notice.textContent = error.message; return false; }
+  finally { button.disabled = false; }
+}
+request.onsubmit = async event => {
+  event.preventDefault();
+  const redirect = location.origin + location.pathname;
+  if (await submit(request, 'recover?redirect_to=' + encodeURIComponent(redirect), 'POST', {email:request.elements[0].value.trim()}))
+    notice.textContent = 'Si la cuenta existe, recibirás un enlace por correo.';
+};
+change.onsubmit = async event => {
+  event.preventDefault();
+  const password = change.elements[0].value;
+  if (password !== change.elements[1].value) { notice.textContent = 'Las contraseñas deben coincidir.'; return; }
+  if (await submit(change, 'user', 'PUT', {password}, token)) {
+    change.reset(); change.hidden = true;
+    notice.textContent = 'Contraseña guardada. Vuelve al inicio e introduce tu nueva contraseña.';
+  } else { request.hidden = false; }
+};
+</script></body></html>
