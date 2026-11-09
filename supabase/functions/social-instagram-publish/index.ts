@@ -214,6 +214,7 @@ Deno.serve(async (req) => {
     if (b.action === "storyEligibility" && uuid(b.connectionId)) {
       const { account, graph } = await connection(s, b.connectionId);
       return json({
+        creator: account.account_type === "CREATOR",
         eligible:
           verifiedBusiness(account.account_type) &&
           (await graph(account.external_account_id + "?fields=id")).id ===

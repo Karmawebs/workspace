@@ -91,4 +91,4 @@ Conector para la configuración de Meta 2271522993798663. Usa un SUAT, identific
 
 Instagram 4.3 adds explicit confirmation in the Social editor, server-side container processing, and independent delivery status in content and calendar. A durable dispatch fence prevents repeating an ambiguous media_publish. Cron only resumes already confirmed attempts. The first real publication requires approval in Workspace.
 
-Unified Login IGUser does not expose account_type. Stories are gated on verified Business metadata in the server-managed connection. For @karma.webs this verification remains pending.
+Unified Login IGUser does not expose account_type. Stories are gated on verified Business metadata in the server-managed connection. The owner verified @karma.webs as Creator. Stories are disabled for this account.
