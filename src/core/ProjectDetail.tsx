@@ -1,3 +1,4 @@
+import {PortalAdmin} from "../portal/PortalAdmin";
 import { SocialConnectionsDialog } from "../modules/SocialConnections";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -33,6 +34,7 @@ export function ProjectDetail({ scope, socialConnections=false, canManageConnect
   return <>
     <Link className="back-link" to={`/${scope.app}/projects`}><ArrowLeft size={16}/>Proyectos</Link>
     <header className="page-heading"><div><span className="eyebrow">{apps[scope.app].name.toUpperCase()} / PROYECTO</span><h1>{text(project.name)}</h1><p className="muted">{pretty(project.status)}{project.archived ? " · Archivado" : ""}{project.due_date ? ` · Entrega ${dateLabel(project.due_date)}` : ""}</p></div><button className="secondary" onClick={() => setEdit(true)}><Pencil size={16}/>Editar proyecto</button></header>
+    {scope.app==="social"&&canManageConnections&&<PortalAdmin key={id} projectId={id} workspaceId={scope.workspaceId}/>}
     {panels.error && <p className="error">{panels.error}</p>}
     <div className="quick-panels">{panelRows.map((p, i) => <button className="card quick-panel" key={i} onClick={() => setTab(panelTarget(p.key))}><div><span className="panel-icon">{["↗", "◈", "◷", "ⓘ"][i % 4]}</span><ArrowUpRight size={16}/></div><strong>{p.title}</strong><small>{p.subtitle || panelSubtitle(p.key)}</small></button>)}{socialConnections&&<button className="card quick-panel" onClick={()=>setConnectionsProject(id)}><div><span className="panel-icon">↗</span><ArrowUpRight size={16}/></div><strong>Conexiones</strong><small>Cuentas sociales</small></button>}</div>
     {socialConnections&&connectionsProject===id&&<SocialConnectionsDialog workspaceId={scope.workspaceId} projectId={id} projectName={text(project.name)} canManage={canManageConnections} onClose={()=>setConnectionsProject(undefined)}/>}

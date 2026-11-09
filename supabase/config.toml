@@ -13,3 +13,8 @@ verify_jwt = false
 
 [functions.social-instagram-publish]
 verify_jwt = false
+
+[functions.social-client-portal]
+verify_jwt = false
+[functions.social-portal-admin]
+verify_jwt = false
