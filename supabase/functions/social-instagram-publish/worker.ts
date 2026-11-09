@@ -117,3 +117,11 @@ async function ready(p: Publisher, id: string) {
     );
   return status === "FINISHED";
 }
+
+// Unified Login returns an IGUser without account_type. Only server-verified
+// connection metadata can identify an Empresa account before publication.
+export function verifiedBusiness(accountType: unknown) {
+  return (
+    typeof accountType === "string" && accountType.toUpperCase() === "BUSINESS"
+  );
+}

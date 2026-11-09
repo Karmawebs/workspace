@@ -155,3 +155,10 @@ it("checks the JPEG dimensions from the signed original", async () => {
     ),
   ).rejects.toThrow("proporción");
 });
+
+import { verifiedBusiness } from "../supabase/functions/social-instagram-publish/worker";
+it("requires verified Business metadata before enabling stories", () => {
+  expect(verifiedBusiness("BUSINESS")).toBe(true);
+  for (const t of [null, "CREATOR", "PERSONAL", true])
+    expect(verifiedBusiness(t)).toBe(false);
+});
