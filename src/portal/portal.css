@@ -101,3 +101,44 @@
  .client-portal .portal-row>b{flex:1 1 calc(100% - 90px);min-width:0}
  .client-portal .portal-row>span:not(.portal-type-tag){margin-right:auto}
 }
+
+/* Finder-inspired, read-only client Drive */
+.client-portal .portal-overlay .portal-finder-dialog{width:min(94vw,1060px);height:min(86dvh,760px);max-height:86dvh;display:flex;flex-direction:column;overflow:hidden;padding:26px 30px 24px;border-radius:18px;background:#18181a;border:1px solid #38383e}
+.client-portal .portal-finder-dialog>h2{font-size:23px;line-height:1.3;font-weight:560;letter-spacing:-.045em;margin:1px 0 21px}
+.client-portal .portal-finder-dialog>.close{position:absolute;right:30px;top:25px;width:34px;height:34px;display:grid;place-items:center;padding:0;border:1px solid #39393d;background:#242427;border-radius:9px;font-size:0}
+.client-portal .portal-finder-dialog{position:relative}
+.client-portal .portal-finder{display:flex;flex-direction:column;flex:1;min-height:0;border:1px solid #303035;border-radius:13px;overflow:hidden;background:#151517}
+.client-portal .portal-finder-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 15px;border-bottom:1px solid #303035;background:#1c1c1f}
+.client-portal .portal-finder-breadcrumbs{display:flex;align-items:center;gap:6px;min-width:0;overflow:auto;scrollbar-width:thin}
+.client-portal .portal-finder-breadcrumbs button,.client-portal .portal-finder-view button{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;padding:6px;border:0;background:transparent;color:#b8b8c0;border-radius:7px}
+.client-portal .portal-finder-breadcrumbs button:disabled{opacity:.25}
+.client-portal .portal-finder-breadcrumbs .portal-finder-crumb{font-size:12px;white-space:nowrap;font-weight:540;color:#d9d9de;padding:6px 5px}
+.client-portal .portal-finder-crumb-part{display:flex;align-items:center;gap:5px;color:#75757e}
+.client-portal .portal-finder-view{display:flex;flex-shrink:0;gap:2px;padding:3px;border:1px solid #35353b;border-radius:9px;background:#242427}
+.client-portal .portal-finder-view button{width:30px;height:28px}
+.client-portal .portal-finder-view button[aria-pressed=true]{background:#424249;color:white}
+.client-portal .portal-finder-scroll{flex:1;min-height:0;overflow:auto;padding:22px}
+.client-portal .portal-finder-files.is-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:20px 12px}
+.client-portal .portal-finder-file{display:flex;min-width:0;align-items:center;flex-direction:column;gap:9px;padding:15px 8px 10px;border:1px solid transparent;border-radius:12px;background:transparent;text-align:center;color:#dedee4}
+.client-portal .portal-finder-file:hover:not(:disabled),.client-portal .portal-finder-file:focus-visible{background:#252529;border-color:#38383f}
+.client-portal .portal-finder-icon{width:76px;height:67px;display:grid;place-items:center;border-radius:11px;background:#25262b;color:#c4c8d0}
+.client-portal .portal-finder-icon.is-folder{background:#263343;color:#9ec3e5}
+.client-portal .portal-finder-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;max-width:100%;font-size:12px;font-weight:520;line-height:1.45}
+.client-portal .portal-finder-files.is-list{display:flex;flex-direction:column;gap:2px}
+.client-portal .portal-finder-files.is-list .portal-finder-file{flex-direction:row;text-align:left;padding:9px 12px;gap:13px;border-radius:8px}
+.client-portal .portal-finder-files.is-list .portal-finder-icon{width:35px;height:35px;border-radius:7px}
+.client-portal .portal-finder-files.is-list .portal-finder-name{display:block;flex:1;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font-size:12px}
+.client-portal .portal-finder-kind{font-size:11px;color:#92929c}
+.client-portal .portal-finder-empty{text-align:center;margin:65px 0;color:#85858e;font-size:13px}
+.client-portal .portal-finder-more{display:block;margin:25px auto 0;background:#26262b;border-color:#38383e;font-size:12px}
+.client-portal .portal-finder-preview{border-top:1px solid #36363d;background:#19191c;max-height:53%;display:flex;flex-direction:column;min-height:120px}
+.client-portal .portal-finder-preview-head{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:10px 16px;font-size:12px;color:#d6d6dd;border-bottom:1px solid #303036}
+.client-portal .portal-finder-preview-head>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.client-portal .portal-finder-preview-head>div{display:flex;align-items:center;gap:6px}
+.client-portal .portal-finder-preview-head a,.client-portal .portal-finder-preview-head button{display:grid;place-items:center;width:31px;height:31px;padding:0;border-radius:7px;background:#27272b;border:1px solid #38383d;color:#dddde4}
+.client-portal .portal-finder-preview>img,.client-portal .portal-finder-preview>video{display:block;max-width:100%;max-height:calc(100% - 55px);width:auto;height:auto;object-fit:contain;margin:auto;background:transparent}
+.client-portal .portal-finder-preview>p{padding:0 16px}
+.client-portal .portal-finder-spin{animation:portal-finder-rotate 1s linear infinite}
+@keyframes portal-finder-rotate{to{transform:rotate(360deg)}}
+@media(max-width:650px){.client-portal .portal-overlay .portal-finder-dialog{width:96vw;height:85dvh;padding:20px 15px 15px;border-radius:13px}.client-portal .portal-finder-dialog>.close{right:15px;top:18px}.client-portal .portal-finder-toolbar{padding:9px;gap:8px}.client-portal .portal-finder-scroll{padding:12px}.client-portal .portal-finder-files.is-grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px 5px}.client-portal .portal-finder-icon{width:64px;height:58px}.client-portal .portal-finder-name{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.client-portal .portal-finder-spin{animation:none}}
