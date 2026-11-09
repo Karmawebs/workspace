@@ -153,9 +153,11 @@ function Modal({
 export function PortalAdmin({
   projectId,
   workspaceId,
+  section = "all",
 }: {
   projectId?: string;
   workspaceId: string;
+  section?: "all" | "alerts" | "management";
 }) {
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([]),
     [choice, choose] = useState(""),
@@ -195,7 +197,7 @@ export function PortalAdmin({
       )}
       {error && <p role="alert">{error}</p>}
       {(projectId || choice) && (
-        <Controls key={projectId || choice} id={projectId || choice} />
+        <Controls key={projectId || choice} id={projectId || choice} section={section} />
       )}
     </div>
   );
@@ -213,7 +215,7 @@ async function invoke<T>(
     );
   return r.data;
 }
-function Controls({ id }: { id: string }) {
+function Controls({ id, section }: { id: string; section: "all" | "alerts" | "management" }) {
   const [data, set] = useState<Listing>(),
     [modal, open] = useState<Dialog | null>(null),
     [error, err] = useState(""),
@@ -310,7 +312,7 @@ function Controls({ id }: { id: string }) {
           {notice}
         </p>
       )}
-      <Card
+      {section !== "alerts" && <Card
         title="Accesos de clientes"
         icon={<UsersRound />}
         count={data?.access.length}
@@ -342,8 +344,8 @@ function Controls({ id }: { id: string }) {
               </div>
             ))
           : empty("Todavía no hay clientes con acceso a este proyecto.")}
-      </Card>
-      <Card
+      </Card>}
+      {section !== "management" && <Card
         title="Avisos y aprobaciones"
         icon={<MessagesSquare />}
         count={data?.history.length}
@@ -371,8 +373,8 @@ function Controls({ id }: { id: string }) {
               </div>
             ))
           : empty("Las solicitudes de cambios y aprobaciones aparecerán aquí.")}
-      </Card>
-      <Card
+      </Card>}
+      {section !== "alerts" && <Card
         title="Credenciales"
         icon={<KeyRound />}
         count={data?.credentials.length}
@@ -423,7 +425,7 @@ function Controls({ id }: { id: string }) {
               </div>
             ))
           : empty("No hay credenciales guardadas en este proyecto.")}
-      </Card>
+      </Card>}
       {modal && (
         <Modal title={title} close={() => show(null)} busy={busy}>
           {problem}
