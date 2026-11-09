@@ -3,6 +3,7 @@
   "name": "workspace",
   "compatibility_date": "2026-10-24",
   "workers_dev": true,
+  "previews": {},
   "build": {
     "command": "npm run build"
   },
