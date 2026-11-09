@@ -12,13 +12,13 @@ create table public.kw_portal_access (
 create index kw_portal_access_project on public.kw_portal_access(project_id);
 create function kw_private.portal_provision() returns trigger language plpgsql security definer set search_path='' as $$
 begin
- if new.role='kw_portal_client' then
+ if new.role='kw_portal_client' and new.raw_app_meta_data->>'portal'='social' and not exists(select from public.kw_portal_access where user_id=new.id) then
   if new.raw_app_meta_data->>'portal' is distinct from 'social' or not exists(select 1 from public.kw_projects where id=(new.raw_app_meta_data->>'project')::uuid and app_key='social') then raise exception 'Invalid portal assignment';end if;
   insert into public.kw_portal_access(user_id,project_id,name,contact_email,login_email) values(new.id,(new.raw_app_meta_data->>'project')::uuid,new.raw_app_meta_data->>'name',lower(new.raw_app_meta_data->>'contact'),lower(new.email));
  end if;
  return new;
 end $$;
-create trigger kw_portal_provision after insert on auth.users for each row execute function kw_private.portal_provision();
+create trigger kw_portal_provision after insert or update of role,raw_app_meta_data on auth.users for each row execute function kw_private.portal_provision();
 -- Refuse membership even if an operator later tries to add a client as a staff user.
 create function kw_private.portal_membership_guard() returns trigger language plpgsql security definer set search_path='' as $$
 begin
