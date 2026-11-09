@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { FileImage, FileVideo, Folder, HardDrive, RefreshCw, ChevronRight } from "lucide-react";
 import { SocialDriveConnection } from "./SocialDriveConnection";
 import { db } from "../lib/supabase";
 
@@ -157,103 +158,64 @@ export function SocialDriveBrowser({
     }
   }
   return (
-    <section
-      aria-label="Explorador de Google Drive"
-      className="social-drive-browser"
-    >
+    <section aria-label="Explorador de Google Drive" className="social-drive-browser">
       <div className="social-drive-toolbar">
-        <strong>Google Drive · Biblioteca del proyecto</strong>
-        <button
-          type="button"
-          onClick={() => setRevision((n) => n + 1)}
-          disabled={loading}
-        >
-          Actualizar
+        <div className="social-drive-heading">
+          <span className="social-drive-brand"><HardDrive size={18} aria-hidden="true" /></span>
+          <div><strong>Google Drive</strong><small>Biblioteca del proyecto</small></div>
+        </div>
+        <button className="social-drive-refresh" type="button" onClick={() => setRevision((n) => n + 1)} disabled={loading} aria-label="Actualizar archivos" title="Actualizar archivos">
+          <RefreshCw size={16} aria-hidden="true" />
         </button>
       </div>
-      <SocialDriveConnection
-        projectId={projectId}
-        onChange={() => {
-          setPath([{ name: "Carpeta del proyecto" }]);
-          setRevision((n) => n + 1);
-        }}
-      />
-      <nav aria-label="Ruta de carpetas">
+      <SocialDriveConnection projectId={projectId} onChange={() => {
+        setPath([{ name: "Carpeta del proyecto" }]);
+        setRevision((n) => n + 1);
+      }} />
+      <nav className="social-drive-breadcrumbs" aria-label="Ruta de carpetas">
         {path.map((entry, index) => (
-          <button
-            key={entry.id || "root"}
-            type="button"
-            disabled={loading || index === path.length - 1}
-            onClick={() => setPath((old) => old.slice(0, index + 1))}
-          >
-            {entry.name}
-            {index < path.length - 1 ? " /" : ""}
-          </button>
+          <span className="social-drive-crumb" key={entry.id || "root"}>
+            {index > 0 && <ChevronRight size={14} aria-hidden="true" />}
+            <button type="button" disabled={loading || index === path.length - 1}
+              aria-current={index === path.length - 1 ? "page" : undefined}
+              onClick={() => setPath((old) => old.slice(0, index + 1))}>{entry.name}</button>
+          </span>
         ))}
       </nav>
-      {loading && <p role="status">Cargando archivos de Drive…</p>}
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
-      {!loading && !error && files.length === 0 && (
-        <p>
-          Esta carpeta no contiene imágenes, vídeos o subcarpetas compatibles.
-        </p>
-      )}
+      {loading && <p role="status" className="social-drive-notice">Cargando archivos de Drive…</p>}
+      {error && <p role="alert" className="error social-drive-notice">{error}</p>}
+      {!loading && !error && files.length === 0 && <p className="social-drive-notice">Esta carpeta no contiene imágenes, vídeos o subcarpetas compatibles.</p>}
       <ul className="social-drive-files">
         {files.map((file) => (
           <li key={file.id}>
             {file.mimeType === FOLDER ? (
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() =>
-                  setPath((old) => [...old, { id: file.id, name: file.name }])
-                }
-              >
-                📁 {file.name}
+              <button className="social-drive-file-row" type="button" disabled={loading}
+                onClick={() => setPath((old) => [...old, { id: file.id, name: file.name }])}>
+                <Folder className="social-drive-file-icon social-drive-folder-icon" size={19} aria-hidden="true" />
+                <span className="social-drive-file-name">{file.name}</span>
+                <ChevronRight size={15} aria-hidden="true" />
               </button>
             ) : (
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selected.includes(file.id)}
-                  onChange={(event) =>
-                    setSelected((old) =>
-                      event.target.checked
-                        ? [...old, file.id]
-                        : old.filter((id) => id !== file.id),
-                    )
-                  }
-                />
-                {file.mimeType.startsWith("video/") ? "🎬" : "🖼️"} {file.name}
+              <label className={`social-drive-file-row ${selected.includes(file.id) ? "is-selected" : ""}`}>
+                <input type="checkbox" checked={selected.includes(file.id)}
+                  onChange={(event) => setSelected((old) => event.target.checked
+                    ? [...old, file.id] : old.filter((id) => id !== file.id))} />
+                {file.mimeType.startsWith("video/") ?
+                  <FileVideo className="social-drive-file-icon" size={19} aria-hidden="true" /> :
+                  <FileImage className="social-drive-file-icon" size={19} aria-hidden="true" />}
+                <span className="social-drive-file-name">{file.name}</span>
               </label>
             )}
           </li>
         ))}
       </ul>
-      {nextPage && (
-        <button type="button" disabled={loading} onClick={() => void more()}>
-          Cargar más
+      {nextPage && <button className="social-drive-secondary" type="button" disabled={loading} onClick={() => void more()}>Cargar más</button>}
+      {selected.length > 0 && <div className="social-drive-import">
+        <p role="status">{selected.length} archivo(s) seleccionado(s) · Máximo 50 MiB por archivo</p>
+        <button className="social-drive-primary" type="button" disabled={importing || loading} onClick={() => void importSelected()}>
+          {importing ? "Importando…" : "Añadir al contenido"}
         </button>
-      )}
-      {selected.length > 0 && (
-        <div>
-          <p role="status">
-            {selected.length} archivo(s) seleccionado(s). Máximo 50 MiB por
-            archivo.
-          </p>
-          <button
-            type="button"
-            disabled={importing || loading}
-            onClick={() => void importSelected()}
-          >
-            {importing ? "Importando…" : "Añadir al contenido"}
-          </button>
-        </div>
-      )}
+      </div>}
     </section>
   );
 }
