@@ -117,3 +117,50 @@
     padding: 20px 10px;
   }
 }
+
+
+/* Drive library: compact, accessible controls inside the content editor. */
+.social-drive-browser { display: grid; gap: 12px; min-width: 0; padding: 14px; border: 1px solid var(--border, #e5e3e8); border-radius: 14px; background: #fff; }
+.social-drive-toolbar, .social-drive-heading, .social-drive-connection-toggle, .social-drive-file-row, .social-drive-import { display: flex; align-items: center; }
+.social-drive-toolbar, .social-drive-import { justify-content: space-between; gap: 12px; }
+.social-drive-heading { gap: 10px; min-width: 0; }
+.social-drive-heading > div { display: grid; gap: 2px; }
+.social-drive-heading strong { font-size: 14px; }
+.social-drive-heading small, .social-drive-import p, .social-drive-notice { font-size: 12px; color: var(--muted, #74717a); }
+.social-drive-brand { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; border-radius: 10px; background: #f1eff7; color: #69568e; }
+.social-drive-browser button { cursor: pointer; }
+.social-drive-browser button:disabled { opacity: .55; cursor: not-allowed; }
+.social-drive-refresh, .social-drive-secondary, .social-drive-primary, .social-drive-danger { display: inline-flex; justify-content: center; align-items: center; gap: 7px; min-height: 34px; padding: 7px 11px; border-radius: 9px; font-size: 12px; font-weight: 600; }
+.social-drive-refresh, .social-drive-secondary { border: 1px solid #e3e1e8; color: #29262e; background: #fff; }
+.social-drive-refresh { width: 34px; padding: 0; flex: 0 0 34px; }
+.social-drive-primary { background: #252429; color: #fff; border: 1px solid #252429; }
+.social-drive-danger { background: #fff; color: #a7434c; border: 1px solid #f0d7db; }
+.social-drive-connection { min-width: 0; }
+.social-drive-connection-toggle { width: 100%; justify-content: space-between; border: 1px solid #e6e4e9; background: #faf9fb; color: #3e3b44; border-radius: 9px; padding: 10px 12px; font-size: 12px; font-weight: 600; }
+.social-drive-connection-toggle span { display: inline-flex; align-items: center; gap: 8px; }
+.social-drive-connection-toggle .is-open { transform: rotate(180deg); }
+.social-drive-connection-panel { min-width: 0; margin: 7px 0 0; padding: 12px; border: 1px solid #e6e4e9; border-radius: 10px; }
+.social-drive-connection-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.social-drive-folder-picker { display: grid; gap: 10px; margin-top: 12px; }
+.social-drive-folder-path, .social-drive-connection-message { margin: 0; font-size: 12px; color: #696571; overflow-wrap: anywhere; }
+.social-drive-folder-list { display: grid; gap: 4px; }
+.social-drive-folder-choice { display: flex; align-items: center; gap: 9px; width: 100%; min-width: 0; padding: 9px; text-align: left; border: 1px solid transparent; border-radius: 8px; background: #faf9fb; color: #333; }
+.social-drive-folder-choice span { overflow-wrap: anywhere; }
+.social-drive-breadcrumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.social-drive-crumb { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.social-drive-crumb button { border: 0; background: transparent; padding: 3px 4px; font-size: 12px; color: #625e69; overflow-wrap: anywhere; }
+.social-drive-crumb button[aria-current="page"] { color: #29262e; font-weight: 700; }
+.social-drive-files { display: grid; gap: 5px; list-style: none; margin: 0; padding: 0; max-height: 260px; overflow: auto; }
+.social-drive-files li { min-width: 0; }
+.social-drive-file-row { box-sizing: border-box; width: 100%; min-width: 0; gap: 10px; padding: 10px 11px; border: 1px solid #eceaf0; border-radius: 9px; background: #fff; color: #302d34; text-align: left; font-size: 12px; cursor: pointer; }
+.social-drive-file-row:hover, .social-drive-folder-choice:hover { background: #f7f5fa; }
+.social-drive-file-row.is-selected { border-color: #bcb0d6; background: #f5f1fb; }
+.social-drive-file-row input { flex: 0 0 auto; accent-color: #7965a5; }
+.social-drive-file-icon { flex: 0 0 auto; color: #8574ab; }
+.social-drive-folder-icon { color: #b58a4e; }
+.social-drive-file-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.social-drive-import { flex-wrap: wrap; border-top: 1px solid #eeecf0; padding-top: 12px; }
+.social-drive-import p { margin: 0; }
+.social-drive-notice { margin: 0; }
+.social-drive-browser button:focus-visible, .social-drive-file-row:focus-within { outline: 2px solid #8574ab; outline-offset: 2px; }
+@media (max-width: 560px) { .social-drive-browser { padding: 10px; } .social-drive-import { align-items: stretch; } .social-drive-import .social-drive-primary { width: 100%; } }
