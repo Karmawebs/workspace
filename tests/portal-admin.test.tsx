@@ -22,3 +22,9 @@ it("muestra la solicitud con su contexto y responde vinculada a la actividad ori
 it("consulta una credencial únicamente al abrirla y confirma antes de eliminar",async()=>{
  await start();expect(invoke).toHaveBeenCalledTimes(1);click("Consultar CMS");await waitFor(()=>expect(screen.getByLabelText("Contraseña").getAttribute("type")).toBe("password"));click("Cerrar");expect(screen.queryByDisplayValue("fixture-only")).toBeNull();vi.mocked(window.confirm).mockReturnValue(false);click("Eliminar CMS");expect(invoke).toHaveBeenCalledTimes(2);
 });
+it("sitúa la actividad sobre el contenido del proyecto y la gestión debajo con una sola carga",async()=>{
+ render(<PortalAdmin projectId="p" workspaceId="w"><h2>Contenido habitual</h2></PortalAdmin>);
+ await screen.findByText(user.login_email);
+ expect(screen.getAllByRole("heading").map(el=>el.textContent)).toEqual(["Avisos y aprobaciones","Contenido habitual","Accesos de clientes","Credenciales"]);
+ expect(invoke).toHaveBeenCalledTimes(1);
+});
