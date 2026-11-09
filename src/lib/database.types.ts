@@ -1289,6 +1289,12 @@ export type Database = {
           },
         ];
       };
+      kw_social_platform_connections: {
+        Row: import("../modules/socialPlatforms").SocialAccount & {workspace_id:string;display_name:string|null;account_type:string|null};
+        Insert: never;
+        Update: never;
+        Relationships: [{foreignKeyName:"kw_social_platform_connections_project_id_fkey";columns:["project_id"];isOneToOne:false;referencedRelation:"kw_projects";referencedColumns:["id"]}];
+      };
       kw_social_storage_cleanup: {
         Row: {
           created_at: string;

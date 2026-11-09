@@ -1,3 +1,4 @@
+import { SocialConnections } from "./modules/SocialConnections";
 import { useEffect, useState, type CSSProperties } from "react";
 import { HashRouter, Navigate, useNavigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { Menu } from "lucide-react";
@@ -41,8 +42,8 @@ function Shell() {
       <main key={`${membership.workspace_id}/${key}`}>{error?<p className="error" role="alert">{error}<button onClick={()=>window.location.reload()}>Reintentar</button></p>:!config?<p role="status">Cargando Workspace…</p>:!allowed?<div className="card info-panel"><h1>Aplicación no habilitada</h1><p>Selecciona una aplicación disponible en el menú.</p></div>:<Routes>
         <Route index element={<Navigate to={home} replace/>}/>
         {key==="karma"&&<Route path="home" element={<KarmaInternal scope={scope}/>}/>} 
-        {available.map(n=><Route key={n.path} path={n.path} element={n.path==="dashboard"?<Dashboard scope={scope}/>:n.path==="calendar"?<Calendar scope={scope}/>:n.path==="sites"?<Care scope={scope}/>:n.path==="projects"&&key==="care"?<CareProjects scope={scope}/>:n.path==="settings"&&key==="care"?<CareSettings scope={scope}/>:n.path==="users"?<Users/>:<EntityView kind={n.path as EntityKey} scope={scope}/>}/>) }
-        {available.some(n=>n.path==="projects")&&<Route path="projects/:id" element={key==="care"?<CareProjectRoute scope={scope}/>:<ProjectDetail scope={scope}/>}/>} 
+        {available.map(n=><Route key={n.path} path={n.path} element={key==="social"&&n.path==="connections"?<SocialConnections workspaceId={scope.workspaceId} canManage={["admin","owner"].includes(membership.role)}/>:n.path==="dashboard"?<Dashboard scope={scope}/>:n.path==="calendar"?<Calendar scope={scope}/>:n.path==="sites"?<Care scope={scope}/>:n.path==="projects"&&key==="care"?<CareProjects scope={scope}/>:n.path==="settings"&&key==="care"?<CareSettings scope={scope}/>:n.path==="users"?<Users/>:<EntityView kind={n.path as EntityKey} scope={scope}/>}/>) }
+        {available.some(n=>n.path==="projects")&&<Route path="projects/:id" element={key==="care"?<CareProjectRoute scope={scope}/>:<ProjectDetail scope={scope} socialConnections={key==="social"&&available.some(n=>n.path==="connections")} canManageConnections={["admin","owner"].includes(membership.role)}/>}/>}
         <Route path="*" element={<div className="card info-panel"><h1>Página no disponible</h1><p>Selecciona una sección del menú.</p></div>}/>
       </Routes>}</main>
       <footer className="app-footer">KARMA WORKSPACE <span>Work · Social · Care · Karma</span></footer>

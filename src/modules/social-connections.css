@@ -1,0 +1,35 @@
+.social-connections-dialog {
+  width: min(32rem, calc(100vw - 2rem));
+  padding: 1.5rem;
+}
+.social-connections-dialog > header,
+.social-platforms section > div:has(> button) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.social-platforms {
+  display: grid;
+  gap: 1rem;
+}
+.social-platforms > section {
+  padding: 1rem;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 12px;
+}
+.social-platforms h3,
+.social-platforms p {
+  margin: 0 0 0.5rem;
+}
+.social-platforms small {
+  color: var(--muted);
+}
+.social-account {
+  display: grid;
+  gap: 0.4rem;
+  overflow-wrap: anywhere;
+}
+.social-account summary {
+  cursor: pointer;
+}

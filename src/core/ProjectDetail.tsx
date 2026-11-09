@@ -1,3 +1,4 @@
+import { SocialConnectionsDialog } from "../modules/SocialConnections";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight, Settings2, Pencil } from "lucide-react";
@@ -12,8 +13,9 @@ import { WorkJournal } from "./WorkJournal";
 import { useRows } from "./useRows";
 import { ProjectUrgency } from "./ProjectUrgency";
 import { Care } from "../modules/Care";
-export function ProjectDetail({ scope }: { scope: Scope }) {
+export function ProjectDetail({ scope, socialConnections=false, canManageConnections=false }: { scope: Scope; socialConnections?:boolean; canManageConnections?:boolean }) {
   const { id = "" } = useParams(), [project, setProject] = useState<Row>(), [error, setError] = useState(""), [tab, setTab] = useState("activity"), [edit, setEdit] = useState(false), [version, setVersion] = useState(0);
+  const [connectionsProject,setConnectionsProject]=useState<string>();
   const panels = useRows(entity("panels"), scope, id), events = useRows(entity("events"), scope, id), milestones = useRows(entity("milestones"), scope, id);
   useEffect(() => { let alive = true; setProject(undefined); setError(""); db.from("kw_projects").select("*").eq("id", id).eq("workspace_id", scope.workspaceId).eq("app_key", scope.app).single().then(({ data, error }) => { if (!alive) return; if (error) setError("Proyecto no disponible o sin acceso."); else setProject(data as Row); }); return () => { alive = false; }; }, [id, scope.workspaceId, scope.app, version]);
   if (error) return <div className="error" role="alert">{error}<Link to={`/${scope.app}/projects`}>Volver a proyectos</Link></div>;
@@ -32,7 +34,8 @@ export function ProjectDetail({ scope }: { scope: Scope }) {
     <Link className="back-link" to={`/${scope.app}/projects`}><ArrowLeft size={16}/>Proyectos</Link>
     <header className="page-heading"><div><span className="eyebrow">{apps[scope.app].name.toUpperCase()} / PROYECTO</span><h1>{text(project.name)}</h1><p className="muted">{pretty(project.status)}{project.archived ? " · Archivado" : ""}{project.due_date ? ` · Entrega ${dateLabel(project.due_date)}` : ""}</p></div><button className="secondary" onClick={() => setEdit(true)}><Pencil size={16}/>Editar proyecto</button></header>
     {panels.error && <p className="error">{panels.error}</p>}
-    <div className="quick-panels">{panelRows.map((p, i) => <button className="card quick-panel" key={i} onClick={() => setTab(panelTarget(p.key))}><div><span className="panel-icon">{["↗", "◈", "◷", "ⓘ"][i % 4]}</span><ArrowUpRight size={16}/></div><strong>{p.title}</strong><small>{p.subtitle || panelSubtitle(p.key)}</small></button>)}</div>
+    <div className="quick-panels">{panelRows.map((p, i) => <button className="card quick-panel" key={i} onClick={() => setTab(panelTarget(p.key))}><div><span className="panel-icon">{["↗", "◈", "◷", "ⓘ"][i % 4]}</span><ArrowUpRight size={16}/></div><strong>{p.title}</strong><small>{p.subtitle || panelSubtitle(p.key)}</small></button>)}{socialConnections&&<button className="card quick-panel" onClick={()=>setConnectionsProject(id)}><div><span className="panel-icon">↗</span><ArrowUpRight size={16}/></div><strong>Conexiones</strong><small>Cuentas sociales</small></button>}</div>
+    {socialConnections&&connectionsProject===id&&<SocialConnectionsDialog workspaceId={scope.workspaceId} projectId={id} projectName={text(project.name)} canManage={canManageConnections} onClose={()=>setConnectionsProject(undefined)}/>}
     <div className="project-toolbar"><div className="tabs" role="tablist">{tabs.map((t) => <button role="tab" aria-selected={tab === t.key} className={tab === t.key ? "active" : ""} key={t.key} onClick={() => { setTab(t.key); if (t.key !== "panels") panels.reload(); }}>{t.key === "panels" && <Settings2 size={14}/>} {t.title}</button>)}</div><ProjectUrgency key={`${scope.app}:${id}`} scope={scope} project={project} onSave={(updated) => setProject((current) => current?.id === updated.id ? updated : current)}/></div>
     <div role="tabpanel">
       {tab === "activity" ? scope.app === "work" ? <div className="operations-grid"><EntityView kind="tasks" scope={scope} projectId={id} compact/><WorkJournal scope={scope} projectId={id}/></div> : scope.app === "social" ? <div className="operations-grid social-project-columns"><div className="social-project-left"><EntityView kind="tasks" scope={scope} projectId={id} compact/><EntityView kind="events" scope={scope} projectId={id} compact/></div><WorkJournal scope={scope} projectId={id}/></div> : <div className="operations-grid"><EntityView kind="tasks" scope={scope} projectId={id} compact/><EntityView kind="events" scope={scope} projectId={id} compact/></div>

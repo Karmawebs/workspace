@@ -13,7 +13,7 @@ export const navigation = [
   {path:"content",name:"Contenido",module:"content_manager",apps:["social"]},
   {path:"milestones",name:"Hitos",module:"milestones",apps:[]},
   {path:"sites",name:"Área técnica",module:"technical",apps:["care"]},
-  {path:"connections",name:"Conexiones",module:"connections",apps:["care"]},
+  {path:"connections",name:"Conexiones",module:"connections",apps:["care","social"]},
   {path:"clients",name:"CRM · Clientes",module:"crm",apps:["work","social"]},
   {path:"alerts",name:"Alertas",module:"alerts",apps:["care"]},
   {path:"settings",name:"Configuración",module:"settings",apps:["care"]},
