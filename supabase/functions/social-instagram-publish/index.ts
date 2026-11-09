@@ -10,9 +10,9 @@ import {
 } from "../_shared/social-drive.ts";
 import { openPlatformTokens } from "../_shared/social-platform-credentials.ts";
 import { formatError } from "../_shared/instagram-formats.ts";
-import { advance, Rejection } from "./worker.ts";
+import { verifiedBusiness, advance, Rejection } from "./worker.ts";
 // Supabase Edge Runtime extends Deno with a background task lifetime.
-declare const EdgeRuntime: { waitUntil(task:Promise<void>):void };
+declare const EdgeRuntime: { waitUntil(task: Promise<void>): void };
 const table = "kw_instagram_publications";
 const uuid = (v: unknown) =>
   typeof v === "string" &&
@@ -215,8 +215,9 @@ Deno.serve(async (req) => {
       const { account, graph } = await connection(s, b.connectionId);
       return json({
         eligible:
-          (await graph(account.external_account_id + "?fields=account_type"))
-            .account_type === "BUSINESS",
+          verifiedBusiness(account.account_type) &&
+          (await graph(account.external_account_id + "?fields=id")).id ===
+            account.external_account_id,
       });
     }
     const { data: c } = await s.db
@@ -280,8 +281,9 @@ Deno.serve(async (req) => {
     if (reason) throw new Rejection(reason);
     if (
       c.content_type === "story" &&
-      (await graph(account.external_account_id + "?fields=account_type"))
-        .account_type !== "BUSINESS"
+      (!verifiedBusiness(account.account_type) ||
+        (await graph(account.external_account_id + "?fields=id")).id !==
+          account.external_account_id)
     )
       throw new Rejection(
         "Meta requiere una cuenta Business para publicar historias.",

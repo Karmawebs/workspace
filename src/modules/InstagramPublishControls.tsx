@@ -141,7 +141,10 @@ export function InstagramPublishControls({
         .then((r) => {
           if (active) {
             if (r.eligible) setBusiness(account.id);
-            else setStoryError("Las historias requieren una cuenta Business.");
+            else
+              setStoryError(
+                "Historias pendientes de verificar. Confirma que el tipo de cuenta en Instagram es Empresa.",
+              );
           }
         })
         .catch(() => {
