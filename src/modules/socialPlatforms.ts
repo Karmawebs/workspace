@@ -1,5 +1,5 @@
 export const platforms = {
-  instagram: { name: "Instagram", availability: "next_stage" },
+  instagram: { name: "Instagram", availability: "available" },
   facebook: { name: "Facebook", availability: "planned" },
   tiktok: { name: "TikTok", availability: "planned" },
 } as const;

@@ -85,3 +85,6 @@ Destino confirmado: workspace.karmawebs.com. Migración social_drive_metadata ap
 
 ## Social · etapa 2.1
 Registro de cuentas separado de Drive, por proyecto y plataforma. El resumen y el diálogo de proyecto leen metadatos administrativos con RLS. Instagram queda preparado para la etapa 2.2. Facebook y TikTok figuran como próximos. Las credenciales admiten cifrado AES-GCM con versión de clave y renovación por revisión. La futura función de servidor deberá cargar la clave de 256 bits desde secretos y comprobar proyecto y rol antes de usar service_role. No hay claves ni autorizaciones de plataformas en esta etapa. Rollback para el registro vacío en supabase/rollback/social_platform_connections.sql.
+
+## Social · Instagram Unified Login
+Conector para la configuración de Meta 2271522993798663. Usa un SUAT, identifica el negocio y la cuenta profesional asignada y cifra la credencial en servidor. Ante caducidad o revocación permite comprobar y volver a autorizar. El consentimiento incluye instagram_manage_messages obligatorio en Meta; Workspace no utiliza la API de mensajes. Prueba real pendiente de autorización de @karma.webs.

@@ -11,6 +11,10 @@ class ErrorBoundary extends Component<{ children: ReactNode },{ error: string }>
   render() { return this.state.error ? <div className="auth-page"><div className="card auth-card"><h1>No se pudo abrir Workspace</h1><p role="alert">{this.state.error}</p><button onClick={() => location.reload()}>Reintentar</button></div></div> : this.props.children; }
 }
 const root = createRoot(document.getElementById("root")!);
-if(location.pathname === "/social/drive/callback"){
+if(location.pathname === "/social/instagram/callback"){
+  const params=new URLSearchParams(location.search);
+  history.replaceState(null,"",location.pathname);
+  import("./modules/InstagramConnection").then(({InstagramCallback})=>root.render(<InstagramCallback params={params}/>));
+} else if(location.pathname === "/social/drive/callback"){
   import("./modules/SocialDriveConnection").then(m=>m.finishDrive()).then(message=>root.render(<p>{message}</p>)).catch(error=>root.render(<p role="alert">{error.message}</p>));
 } else import("./App").then(({ default: App }) => root.render(<React.StrictMode><ErrorBoundary><App /></ErrorBoundary></React.StrictMode>)).catch((error) => root.render(<div className="auth-page"><div className="card auth-card"><h1>Configura Karma Workspace</h1><p>{error.message}</p></div></div>));
