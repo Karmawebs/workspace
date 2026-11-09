@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChevronDown, ChevronLeft, Folder, Link2, Plug, Unplug } from "lucide-react";
 import { db } from "../lib/supabase";
 
 type Folder = { id: string; name: string };
@@ -59,6 +60,7 @@ export function SocialDriveConnection({
   const [next, setNext] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   async function run(action: () => Promise<void>) {
     setBusy(true);
     setMessage("");
@@ -110,77 +112,43 @@ export function SocialDriveConnection({
     });
   }
   return (
-    <fieldset disabled={busy}>
-      <legend>Conexión del proyecto</legend>
-      <button type="button" onClick={connect}>
-        Conectar cuenta
+    <div className="social-drive-connection">
+      <button type="button" className="social-drive-connection-toggle" aria-expanded={expanded}
+        aria-controls="social-drive-connection-actions" onClick={() => setExpanded((value) => !value)}>
+        <span><Plug size={15} aria-hidden="true" /> Gestionar conexión</span>
+        <ChevronDown size={16} className={expanded ? "is-open" : ""} aria-hidden="true" />
       </button>
-      <button type="button" onClick={() => void run(() => browse([]))}>
-        Elegir carpeta
-      </button>
-      <button
-        type="button"
-        onClick={() =>
-          void run(async () => {
+      {expanded && <fieldset id="social-drive-connection-actions" className="social-drive-connection-panel" disabled={busy}>
+        <legend className="sr-only">Conexión del proyecto</legend>
+        <div className="social-drive-connection-buttons">
+          <button className="social-drive-secondary" type="button" onClick={connect}><Plug size={15} aria-hidden="true" /> Conectar cuenta</button>
+          <button className="social-drive-secondary" type="button" onClick={() => void run(() => browse([]))}><Folder size={15} aria-hidden="true" /> Elegir carpeta</button>
+          <button className="social-drive-danger" type="button" onClick={() => void run(async () => {
             await driveAction({ projectId, action: "disconnect" });
             setFolders(null);
             setMessage("Cuenta desconectada.");
             onChange();
-          })
-        }
-      >
-        Desconectar
-      </button>
-      {folders && (
-        <div>
-          <p>{["Mi unidad", ...path.map((f) => f.name)].join(" / ")}</p>
-          {path.length > 0 && (
-            <>
-              <button
-                type="button"
-                onClick={() => void run(() => browse(path.slice(0, -1)))}
-              >
-                Subir un nivel
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  void run(async () => {
-                    await driveAction({
-                      projectId,
-                      action: "bind",
-                      folderId: path.at(-1)?.id,
-                    });
-                    setFolders(null);
-                    setMessage("Carpeta vinculada.");
-                    onChange();
-                  })
-                }
-              >
-                Vincular esta carpeta
-              </button>
-            </>
-          )}
-          {folders.map((f) => (
-            <button
-              type="button"
-              key={f.id}
-              onClick={() => void run(() => browse([...path, f]))}
-            >
-              {f.name}
-            </button>
-          ))}
-          {next && (
-            <button
-              type="button"
-              onClick={() => void run(() => browse(path, next))}
-            >
-              Más carpetas
-            </button>
-          )}
+          })}><Unplug size={15} aria-hidden="true" /> Desconectar</button>
         </div>
-      )}
-      {message && <p role="status">{message}</p>}
-    </fieldset>
+        {folders && <div className="social-drive-folder-picker">
+          <p className="social-drive-folder-path">{["Mi unidad", ...path.map((f) => f.name)].join(" / ")}</p>
+          {path.length > 0 && <div className="social-drive-connection-buttons">
+            <button className="social-drive-secondary" type="button" onClick={() => void run(() => browse(path.slice(0, -1)))}><ChevronLeft size={15} aria-hidden="true" /> Subir un nivel</button>
+            <button className="social-drive-primary" type="button" onClick={() => void run(async () => {
+              await driveAction({ projectId, action: "bind", folderId: path.at(-1)?.id });
+              setFolders(null);
+              setMessage("Carpeta vinculada.");
+              onChange();
+            })}><Link2 size={15} aria-hidden="true" /> Vincular esta carpeta</button>
+          </div>}
+          <div className="social-drive-folder-list">{folders.map((f) => (
+            <button className="social-drive-folder-choice" type="button" key={f.id}
+              onClick={() => void run(() => browse([...path, f]))}><Folder size={16} aria-hidden="true" /> <span>{f.name}</span></button>
+          ))}</div>
+          {next && <button className="social-drive-secondary" type="button" onClick={() => void run(() => browse(path, next))}>Más carpetas</button>}
+        </div>}
+      </fieldset>}
+      {message && <p role="status" className="social-drive-connection-message">{message}</p>}
+    </div>
   );
 }
