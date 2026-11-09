@@ -1,3 +1,67 @@
 .client-portal{min-height:100dvh;background:#101011;color:#f8f8f8;display:flex;font:15px/1.45 system-ui,sans-serif;color-scheme:dark}.client-portal *{box-sizing:border-box}.client-portal aside{width:190px;background:#090909;padding:32px 18px;display:flex;gap:20px;flex-direction:column;border-right:1px solid #333}.client-portal aside img,.portal-login img{width:62px;filter:brightness(0) invert(1)}.client-portal aside button:last-child{margin-top:auto}.client-portal main{flex:1;min-width:0;padding:26px}.client-portal header,.portal-month,.client-portal nav,.client-portal footer{display:flex;align-items:center;gap:10px}.client-portal header{justify-content:space-between;flex-wrap:wrap}.client-portal h1,.client-portal h2,.client-portal h3{color:inherit;margin:.4em 0}.client-portal small,.client-portal p{color:#c9c9ce}.client-portal button{background:#222;color:white;border:1px solid #49494b;border-radius:9px;padding:8px 12px;cursor:pointer}.client-portal button[aria-pressed=true]{background:white;color:#101010}.client-portal button:disabled{opacity:.55;cursor:default}.portal-layout{display:flex;align-items:flex-start;gap:20px}.portal-layout section{flex:1;min-width:0}.portal-month{margin:16px 0;text-transform:capitalize}.portal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid #444;border-radius:13px;overflow:hidden;background:#181819}.portal-grid>b{text-align:center;padding:10px 0}.portal-grid>div{min-height:90px;border:1px solid #303031;padding:5px}.portal-grid button.chip{display:block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#9ec9ec;color:#111;font-size:12px;padding:5px;border:0}.portal-grid .chip.carousel{background:#a6d7aa}.portal-grid .chip.reel{background:#c6a5ee}.portal-grid .chip.story{background:#e8a4b4}.client-portal article,.portal-login{padding:20px;background:#171718;border:1px solid #414142;border-radius:16px}.client-portal article{width:min(34%,450px)}.client-portal .preview,.client-portal video{width:100%;max-height:46vh;object-fit:contain;background:#0b0b0b}.client-portal .close{float:right}.client-portal .copy{white-space:pre-wrap;padding:12px;background:#232323;border-radius:8px}.portal-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #444;flex-wrap:wrap}.portal-row b{flex:1}.portal-login{margin:auto;width:min(92%,380px)}.client-portal label,.client-portal input,.client-portal textarea{display:block;width:100%;margin:10px 0}.client-portal input,.client-portal textarea{padding:9px;background:#252525;color:white;border:1px solid #666;border-radius:6px}@media(max-width:900px){.client-portal{flex-direction:column}.client-portal aside{width:100%;flex-direction:row;align-items:center;padding:10px}.client-portal aside img{width:32px}.client-portal aside button:last-child{margin:0 0 0 auto}.client-portal main{padding:12px}.client-portal article{position:fixed;z-index:2;inset:auto 0 0;width:100%;max-height:85dvh;overflow:auto;box-shadow:0 -10px 40px #0009}.portal-grid>div{min-height:70px;padding:2px}}
 .portal-overlay{position:fixed;inset:0;z-index:5;display:grid;place-items:center;background:#000a}.portal-overlay section{background:#181819;width:min(94vw,620px);max-height:86dvh;overflow:auto;border:1px solid #555;padding:22px;border-radius:15px}.portal-overlay section>button{display:block;margin:6px 0}.portal-overlay input[type=checkbox]{width:auto;display:inline}.client-portal footer button:last-child{background:#287a39}.client-portal footer button:first-child{border-color:#a34646;color:#ff9696}@media(max-width:900px){.client-portal aside{flex-wrap:wrap}}
 .client-portal aside .portal-shortcut{display:flex;align-items:center;gap:12px;text-align:left;min-height:52px;background:#19191b;border:1px solid #303034}.portal-shortcut small{display:block;font-size:11px}.client-portal nav button svg,.client-portal aside button svg{vertical-align:middle}.portal-month{flex-wrap:wrap}.portal-legend{margin-left:auto;display:flex;gap:9px}.portal-legend span{font-size:12px}.portal-legend span:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#9ec9ec;margin-right:4px}.portal-legend .carousel:before{background:#a6d7aa}.portal-legend .reel:before{background:#c6a5ee}.portal-legend .story:before{background:#e8a4b4}.client-portal article,.portal-row b{overflow-wrap:anywhere}.client-portal button:focus-visible{outline:2px solid #a9c9ff;outline-offset:2px}@media(max-width:900px){.portal-shortcut small{display:none}.client-portal aside .portal-shortcut{min-height:42px;padding:6px 8px}.portal-legend{width:100%;margin-left:0}.client-portal footer{flex-wrap:wrap}}
+
+
+/* Karma client experience — compact navigation and refined dark surfaces */
+.client-portal{--portal-border:#29292c;--portal-muted:#9999a2;--portal-surface:#171719;--portal-accent:#b4d4ef;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;line-height:1.55;letter-spacing:-.012em;background:#101012}
+.client-portal aside{position:sticky;top:0;align-self:flex-start;height:100dvh;width:76px;min-width:76px;flex-shrink:0;padding:26px 13px 16px;gap:13px;transition:width .22s ease,min-width .22s ease;overflow:hidden;background:#09090b;border-right:1px solid #242427;z-index:4}
+.client-portal aside:hover,.client-portal aside:focus-within{width:224px;min-width:224px}
+.client-portal aside img{width:48px;margin:0 0 22px 2px;flex-shrink:0}
+.client-portal aside .portal-shortcut{width:100%;min-height:48px;padding:12px 13px;gap:17px;border-radius:11px;border:1px solid transparent;background:transparent;white-space:nowrap;flex-shrink:0;transition:background .15s,border-color .15s}
+.client-portal aside .portal-shortcut:hover:not(:disabled),.client-portal aside .portal-shortcut:focus-visible{background:#202023;border-color:#343438}
+.client-portal aside .portal-shortcut svg{min-width:20px;flex-shrink:0;stroke-width:1.7}
+.client-portal aside .portal-shortcut span{opacity:0;visibility:hidden;transition:opacity .12s ease;font-size:13px;font-weight:550}
+.client-portal aside:hover .portal-shortcut span,.client-portal aside:focus-within .portal-shortcut span{opacity:1;visibility:visible}
+.client-portal aside .portal-shortcut small{font-weight:400;font-size:11px;color:#929299}
+.client-portal aside>button:last-child{display:flex;align-items:center;gap:17px;white-space:nowrap;width:100%;min-height:48px;padding:13px;background:transparent;border:1px solid transparent;font-size:0;text-align:left}
+.client-portal aside>button:last-child svg{flex-shrink:0;min-width:20px;width:20px;height:20px}
+.client-portal aside:hover>button:last-child,.client-portal aside:focus-within>button:last-child{font-size:13px}
+.client-portal aside>button:last-child:hover{background:#202023}
+.client-portal main{padding:58px clamp(24px,4vw,76px) 64px;min-width:0}
+.client-portal header{align-items:flex-start;gap:28px;margin-bottom:43px}
+.client-portal header small{font-size:10px;letter-spacing:.15em;font-weight:600;color:#8b8b94}
+.client-portal header h1{font-size:clamp(28px,2.6vw,38px);font-weight:570;letter-spacing:-.055em;margin:14px 0 8px}
+.client-portal header p{font-size:13px;color:#a5a5ad;margin:0}
+.client-portal header nav{margin-top:20px;padding:3px;border:1px solid #303034;border-radius:12px;background:#19191b;gap:2px}
+.client-portal header nav button{border:0;background:transparent;color:#a8a8b0;padding:9px 14px;border-radius:9px;font-size:12px;font-weight:550}
+.client-portal header nav button[aria-pressed=true]{background:#f5f5f6;color:#151517}
+.client-portal h2{font-size:20px;font-weight:570;letter-spacing:-.04em}
+.portal-month{margin:12px 0 18px;gap:9px}
+.portal-month h2{margin-right:8px}
+.portal-month>button{width:34px;height:34px;padding:0;border-radius:9px;background:#1d1d20;border-color:#343438}
+.portal-legend{gap:14px}
+.portal-legend span{font-size:11px;color:#aaaab2}
+.portal-grid{background:#141416;border:1px solid var(--portal-border);border-radius:14px}
+.portal-grid>b{font-size:12px;font-weight:550;color:#b6b6be;padding:13px 0;background:#19191b}
+.portal-grid>div{min-height:108px;border:0;border-top:1px solid #2a2a2d;border-right:1px solid #2a2a2d;padding:9px}
+.portal-grid>div:nth-child(7n){border-right:0}
+.portal-grid>div>small{font-size:11px;color:#898991}
+.portal-grid button.chip{border-radius:6px;text-align:left;padding:6px 8px;margin-top:5px;font-size:11px;font-weight:550;transition:filter .15s}
+.portal-grid button.chip:hover{filter:brightness(1.12)}
+.client-portal article{background:#19191b;border:1px solid #36363a;border-radius:16px;padding:23px;box-shadow:0 12px 36px #0002}
+.client-portal article h2{font-size:21px}
+.client-portal article h3{font-size:13px;font-weight:600;margin-top:20px}
+.client-portal article .copy{background:#242427;border:1px solid #303035;padding:15px;border-radius:10px}
+.client-portal article .close{width:34px;height:34px;padding:0}
+.portal-row{padding:15px 0;border-bottom:1px solid #2e2e31;gap:14px}
+.portal-row b{font-weight:550}
+.client-portal button{transition:background .15s,border-color .15s}
+.client-portal button:not(:disabled):hover{border-color:#696970}
+.portal-overlay section{background:#19191c;border-color:#36363b;box-shadow:0 24px 80px #0009}
+@media(max-width:900px){
+ .client-portal{flex-direction:column}
+ .client-portal aside,.client-portal aside:hover,.client-portal aside:focus-within{position:relative;top:auto;align-self:stretch;width:100%;min-width:0;height:auto;min-height:68px;padding:12px 16px;flex-direction:row;flex-wrap:nowrap;gap:7px;overflow-x:auto;align-items:center;transition:none}
+ .client-portal aside img{width:34px;margin:0 12px 0 0}
+ .client-portal aside .portal-shortcut{width:auto;min-width:42px;min-height:42px;padding:10px;gap:0}
+ .client-portal aside .portal-shortcut span,.client-portal aside:hover .portal-shortcut span,.client-portal aside:focus-within .portal-shortcut span{display:none}
+ .client-portal aside>button:last-child,.client-portal aside:hover>button:last-child,.client-portal aside:focus-within>button:last-child{width:42px;min-width:42px;min-height:42px;margin:0 0 0 auto;padding:10px;font-size:0;gap:0}
+ .client-portal main{padding:30px 18px 48px}
+ .client-portal header{margin-bottom:30px;gap:20px}
+ .client-portal header nav{margin-top:0}
+ .portal-grid>div{min-height:78px;padding:4px}
+ .portal-grid>b{font-size:10px;padding:9px 0}
+ .portal-grid button.chip{font-size:10px;padding:4px}
+ .portal-legend{gap:10px}
+}
+@media(prefers-reduced-motion:reduce){.client-portal aside,.client-portal aside .portal-shortcut span,.client-portal button{transition:none}}
