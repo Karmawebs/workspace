@@ -16,10 +16,20 @@ Deno.serve(async req=>{
  }
  if(b.action==="list"){
  const access=await db.from("kw_portal_access").select("user_id,name,contact_email,login_email,active").eq("project_id",projectId).order("name");
- const history=await db.from("kw_portal_history").select("id,event,content_id,comment,created_at,parent_id").eq("project_id",projectId).in("event",["changes","reply","approved"]).order("created_at",{ascending:false}).limit(100);
- const credentials=await db.from("kw_portal_credentials").select("id,service,visible").eq("project_id",projectId);
+ const history=await db.from("kw_portal_history").select("id,event,actor,content_id,comment,created_at,parent_id,kw_content_items(title,project_id)").eq("project_id",projectId).in("event",["changes","reply","approved","pending"]).order("created_at",{ascending:false}).limit(100);
+ const credentials=await db.from("kw_portal_credentials").select("id,service,visible").eq("project_id",projectId).order("service");
  if(access.error||history.error||credentials.error)throw Error();
- return json({access:access.data,history:history.data,credentials:credentials.data});}
+ const clients=new Map(access.data.map(a=>[a.user_id,a.name]));
+ const activity=history.data.map(({kw_content_items,actor,...h})=>{
+ const c=Array.isArray(kw_content_items)?kw_content_items[0]:kw_content_items;
+ return {...h,title:c?.project_id===projectId?c.title:null,client:clients.get(actor)??null};
+ });
+ // Project credentials stay encrypted at rest. Only this field leaves the server in a list.
+ const summaries=await Promise.all(credentials.data.map(async c=>{
+ const {data:value,error}=await db.rpc("kw_portal_credential",{p_project:projectId,p_id:c.id,p_action:"reveal"});
+ if(error)throw Error();return {...c,username:typeof value?.username==="string"?value.username:""};
+ }));
+ return json({access:access.data,history:activity,credentials:summaries});}
  if(b.action==="reply"){const {error}=await db.rpc("kw_portal_reply",{p_project:projectId,p_parent:b.parent,p_comment:b.comment,p_actor:user,p_request:b.request});if(error)throw error;return json({ok:true});}
  if(b.action==="credential"){
  if(!["create","reveal","delete","update"].includes(b.op))throw new Failure("Operación no válida",400);
