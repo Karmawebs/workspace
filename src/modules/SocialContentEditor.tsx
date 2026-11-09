@@ -53,6 +53,22 @@ export function SocialContentEditor({
   const [limitError, setLimitError] = useState("");
   const [filesReady, setFilesReady] = useState(!original?.id);
   const contentId = useRef(text(original?.id) || crypto.randomUUID());
+  const [portalReview, setPortalReview] = useState("Pendiente");
+  useEffect(() => {
+    let active = true;
+    if (!original?.id) {
+      setPortalReview("Pendiente");
+      return;
+    }
+    setPortalReview("Consultando…");
+    db.from("kw_portal_reviews").select("status").eq("content_id", String(original.id))
+      .then(({ data, error }) => {
+        if (!active) return;
+        const labels = { approved: "Aprobado", changes: "Cambios solicitados", pending: "Pendiente" };
+        setPortalReview(error ? "No se pudo consultar" : labels[data?.[0]?.status ?? "pending"]);
+      });
+    return () => { active = false; };
+  }, [original?.id]);
   const [caption, setCaption] = useState(text(original?.description));
   const form = useRef<HTMLFormElement>(null);
   const confirmation = useRef<Confirmation | null>(null);
@@ -590,13 +606,14 @@ export function SocialContentEditor({
               rows={3}
             />
           </label>
+          <p>Revisión del portal: <strong>{portalReview}</strong></p>
           <label className="check social-client-approval">
             <input
               type="checkbox"
               name="client_approved"
               defaultChecked={original?.client_approved === true}
             />
-            Aprobado por cliente
+            Aprobación registrada manualmente
           </label>
         </fieldset>
         {error && (
