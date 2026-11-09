@@ -533,7 +533,7 @@ it("crea todos los campos de la fase 2 sin multimedia", async () => {
   };
   for (const [label, value] of Object.entries(values))
     fireEvent.change(screen.getByLabelText(label), { target: { value } });
-  fireEvent.click(screen.getByLabelText("Aprobado por cliente"));
+  fireEvent.click(screen.getByLabelText("Aprobación registrada manualmente"));
   fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
   await waitFor(() => expect(mock.writes).toHaveLength(1));
   expect(mock.writes[0]).toMatchObject({
@@ -601,7 +601,7 @@ it("guarda borrador sin aprobación y conserva un canal heredado", async () => {
     channel: "linkedin",
   });
   await screen.findByRole("option", { name: "Cliente Uno" });
-  fireEvent.click(screen.getByLabelText("Aprobado por cliente"));
+  fireEvent.click(screen.getByLabelText("Aprobación registrada manualmente"));
   fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
   await waitFor(() => expect(mock.writes).toHaveLength(1));
   expect(mock.writes[0]).toMatchObject({
@@ -616,7 +616,7 @@ it("aplica defaults seguros al contenido antiguo", async () => {
   openEditor({ channel: null });
   await screen.findByRole("option", { name: "Cliente Uno" });
   expect(screen.getByText("Borrador")).toBeTruthy();
-  expect(screen.getByLabelText("Aprobado por cliente")).toHaveProperty(
+  expect(screen.getByLabelText("Aprobación registrada manualmente")).toHaveProperty(
     "checked",
     false,
   );
@@ -716,4 +716,11 @@ it("combina estado y proyecto conservando múltiples publicaciones del día", as
   expect(screen.getAllByRole("button", { name: /^(Reel|Post):/ })).toHaveLength(
     3,
   );
+});
+
+it("muestra la solicitud del portal aunque exista una aprobación manual anterior", async () => {
+  mock.content = [{ content_id: "a", status: "changes" }];
+  openEditor({ client_approved: true });
+  expect(await screen.findByText("Cambios solicitados")).toBeTruthy();
+  expect(screen.getByLabelText("Aprobación registrada manualmente")).toHaveProperty("checked", true);
 });

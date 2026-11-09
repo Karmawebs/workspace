@@ -1289,6 +1289,12 @@ export type Database = {
           },
         ];
       };
+      kw_portal_reviews: {
+        Row: { content_id: string; revision: number; status: "pending" | "approved" | "changes" };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       kw_social_platform_connections: {
         Row: import("../modules/socialPlatforms").SocialAccount & {workspace_id:string;display_name:string|null;account_type:string|null};
         Insert: never;
