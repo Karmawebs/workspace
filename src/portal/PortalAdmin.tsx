@@ -153,9 +153,11 @@ function Modal({
 export function PortalAdmin({
   projectId,
   workspaceId,
+  children,
 }: {
   projectId?: string;
   workspaceId: string;
+  children?: ReactNode;
 }) {
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([]),
     [choice, choose] = useState(""),
@@ -179,6 +181,7 @@ export function PortalAdmin({
       live = false;
     };
   }, [projectId, workspaceId]);
+  if(projectId && children) return <Controls key={projectId} id={projectId}>{children}</Controls>;
   return (
     <div className="pa-stack">
       {!projectId && (
@@ -213,7 +216,7 @@ async function invoke<T>(
     );
   return r.data;
 }
-function Controls({ id }: { id: string }) {
+function Controls({ id, children }: { id: string; children?: ReactNode }) {
   const [data, set] = useState<Listing>(),
     [modal, open] = useState<Dialog | null>(null),
     [error, err] = useState(""),
@@ -302,7 +305,7 @@ function Controls({ id }: { id: string }) {
                     ? "Editar credencial"
                     : "Añadir credencial"
                 : "";
-  return (
+  const feedback = (
     <>
       {!modal && problem}
       {!modal && notice && (
@@ -310,6 +313,9 @@ function Controls({ id }: { id: string }) {
           {notice}
         </p>
       )}
+    </>
+  );
+  const accessCard = (
       <Card
         title="Accesos de clientes"
         icon={<UsersRound />}
@@ -343,6 +349,8 @@ function Controls({ id }: { id: string }) {
             ))
           : empty("Todavía no hay clientes con acceso a este proyecto.")}
       </Card>
+  );
+  const activityCard = (
       <Card
         title="Avisos y aprobaciones"
         icon={<MessagesSquare />}
@@ -372,6 +380,8 @@ function Controls({ id }: { id: string }) {
             ))
           : empty("Las solicitudes de cambios y aprobaciones aparecerán aquí.")}
       </Card>
+  );
+  const credentialsCard = (
       <Card
         title="Credenciales"
         icon={<KeyRound />}
@@ -424,6 +434,14 @@ function Controls({ id }: { id: string }) {
             ))
           : empty("No hay credenciales guardadas en este proyecto.")}
       </Card>
+  );
+  return (
+    <>
+      {children ? <>
+        <div className="pa-stack">{feedback}{activityCard}</div>
+        {children}
+        <div className="pa-stack">{accessCard}{credentialsCard}</div>
+      </> : <>{feedback}{accessCard}{activityCard}{credentialsCard}</>}
       {modal && (
         <Modal title={title} close={() => show(null)} busy={busy}>
           {problem}
