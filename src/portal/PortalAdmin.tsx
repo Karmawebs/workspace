@@ -153,11 +153,11 @@ function Modal({
 export function PortalAdmin({
   projectId,
   workspaceId,
-  section = "all",
+  children,
 }: {
   projectId?: string;
   workspaceId: string;
-  section?: "all" | "alerts" | "management";
+  children?: ReactNode;
 }) {
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([]),
     [choice, choose] = useState(""),
@@ -181,6 +181,7 @@ export function PortalAdmin({
       live = false;
     };
   }, [projectId, workspaceId]);
+  if(projectId && children) return <Controls key={projectId} id={projectId}>{children}</Controls>;
   return (
     <div className="pa-stack">
       {!projectId && (
@@ -197,7 +198,7 @@ export function PortalAdmin({
       )}
       {error && <p role="alert">{error}</p>}
       {(projectId || choice) && (
-        <Controls key={projectId || choice} id={projectId || choice} section={section} />
+        <Controls key={projectId || choice} id={projectId || choice} />
       )}
     </div>
   );
@@ -215,7 +216,7 @@ async function invoke<T>(
     );
   return r.data;
 }
-function Controls({ id, section }: { id: string; section: "all" | "alerts" | "management" }) {
+function Controls({ id, children }: { id: string; children?: ReactNode }) {
   const [data, set] = useState<Listing>(),
     [modal, open] = useState<Dialog | null>(null),
     [error, err] = useState(""),
@@ -304,7 +305,7 @@ function Controls({ id, section }: { id: string; section: "all" | "alerts" | "ma
                     ? "Editar credencial"
                     : "Añadir credencial"
                 : "";
-  return (
+  const feedback = (
     <>
       {!modal && problem}
       {!modal && notice && (
@@ -312,7 +313,10 @@ function Controls({ id, section }: { id: string; section: "all" | "alerts" | "ma
           {notice}
         </p>
       )}
-      {section !== "alerts" && <Card
+    </>
+  );
+  const accessCard = (
+      <Card
         title="Accesos de clientes"
         icon={<UsersRound />}
         count={data?.access.length}
@@ -344,8 +348,10 @@ function Controls({ id, section }: { id: string; section: "all" | "alerts" | "ma
               </div>
             ))
           : empty("Todavía no hay clientes con acceso a este proyecto.")}
-      </Card>}
-      {section !== "management" && <Card
+      </Card>
+  );
+  const activityCard = (
+      <Card
         title="Avisos y aprobaciones"
         icon={<MessagesSquare />}
         count={data?.history.length}
@@ -373,8 +379,10 @@ function Controls({ id, section }: { id: string; section: "all" | "alerts" | "ma
               </div>
             ))
           : empty("Las solicitudes de cambios y aprobaciones aparecerán aquí.")}
-      </Card>}
-      {section !== "alerts" && <Card
+      </Card>
+  );
+  const credentialsCard = (
+      <Card
         title="Credenciales"
         icon={<KeyRound />}
         count={data?.credentials.length}
@@ -425,7 +433,15 @@ function Controls({ id, section }: { id: string; section: "all" | "alerts" | "ma
               </div>
             ))
           : empty("No hay credenciales guardadas en este proyecto.")}
-      </Card>}
+      </Card>
+  );
+  return (
+    <>
+      {children ? <>
+        <div className="pa-stack">{feedback}{activityCard}</div>
+        {children}
+        <div className="pa-stack">{accessCard}{credentialsCard}</div>
+      </> : <>{feedback}{accessCard}{activityCard}{credentialsCard}</>}
       {modal && (
         <Modal title={title} close={() => show(null)} busy={busy}>
           {problem}

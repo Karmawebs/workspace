@@ -31,10 +31,7 @@ export function ProjectDetail({ scope, socialConnections=false, canManageConnect
   ];
   function panelTarget(key: string) { return key === "information" ? "information" : key === "connections" ? "connections" : key === "next_milestone" ? "milestones" : key === "next_event" ? scope.app === "work" ? "meetings" : "activity" : "resources"; }
   function panelSubtitle(key: string) { if (key === "information") return text(project?.description) || "Datos del proyecto"; if (key === "next_event") { const next = events.rows.find((r) => new Date(text(r.starts_at)) >= new Date()); return next ? `${text(next.title)} · ${dateLabel(next.starts_at)}` : "Sin eventos próximos"; } if (key === "next_milestone") { const next = milestones.rows.filter((r) => r.status !== "completed").sort((a, b) => text(a.due_at || "9999").localeCompare(text(b.due_at || "9999")))[0]; return next ? text(next.title) : "Sin hitos pendientes"; } return "Ver y gestionar"; }
-  return <>
-    <Link className="back-link" to={`/${scope.app}/projects`}><ArrowLeft size={16}/>Proyectos</Link>
-    <header className="page-heading"><div><span className="eyebrow">{apps[scope.app].name.toUpperCase()} / PROYECTO</span><h1>{text(project.name)}</h1><p className="muted">{pretty(project.status)}{project.archived ? " · Archivado" : ""}{project.due_date ? ` · Entrega ${dateLabel(project.due_date)}` : ""}</p></div><button className="secondary" onClick={() => setEdit(true)}><Pencil size={16}/>Editar proyecto</button></header>
-    {scope.app==="social"&&canManageConnections&&<PortalAdmin key={`${id}:alerts`} projectId={id} workspaceId={scope.workspaceId} section="alerts"/>}
+  const projectContent = <>
     {panels.error && <p className="error">{panels.error}</p>}
     <div className="quick-panels">{panelRows.map((p, i) => <button className="card quick-panel" key={i} onClick={() => setTab(panelTarget(p.key))}><div><span className="panel-icon">{["↗", "◈", "◷", "ⓘ"][i % 4]}</span><ArrowUpRight size={16}/></div><strong>{p.title}</strong><small>{p.subtitle || panelSubtitle(p.key)}</small></button>)}{socialConnections&&<button className="card quick-panel" onClick={()=>setConnectionsProject(id)}><div><span className="panel-icon">↗</span><ArrowUpRight size={16}/></div><strong>Conexiones</strong><small>Cuentas sociales</small></button>}</div>
     {socialConnections&&connectionsProject===id&&<SocialConnectionsDialog workspaceId={scope.workspaceId} projectId={id} projectName={text(project.name)} canManage={canManageConnections} onClose={()=>setConnectionsProject(undefined)}/>}
@@ -46,7 +43,11 @@ export function ProjectDetail({ scope, socialConnections=false, canManageConnect
       : tab === "members" ? <ProjectMembers scope={scope} projectId={id}/>
       : tab === "sites" ? <Care scope={scope} projectId={id}/>
       : <EntityView key={tab} kind={tabs.find((t) => t.key === tab)?.entity || "resources"} scope={scope} projectId={id}/>}</div>
-    {scope.app==="social"&&canManageConnections&&<PortalAdmin key={`${id}:management`} projectId={id} workspaceId={scope.workspaceId} section="management"/>}
+  </>;
+  return <>
+    <Link className="back-link" to={`/${scope.app}/projects`}><ArrowLeft size={16}/>Proyectos</Link>
+    <header className="page-heading"><div><span className="eyebrow">{apps[scope.app].name.toUpperCase()} / PROYECTO</span><h1>{text(project.name)}</h1><p className="muted">{pretty(project.status)}{project.archived ? " · Archivado" : ""}{project.due_date ? ` · Entrega ${dateLabel(project.due_date)}` : ""}</p></div><button className="secondary" onClick={() => setEdit(true)}><Pencil size={16}/>Editar proyecto</button></header>
+    {scope.app==="social"&&canManageConnections ? <PortalAdmin key={id} projectId={id} workspaceId={scope.workspaceId}>{projectContent}</PortalAdmin> : projectContent}
     {edit && <Editor def={entity("projects")} scope={scope} original={project} onClose={() => setEdit(false)} onSave={() => { setEdit(false); setVersion((v) => v + 1); }}/>} 
   </>;
 }
