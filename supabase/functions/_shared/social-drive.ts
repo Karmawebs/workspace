@@ -7,7 +7,7 @@ export function env(name: string) {
 }
 export const cors = {
   "Access-Control-Allow-Origin":
-    Deno.env.get("WORKSPACE_ORIGIN") ?? "https://work.karmawebs.com",
+    Deno.env.get("WORKSPACE_ORIGIN") ?? "https://workspace.karmawebs.com",
   "Access-Control-Allow-Headers":
     "authorization, apikey, content-type, x-client-info",
   "Access-Control-Allow-Methods": "POST, OPTIONS",

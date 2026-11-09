@@ -79,3 +79,6 @@ Aplicada `20261030004429_social_workflow_phase2`: dos columnas en kw_content_ite
 
 ## Social — integración Drive en rama de desarrollo, 2026-11-08
 OAuth por proyecto con PKCE y refresh cifrado, selector de raíz e importación de imágenes/vídeos al Media Manager. Callback local registrado. Migración y funciones pendientes de despliegue. Falta probar el consentimiento y el guardado reales con el secreto renovado y un backend aislado. Ver SOCIAL_GOOGLE_DRIVE_IMPLEMENTATION.md.
+
+## Social — preparación de producción, 2026-11-09
+Destino confirmado: workspace.karmawebs.com. Migración social_drive_metadata aplicada y tres funciones social-drive desplegadas en wrkoskqfjuefgrwhymqu. Secretos de producción configurados. Compilación, 66 pruebas frontend y escenario Deno correctos. Pendiente verificar un borrador real con imagen y vídeo tras el consentimiento de Google.
