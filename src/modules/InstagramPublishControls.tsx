@@ -206,6 +206,7 @@ export function InstagramPublishControls({
   }, [items, format, compatibleFiles, account]);
   const current =
     media?.items === items && media?.format === format ? media : undefined;
+  const manualOnly = !!current?.error && current.error.includes("proporción entre 4:5");
   const problem = !account
     ? accountError ||
       "Selecciona un proyecto con una cuenta de Instagram conectada."
@@ -234,7 +235,8 @@ export function InstagramPublishControls({
             ))}
         </select>
       </label>
-      {problem && <small>{problem}</small>}
+      {problem && <small role="status">{problem}</small>}
+      {manualOnly && <p className="ig-manual-notice" role="status">Puedes guardar este diseño original en Workspace y publicarlo manualmente desde Instagram. La publicación automática permanecerá deshabilitada para evitar errores; no se recortará ni modificará la imagen.</p>}
       <button
         type="button"
         disabled={blocked || !!problem}
