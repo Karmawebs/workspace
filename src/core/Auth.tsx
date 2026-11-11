@@ -141,7 +141,7 @@ export function Auth({ children }: { children: ReactNode }) {
   );
 }
 function Login({ externalError }: { externalError: string }) {
-  const [mode, setMode] = useState<"login" | "signup" | "reset">("login"),
+  const [mode, setMode] = useState<"login" | "reset">("login"),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
     [error, setError] = useState("");
@@ -157,16 +157,6 @@ function Login({ externalError }: { externalError: string }) {
       if (mode === "login") {
         const { error } = await db.auth.signInWithPassword({ email, password });
         if (error) throw error;
-      } else if (mode === "signup") {
-        const { error } = await db.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        if (error) throw error;
-        setNotice(
-          "Revisa tu correo para confirmar la cuenta. Un administrador deberá darte acceso al Workspace.",
-        );
       } else {
         const { error } = await db.auth.resetPasswordForEmail(email, {
           redirectTo: window.location.origin + "/recuperar.html",
@@ -202,16 +192,10 @@ function Login({ externalError }: { externalError: string }) {
       <div className="card auth-card">
         <span className="eyebrow">KARMA WORKSPACE</span>
         <h2>
-          {mode === "login"
-            ? "Bienvenido de nuevo"
-            : mode === "signup"
-              ? "Crea tu cuenta"
-              : "Recupera tu acceso"}
+          {mode === "login" ? "Bienvenido de nuevo" : "Recupera tu acceso"}
         </h2>
         <p className="muted">
-          {mode === "signup"
-            ? "Crear una cuenta no concede acceso al Workspace."
-            : "Entra a tu espacio de trabajo."}
+          Entra a tu espacio de trabajo.
         </p>
         <form onSubmit={submit}>
           <label>
@@ -224,10 +208,7 @@ function Login({ externalError }: { externalError: string }) {
               <input
                 name="password"
                 type="password"
-                autoComplete={
-                  mode === "signup" ? "new-password" : "current-password"
-                }
-                minLength={mode === "signup" ? 8 : undefined}
+                autoComplete="current-password"
                 required
               />
             </label>
@@ -243,25 +224,17 @@ function Login({ externalError }: { externalError: string }) {
               ? "Un momento…"
               : mode === "login"
                 ? "Entrar"
-                : mode === "signup"
-                  ? "Crear cuenta"
-                  : "Enviar enlace"}
+                : "Enviar enlace"}
           </button>
         </form>
-        <button
-          className="ghost"
-          onClick={() => {
-            setMode(mode === "login" ? "signup" : "login");
-            setNotice("");
-            setError("");
-          }}
-        >
-          {mode === "login" ? "Crear una cuenta" : "Volver a iniciar sesión"}
-        </button>
+        
         {mode === "login" && (
           <button className="ghost" onClick={() => setMode("reset")}>
             He olvidado mi contraseña
           </button>
+        )}
+        {mode === "reset" && (
+          <button className="ghost" onClick={() => { setMode("login"); setNotice(""); setError(""); }}>Volver a iniciar sesión</button>
         )}
       </div>
     </div>
