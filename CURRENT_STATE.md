@@ -111,3 +111,21 @@ Instagram 4.3 adds explicit confirmation in the Social editor, server-side conta
 Unified Login IGUser does not expose account_type. Stories are gated on verified Business metadata in the server-managed connection. The owner verified @karma.webs as Creator. Stories are disabled for this account.
 
 Social 4.4 derives a single delivery state from confirmed attempts. Old editorial dates remain planning data. Scheduling, validated edits and rescheduling commit atomically. The minute worker claims only confirmed due attempts and resumes the existing Instagram publisher. UTC instants retain the selected occurrence at a daylight-saving overlap. Issue #9 remains open for 3:4 media; originals can be saved for manual use.
+
+## Karma móvil — 2026-11-16
+
+Vista exclusiva de `/karma/home` hasta 760 px: tema oscuro local al shell, logo y
+menú existente, tareas primero, creación rápida en tarjeta, archivo y tres accesos
+en dos columnas. Se ocultan solo en móvil los placeholders y las acciones del archivo;
+los títulos abren el editor completo con descripción, checklist y adjuntos. Recuperar
+una tarea completada está disponible en el editor móvil. Escritorio conserva sus
+columnas, controles y tema claro. Sin backend, migraciones ni nuevas dependencias.
+
+KarmaQuickTask reutiliza saveRow/kw_tasks y defaults; bloqueo síncrono de doble envío,
+limpieza al guardar y conservación del título ante error. Modales adaptados a viewport
+y safe areas; campo en flujo normal para el teclado. 99 tests frontend pasan (4 nuevos);
+build y TypeScript pasan. Navegador con backend sintético: 375/430 sin overflow,
+Enter, archivo, editor con adjunto existente, tres accesos y navegación verificados;
+escritorio 1440 conserva tema claro, dos columnas y creación rápida oculta. Social
+no hereda el tema. No se escribieron datos reales. Pendiente comprobación física en
+Safari/iPhone con teclado y subida/descarga real de archivos; no se afirma cubierta.

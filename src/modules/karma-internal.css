@@ -38,3 +38,81 @@
 .karma-task-archive-row{display:flex;align-items:center;gap:14px;padding:14px 6px;border-bottom:1px solid var(--line);min-width:0}
 .karma-task-archive-row>.text-button{flex:1;min-width:0;text-align:left;overflow-wrap:anywhere}
 .karma-task-archive-row>.icon-button{margin-left:auto}
+
+/* New controls are absent from the desktop layout. */
+.karma-quick-task,.karma-mobile-brand,.karma-mobile-restore{display:none}
+@media(max-width:760px){
+  .karma-mobile-page{
+    --canvas:#080808;--surface:#141414;--surface-subtle:#202020;--surface-hover:#282828;
+    --ink:#f5f5f5;--ink-secondary:#d0d0d0;--muted:#aaa;--placeholder:#929292;
+    --line:#2b2b2b;--line-soft:#242424;--line-control:#3b3b3b;--line-hover:#555;
+    --card:#141414;--border:#303030;--accent-ink:#c9b8db;--accent-line:#b2a0c4;
+    --danger-surface:#321b20;--danger-ink:#ffb9c4;--danger-line:#63343f;
+    background:var(--canvas);color:var(--ink);min-height:100dvh;color-scheme:dark;
+  }
+  .karma-mobile-page .main-shell{background:var(--canvas);min-width:0}
+  .karma-mobile-page .topbar{height:auto;min-height:76px;background:var(--canvas);border:0;padding:calc(12px + env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) 12px max(18px,env(safe-area-inset-left));gap:12px}
+  .karma-mobile-page .karma-mobile-brand{display:block;object-fit:contain}
+  .karma-mobile-page .topbar .mobile-menu{order:3;margin-left:auto;width:44px;height:44px;color:var(--ink)}
+  .karma-mobile-page .topbar .workspace-name{display:none}
+  .karma-mobile-page .topbar select{max-width:50%;font-size:16px}
+  .karma-mobile-page main{padding:8px max(16px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));min-height:0;width:100%}
+  .karma-mobile-page .karma-internal-heading,.karma-mobile-page .app-footer{display:none}
+  .karma-mobile-page .karma-internal-layout{display:flex;flex-direction:column;gap:28px}
+  .karma-mobile-page .karma-internal-tasks-column{order:0;width:100%}
+  .karma-mobile-page .karma-internal-shortcuts-column{order:1;width:100%}
+  .karma-mobile-page .karma-internal-tasks-column>.section-card{padding:16px;border-radius:18px}
+  .karma-mobile-page .karma-internal-tasks-column .section-header{align-items:center;margin-bottom:8px}
+  .karma-mobile-page .karma-internal-tasks-column .section-header h2{font-size:16px}
+  .karma-mobile-page .karma-internal-tasks-column .section-header>.search,
+  .karma-mobile-page .karma-internal-tasks-column .section-header>button{display:none}
+  .karma-mobile-page .compact-record{min-width:0;padding:8px 0;align-items:center}
+  .karma-mobile-page .compact-record .record-main{width:100%;min-width:0}
+  .karma-mobile-page .compact-record .record-title{flex-wrap:nowrap;align-items:center;gap:6px}
+  .karma-mobile-page .compact-record .task-check{flex:0 0 24px;width:24px;height:24px;margin:10px}
+  .karma-mobile-page .compact-record .text-button{min-height:44px;flex:1;min-width:0;text-align:left;overflow-wrap:anywhere;white-space:normal;font-size:15px;line-height:1.5}
+  .karma-mobile-page .compact-record .record-actions{display:flex}
+  .karma-mobile-page .compact-record .record-actions>.icon-button:not(.danger){display:none}
+  .karma-mobile-page .compact-record .record-actions>.danger{width:44px;height:44px;min-width:44px;padding:12px}
+  .karma-mobile-page .karma-quick-task{display:block;margin-top:16px;scroll-margin-bottom:24px}
+  .karma-mobile-page .karma-quick-task form{display:flex;gap:8px;padding:6px;background:#202020;border:1px solid #383838;border-radius:13px}
+  .karma-mobile-page .karma-quick-task input{flex:1;width:0;border:0;background:transparent;font-size:16px;padding:10px 8px;min-height:44px}
+  .karma-mobile-page .karma-quick-task button{width:44px;min-height:44px;padding:10px;border-radius:9px;background:#e7e2ec;color:#151217;flex-shrink:0}
+  .karma-mobile-page .karma-task-archive{margin-top:8px}
+  .karma-mobile-page .karma-task-archive-toggle{font-size:13px;font-weight:500;min-height:48px;color:var(--muted)}
+  .karma-mobile-page .karma-task-archive-toggle:hover{background:transparent;color:var(--ink)}
+  .karma-mobile-page .karma-task-archive-row{padding:0;border-color:var(--line)}
+  .karma-mobile-page .karma-task-archive-row>.task-check,.karma-mobile-page .karma-task-archive-row>.icon-button{display:none}
+  .karma-mobile-page .karma-task-archive-row>.text-button{min-height:44px;padding:10px 8px;text-decoration:none;font-size:14px;color:var(--muted)}
+  .karma-mobile-page .karma-shortcuts{gap:12px}
+  .karma-mobile-page .karma-shortcuts>.karma-placeholder{display:none}
+  .karma-mobile-page .karma-internal-layout .karma-shortcuts>.karma-shortcut.card.quick-panel{min-height:112px;padding:16px;gap:10px;border-radius:15px}
+  .karma-mobile-page .karma-shortcut small{display:none}
+  .karma-mobile-page .karma-shortcut strong{font-size:14px}
+  .karma-mobile-page .care-project-modal-backdrop{padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));overflow-y:auto;align-items:center}
+  .karma-mobile-page .care-project-modal,.karma-mobile-page dialog.editor{width:calc(100vw - 24px);max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));min-width:0;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:16px;overflow:auto;overscroll-behavior:contain}
+  .karma-mobile-page .care-project-modal{padding:16px}
+  .karma-mobile-page .care-project-modal-header{gap:8px;min-width:0}
+  .karma-mobile-page .care-project-modal-header h2{font-size:21px}
+  .karma-mobile-page .care-project-modal-close,.karma-mobile-page .care-file-header-button,.karma-mobile-page .editor .icon-button{min-width:44px;min-height:44px;flex-shrink:0}
+  .karma-mobile-page .care-file-wall{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .karma-mobile-page .karma-contacts-grid{grid-template-columns:minmax(0,1fr)}
+  .karma-mobile-page .karma-contact-form-row{grid-template-columns:minmax(0,1fr)}
+  .karma-mobile-page .karma-contact-actions>button:not(.secondary){background:#e7e2ec;color:#151217}
+  .karma-mobile-page .karma-contact-main{min-width:0;overflow-wrap:anywhere}
+  .karma-mobile-page :is(input,select,textarea){font-size:16px}
+  .karma-mobile-page .editor.work-task-editor form,.karma-mobile-page .editor form{padding:16px}
+  .karma-mobile-page .editor header{gap:8px}
+  .karma-mobile-page .work-task-heading{min-width:0;flex:1}
+  .karma-mobile-page .work-task-title{font-size:20px;width:100%}
+  .karma-mobile-page .work-task-tools{gap:0;flex-shrink:0}
+  .karma-mobile-page .work-task-attachments>div{min-width:0;flex-wrap:wrap}
+  .karma-mobile-page .work-task-attachments a{overflow-wrap:anywhere;min-width:0;flex:1}
+  .karma-mobile-page .editor footer{flex-wrap:wrap;gap:8px}
+  .karma-mobile-page .editor footer button{min-height:44px;background:#303030;color:var(--ink)}
+  .karma-mobile-page .karma-mobile-restore{display:inline-flex}
+  .karma-mobile-page .karma-file-preview{padding:8px;position:fixed;z-index:100}
+  .karma-mobile-page .karma-file-preview-card{width:100%;padding:12px;background:var(--surface)}
+  .karma-mobile-page .karma-file-preview-card iframe{width:100%}
+  .karma-mobile-page .care-project-resource-modal .record{min-width:0;flex-wrap:wrap}
+}
