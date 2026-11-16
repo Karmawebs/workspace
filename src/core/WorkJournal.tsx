@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, ChevronDown } from "lucide-react";
 import { entity } from "./entities";
 import { message, saveRow, type Scope } from "./data";
 import { useRows } from "./useRows";
@@ -11,6 +11,7 @@ export function WorkJournal({ scope, projectId }: { scope: Scope; projectId: str
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState("");
+  const [expandedEntries,setExpandedEntries] = useState<string[]>([]);
 
   const entries = [...rows].sort((a, b) => {
     const aCreated = text(a.created_at);
@@ -78,8 +79,16 @@ export function WorkJournal({ scope, projectId }: { scope: Scope; projectId: str
         ) : (
           entries.map((row) => (
             <article className="work-journal-entry" key={text(row.id)}>
-              <time>{dateLabel(row.entry_date || row.created_at)}</time>
-              <p>{text(row.body || row.title)}</p>
+              {scope.app==="social" ? <>
+                <button type="button" className="social-journal-entry-toggle" aria-expanded={expandedEntries.includes(text(row.id))} onClick={()=>setExpandedEntries(current=>current.includes(text(row.id))?current.filter(id=>id!==text(row.id)):[...current,text(row.id)])}>
+                  <span><time>{dateLabel(row.entry_date || row.created_at)}</time><strong>{text(row.body || row.title).replace(/\s+/g," ").slice(0,75)}{text(row.body || row.title).length>75?"…":""}</strong></span>
+                  <ChevronDown size={17} className={expandedEntries.includes(text(row.id))?"is-open":""}/>
+                </button>
+                {expandedEntries.includes(text(row.id))&&<p>{text(row.body || row.title)}</p>}
+              </> : <>
+                <time>{dateLabel(row.entry_date || row.created_at)}</time>
+                <p>{text(row.body || row.title)}</p>
+              </>}
             </article>
           ))
         )}
