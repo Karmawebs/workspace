@@ -23,7 +23,7 @@ import { KarmaInternal } from "./modules/KarmaInternal";
 import { Users } from "./core/Users";
 import { db } from "./lib/supabase";
 
-export default function App() { return <HashRouter><Routes><Route path="/reset-password" element={<ResetPassword/>}/><Route path="/*" element={<Auth><Routes><Route path="/:app/*" element={<Shell/>}/><Route path="*" element={<Navigate to="/work/dashboard" replace/>}/></Routes></Auth>}/></Routes></HashRouter>; }
+export default function App() { return <HashRouter><Routes><Route path="/reset-password" element={<ResetPassword/>}/><Route path="/*" element={<Auth><Routes><Route path="/:app/*" element={<Shell/>}/><Route path="*" element={<Navigate to={window.matchMedia("(max-width: 760px)").matches?"/karma/home":"/work/dashboard"} replace/>}/></Routes></Auth>}/></Routes></HashRouter>; }
 
 function Shell() {
   const navigate=useNavigate(), [creating,setCreating]=useState(false);
