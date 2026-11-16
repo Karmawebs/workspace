@@ -1,0 +1,3 @@
+-- Applied to Karma Workspace production on 2026-11-16.
+-- Library entries and private attachments are managed under RLS.
+-- The production migration was applied through Supabase MCP as social_project_library.
