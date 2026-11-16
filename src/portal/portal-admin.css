@@ -144,3 +144,14 @@
     white-space: normal;
   }
 }
+
+/* Social project: collapsed client activity and access below dashboard */
+.pa-project-accordions{margin-top:28px;display:grid;gap:12px}
+.pa-project-accordions .pa-accordion{padding:0;overflow:hidden}
+.pa-accordion-toggle{width:100%;display:flex;align-items:center;gap:12px;padding:18px 20px;background:transparent;border:0;color:inherit;text-align:left;cursor:pointer}
+.pa-accordion-toggle strong{flex:1;font-size:15px;font-weight:600}
+.pa-accordion-chevron{transition:transform .2s ease}
+.pa-accordion-chevron.is-open{transform:rotate(180deg)}
+.pa-accordion-content{padding:0 14px 14px}
+.pa-accordion-content>.pa-card{margin:0;box-shadow:none;border:0;background:transparent}
+.pa-accordion-content>.pa-card>header{display:none}
