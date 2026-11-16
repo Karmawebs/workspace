@@ -1,5 +1,22 @@
 # KARMA WORKSPACE — CURRENT STATE
 
+## Atajos macOS — 2026-11-16
+
+Endpoint exclusivo `https://karma-task-shortcut.infokarmawebs.workers.dev/tasks`, Worker
+independiente + Edge Function `karma-shortcut`. Bearer de 256 bits, hashes/credencial
+interna en secrets, validación estricta de title, destino Karma fijo, límite aproximado
+10/min por ubicación Cloudflare. Reutiliza kw_tasks y defaults, sin tablas nuevas ni
+cambios RLS. INSERT Realtime y refresco al recuperar foco solo para tareas Karma.
+Instrucciones y rotación: KARMA_SHORTCUT.md. Token entregado por archivo privado fuera
+del repositorio; no compartir el atajo con la credencial.
+
+Prueba pública real HTTP 201: tarea `5b79ef12-a6d2-489a-a20f-8546763c000e`, título
+“Prueba Atajos Karma · 16/11/2026”; confirmados proyecto interno, pending y normal.
+Denegados token ausente/incorrecto, título vacío, inyección de destino y acceso directo
+a Edge con token del atajo. Build OK; pruebas HTTP y suite frontend pasan. El navegador
+de comprobación no tenía sesión; persistencia verificada por consulta de base de datos.
+Queda configurar las acciones nativas y pegar el token en Atajos en el Mac.
+
 Actualizado: 2026-10-25
 
 ## Construido
