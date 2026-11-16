@@ -27,3 +27,14 @@
 .karma-internal-tasks-column>.section-card{margin:0;min-width:0}
 @media(max-width:900px){.karma-internal-layout{grid-template-columns:1fr}.karma-internal-layout .karma-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.karma-internal-layout .karma-shortcuts>.karma-shortcut.card.quick-panel,.karma-internal-layout .karma-shortcuts>.karma-placeholder{min-height:125px}.karma-internal-layout .karma-shortcuts>.karma-placeholder{grid-column:auto}}
+
+/* Archivo de tareas: desplegable sin tarjeta, bajo la lista activa. */
+.karma-task-archive{margin-top:18px}
+.karma-task-archive-toggle{display:flex;align-items:center;gap:9px;width:100%;border:0;background:transparent;color:var(--ink-secondary);padding:12px 4px;text-align:left;font:inherit;font-weight:650;cursor:pointer}
+.karma-task-archive-toggle:hover{color:var(--ink)}
+.karma-task-archive-chevron{transition:transform .2s ease;transform:rotate(-90deg)}
+.karma-task-archive-chevron.open{transform:rotate(0)}
+.karma-task-archive-list{padding:0 4px 6px}
+.karma-task-archive-row{display:flex;align-items:center;gap:14px;padding:14px 6px;border-bottom:1px solid var(--line);min-width:0}
+.karma-task-archive-row>.text-button{flex:1;min-width:0;text-align:left;overflow-wrap:anywhere}
+.karma-task-archive-row>.icon-button{margin-left:auto}
