@@ -16,6 +16,7 @@ import {
   Pencil,
   Trash2,
   ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import { db } from "../lib/supabase";
 import "./portal-admin.css";
@@ -223,6 +224,8 @@ function Controls({ id, children }: { id: string; children?: ReactNode }) {
     [notice, tell] = useState(""),
     [busy, lock] = useState(false);
   const [attempt, reload] = useState(0);
+  const [activityOpen,setActivityOpen] = useState(false);
+  const [accessOpen,setAccessOpen] = useState(false);
   useEffect(() => {
     let live = true;
     invoke<Listing>(id, { action: "list" })
@@ -438,9 +441,22 @@ function Controls({ id, children }: { id: string; children?: ReactNode }) {
   return (
     <>
       {children ? <>
-        <div className="pa-stack">{feedback}{activityCard}</div>
         {children}
-        <div className="pa-stack">{accessCard}{credentialsCard}</div>
+        <div className="pa-stack pa-project-accordions">
+          {feedback}
+          <section className="card pa-accordion">
+            <button type="button" className="pa-accordion-toggle" aria-expanded={activityOpen} onClick={()=>setActivityOpen(v=>!v)}>
+              <MessagesSquare size={19}/><strong>Avisos y aprobaciones</strong><span className="badge">{data?.history.length??0}</span><ChevronDown size={18} className={activityOpen?"pa-accordion-chevron is-open":"pa-accordion-chevron"}/>
+            </button>
+            {activityOpen&&<div className="pa-accordion-content">{activityCard}</div>}
+          </section>
+          <section className="card pa-accordion">
+            <button type="button" className="pa-accordion-toggle" aria-expanded={accessOpen} onClick={()=>setAccessOpen(v=>!v)}>
+              <UsersRound size={19}/><strong>Accesos de clientes</strong><span className="badge">{data?.access.length??0}</span><ChevronDown size={18} className={accessOpen?"pa-accordion-chevron is-open":"pa-accordion-chevron"}/>
+            </button>
+            {accessOpen&&<div className="pa-accordion-content">{accessCard}</div>}
+          </section>
+        </div>
       </> : <>{feedback}{accessCard}{activityCard}{credentialsCard}</>}
       {modal && (
         <Modal title={title} close={() => show(null)} busy={busy}>
