@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { FileText, KeyRound, Paperclip, Plus, Trash2, Users, X } from "lucide-react";
 import { db } from "../lib/supabase";
 import { EntityView } from "../core/EntityView";
-import { WorkJournal } from "../core/WorkJournal";
 import { message, type Scope } from "../core/data";
 import { text, type Row } from "../core/model";
 import "./karma-internal.css";
@@ -159,7 +158,9 @@ export function KarmaInternal({ scope }: { scope: Scope }) {
     <header className="page-heading karma-internal-heading"><div><span className="eyebrow">WORKSPACE / INTERNO</span><h1>Karma</h1></div></header>
     {error && <p className="error" role="alert">{error}</p>}
 
-    <div className="karma-shortcuts" aria-label="Accesos rápidos de Karma">
+    <div className="karma-internal-layout">
+    <section className="karma-internal-shortcuts-column" aria-label="Accesos rápidos de Karma">
+    <div className="karma-shortcuts">
       <button className="card quick-panel karma-shortcut" type="button" onClick={() => setModal("files")}>
         <div><span className="panel-icon"><FileText size={19}/></span><span className="karma-shortcut-count">{files.length}</span></div>
         <strong>Adjuntos</strong><small>Ver y gestionar archivos</small>
@@ -174,10 +175,12 @@ export function KarmaInternal({ scope }: { scope: Scope }) {
         <div><span className="panel-icon"><Users size={19}/></span><span className="karma-shortcut-count">{contacts.length}</span></div>
         <strong>Contactos</strong><small>Ofertas, CV y colaboradores</small>
       </button>
+      <div className="karma-placeholder" aria-hidden="true"/>
     </div>
-    <div className="operations-grid karma-internal-operations">
+    </section>
+    <div className="karma-internal-tasks-column">
       <EntityView kind="tasks" scope={scope} projectId={text(project.id)} compact />
-      <WorkJournal scope={scope} projectId={text(project.id)} />
+    </div>
     </div>
 
     {modal === "credentials" && <div className="care-project-modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setModal(null)}><section className="care-project-modal care-project-resource-modal" role="dialog" aria-modal="true">
