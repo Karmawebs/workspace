@@ -116,3 +116,24 @@
   .karma-mobile-page .karma-file-preview-card iframe{width:100%}
   .karma-mobile-page .care-project-resource-modal .record{min-width:0;flex-wrap:wrap}
 }
+
+/* Karma móvil: tareas sin tarjeta, entrada subrayada y accesos con más aire. */
+@media(max-width:760px){
+  .karma-mobile-page .karma-internal-tasks-column{padding-top:24px;padding-bottom:24px}
+  .karma-mobile-page .karma-internal-tasks-column>.section-card{
+    background:transparent;border:0;box-shadow:none;border-radius:0;
+    padding:0;margin:0;
+  }
+  .karma-mobile-page .karma-quick-task{margin-top:24px}
+  .karma-mobile-page .karma-quick-task form{
+    background:transparent;border:0;border-bottom:1px solid #494949;
+    border-radius:0;padding:0 0 7px;gap:12px;
+  }
+  .karma-mobile-page .karma-quick-task input{
+    background:transparent;border:0;border-radius:0;box-shadow:none;
+    padding:10px 0;
+  }
+  .karma-mobile-page .karma-quick-task input:focus{outline:none;box-shadow:none}
+  .karma-mobile-page .karma-internal-layout{gap:40px}
+  .karma-mobile-page .karma-internal-shortcuts-column{padding-top:16px}
+}
