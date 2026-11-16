@@ -2,7 +2,7 @@ import {PortalAdmin} from "../portal/PortalAdmin";
 import { SocialConnectionsDialog } from "../modules/SocialConnections";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowUpRight, Settings2, Pencil } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Settings2, Pencil, CalendarDays, BookOpen, KeyRound, Plug, Info, X } from "lucide-react";
 import { db } from "../lib/supabase";
 import { type Scope, message } from "./data";
 import { type Row, text, pretty, dateLabel } from "./model";
@@ -14,9 +14,12 @@ import { WorkJournal } from "./WorkJournal";
 import { useRows } from "./useRows";
 import { ProjectUrgency } from "./ProjectUrgency";
 import { Care } from "../modules/Care";
+import { SocialLibrary } from "../modules/SocialLibrary";
+import "../modules/social-project-dashboard.css";
 export function ProjectDetail({ scope, socialConnections=false, canManageConnections=false }: { scope: Scope; socialConnections?:boolean; canManageConnections?:boolean }) {
   const { id = "" } = useParams(), [project, setProject] = useState<Row>(), [error, setError] = useState(""), [tab, setTab] = useState("activity"), [edit, setEdit] = useState(false), [version, setVersion] = useState(0);
   const [connectionsProject,setConnectionsProject]=useState<string>();
+  const [socialModal,setSocialModal]=useState<"schedule"|"library"|"credentials"|"connections"|"information"|null>(null);
   const panels = useRows(entity("panels"), scope, id), events = useRows(entity("events"), scope, id), milestones = useRows(entity("milestones"), scope, id);
   useEffect(() => { let alive = true; setProject(undefined); setError(""); db.from("kw_projects").select("*").eq("id", id).eq("workspace_id", scope.workspaceId).eq("app_key", scope.app).single().then(({ data, error }) => { if (!alive) return; if (error) setError("Proyecto no disponible o sin acceso."); else setProject(data as Row); }); return () => { alive = false; }; }, [id, scope.workspaceId, scope.app, version]);
   if (error) return <div className="error" role="alert">{error}<Link to={`/${scope.app}/projects`}>Volver a proyectos</Link></div>;
@@ -31,6 +34,16 @@ export function ProjectDetail({ scope, socialConnections=false, canManageConnect
   ];
   function panelTarget(key: string) { return key === "information" ? "information" : key === "connections" ? "connections" : key === "next_milestone" ? "milestones" : key === "next_event" ? scope.app === "work" ? "meetings" : "activity" : "resources"; }
   function panelSubtitle(key: string) { if (key === "information") return text(project?.description) || "Datos del proyecto"; if (key === "next_event") { const next = events.rows.find((r) => new Date(text(r.starts_at)) >= new Date()); return next ? `${text(next.title)} · ${dateLabel(next.starts_at)}` : "Sin eventos próximos"; } if (key === "next_milestone") { const next = milestones.rows.filter((r) => r.status !== "completed").sort((a, b) => text(a.due_at || "9999").localeCompare(text(b.due_at || "9999")))[0]; return next ? text(next.title) : "Sin hitos pendientes"; } return "Ver y gestionar"; }
+  const socialDashboard = <div className="social-dashboard">
+    <div className="social-dashboard-columns"><EntityView kind="tasks" scope={scope} projectId={id} compact/><EntityView kind="events" scope={scope} projectId={id} compact/><WorkJournal scope={scope} projectId={id}/></div>
+    <div className="social-dashboard-links">{([
+      ["schedule","Programación",CalendarDays],["library","Biblioteca",BookOpen],["credentials","Contraseñas",KeyRound],
+      ["connections","Conexiones",Plug],["information","Información",Info]
+    ] as const).map(([key,label,Icon])=><button className="social-dashboard-link" key={key} onClick={()=>setSocialModal(key)}><Icon size={20}/><strong>{label}</strong><ArrowUpRight size={17}/></button>)}</div>
+    {socialModal&&<div className="social-dashboard-backdrop" onMouseDown={e=>e.target===e.currentTarget&&setSocialModal(null)}><section className="social-dashboard-modal" role="dialog" aria-modal="true" aria-label={socialModal}><header><h2>{{schedule:"Programación",library:"Biblioteca",credentials:"Contraseñas",connections:"Conexiones",information:"Información"}[socialModal]}</h2><button type="button" className="secondary" onClick={()=>setSocialModal(null)} aria-label="Cerrar"><X size={20}/></button></header><div className="social-dashboard-modal-body">
+      {socialModal==="schedule"?<EntityView kind="content" scope={scope} projectId={id}/>:socialModal==="library"?<SocialLibrary scope={scope} projectId={id}/>:socialModal==="credentials"?<EntityView kind="resources" scope={scope} projectId={id}/>:socialModal==="connections"?socialConnections?<SocialConnectionsDialog workspaceId={scope.workspaceId} projectId={id} projectName={text(project.name)} canManage={canManageConnections} onClose={()=>setSocialModal(null)}/>:<EntityView kind="connections" scope={scope} projectId={id}/>:<section className="info-panel"><p className="preserve-lines">{text(project.description)||"Sin descripción."}</p><dl><dt>Estado</dt><dd>{pretty(project.status)}</dd><dt>Prioridad</dt><dd>{pretty(project.priority)}</dd><dt>Inicio</dt><dd>{dateLabel(project.start_date)||"Sin fecha"}</dd><dt>Entrega</dt><dd>{dateLabel(project.due_date)||"Sin fecha"}</dd></dl><button className="secondary" onClick={()=>{setSocialModal(null);setEdit(true);}}>Editar información</button></section>}
+    </div></section></div>}
+  </div>;
   const projectContent = <>
     {panels.error && <p className="error">{panels.error}</p>}
     <div className="quick-panels">{panelRows.map((p, i) => <button className="card quick-panel" key={i} onClick={() => setTab(panelTarget(p.key))}><div><span className="panel-icon">{["↗", "◈", "◷", "ⓘ"][i % 4]}</span><ArrowUpRight size={16}/></div><strong>{p.title}</strong><small>{p.subtitle || panelSubtitle(p.key)}</small></button>)}{socialConnections&&<button className="card quick-panel" onClick={()=>setConnectionsProject(id)}><div><span className="panel-icon">↗</span><ArrowUpRight size={16}/></div><strong>Conexiones</strong><small>Cuentas sociales</small></button>}</div>
@@ -47,7 +60,7 @@ export function ProjectDetail({ scope, socialConnections=false, canManageConnect
   return <>
     <Link className="back-link" to={`/${scope.app}/projects`}><ArrowLeft size={16}/>Proyectos</Link>
     <header className="page-heading"><div><span className="eyebrow">{apps[scope.app].name.toUpperCase()} / PROYECTO</span><h1>{text(project.name)}</h1><p className="muted">{pretty(project.status)}{project.archived ? " · Archivado" : ""}{project.due_date ? ` · Entrega ${dateLabel(project.due_date)}` : ""}</p></div><button className="secondary" onClick={() => setEdit(true)}><Pencil size={16}/>Editar proyecto</button></header>
-    {scope.app==="social"&&canManageConnections ? <PortalAdmin key={id} projectId={id} workspaceId={scope.workspaceId}>{projectContent}</PortalAdmin> : projectContent}
+    {scope.app==="social" ? canManageConnections ? <PortalAdmin key={id} projectId={id} workspaceId={scope.workspaceId}>{socialDashboard}</PortalAdmin> : socialDashboard : projectContent}
     {edit && <Editor def={entity("projects")} scope={scope} original={project} onClose={() => setEdit(false)} onSave={() => { setEdit(false); setVersion((v) => v + 1); }}/>} 
   </>;
 }
