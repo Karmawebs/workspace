@@ -14,12 +14,13 @@ create table auth.sessions(id uuid primary key,user_id uuid,created_at timestamp
 create table kw_projects(id uuid primary key,workspace_id uuid,app_key text);
 create table kw_workspace_members(user_id uuid,workspace_id uuid,role text);
 create function kw_is_workspace_member(uuid) returns boolean language sql as 'select false';
-create table kw_content_items(id uuid primary key,workspace_id uuid,project_id uuid,title text,description text,file_urls text[],content_type text,client_approved boolean);
+create table kw_content_items(id uuid primary key,workspace_id uuid,project_id uuid,title text,description text,file_urls text[],content_type text,client_approved boolean,scheduled_at timestamptz,internal_notes text);
 create table kw_content_files(content_id uuid,sort_order int,storage_path text);
 create table kw_tasks(id uuid primary key default gen_random_uuid(),workspace_id uuid,project_id uuid,app_key text,title text,description text,metadata jsonb);
-create table kw_instagram_publications(id uuid,content_id uuid,state text,scheduled_for timestamptz);`);
+create table kw_instagram_publications(id uuid,content_id uuid,state text,scheduled_for timestamptz,superseded boolean not null default false);`);
 await pg.exec(readFileSync('supabase/migrations/'+readdirSync('supabase/migrations').find(x=>x.endsWith('_social_client_portal.sql')),'utf8'));
 await pg.exec(readFileSync('supabase/migrations/20261117163813_social_portal_invitations.sql','utf8'));
+await pg.exec(readFileSync('supabase/migrations/20261117184008_social_portal_smtp_queue.sql','utf8'));
 const [w,p,other,u,s,c,d]=Array.from({length:7},()=>crypto.randomUUID());
 await q("insert into kw_projects values ($1,$3,'social'),($2,$3,'social')",[p,other,w]);
 await q("insert into auth.users values($1,'kw_portal_client','fixture@example.invalid',$2)",[u,{portal:'social',project:p,name:'Fixture',contact:'fixture@example.invalid'}]);
@@ -32,11 +33,19 @@ await review(c,0,'approved','');
 await q("update kw_content_items set description='Nuevo copy' where id=$1",[c]);
 assert.equal((await first('select status from kw_portal_reviews where content_id=$1',[c])).status,'pending');
 await assert.rejects(review(c,1,'approved',''));
-await q("insert into kw_instagram_publications values($1,$2,'scheduled',now())",[crypto.randomUUID(),c]);
+await q("insert into kw_instagram_publications(id,content_id,state,scheduled_for) values($1,$2,'scheduled',now())",[crypto.randomUUID(),c]);
 const key=crypto.randomUUID(); await review(c,2,'changes','Editar',key); await review(c,2,'changes','Editar',key);
 assert.equal((await first('select count(*)::int n from kw_tasks')).n,1);
 assert.equal((await first('select state from kw_instagram_publications')).state,'scheduled');
 assert.equal((await first("select count(*)::int n from kw_portal_mail where project_id=$1",[other])).n,0);
+// Internal notes / unchanged saves don't enqueue. Visible title/date changes do.
+const mailCount=async()=>(await first('select count(*)::int n from kw_portal_mail')).n;
+const beforeInternal=await mailCount();await q("update kw_content_items set internal_notes='Private',title=title where id=$1",[c]);assert.equal(await mailCount(),beforeInternal);
+await q("update kw_content_items set title='Updated title' where id=$1",[c]);assert.equal(await mailCount(),beforeInternal+1);
+await q("update kw_content_items set scheduled_at=now() where id=$1",[c]);assert.equal(await mailCount(),beforeInternal+2);
+const beforePublish=await mailCount();await q("update kw_instagram_publications set state='published'");assert.equal(await mailCount(),beforePublish+1);await q("update kw_instagram_publications set state='published'");assert.equal(await mailCount(),beforePublish+1);
+await q("insert into kw_instagram_publications values($1,$2,'scheduled',now(),true)",[crypto.randomUUID(),c]);assert.equal(await mailCount(),beforePublish+1);
+await q("update kw_portal_access set preferences='{}' where user_id=$1",[u]);await q("update kw_content_items set title='Preferences off' where id=$1",[c]);assert.equal(await mailCount(),beforePublish+1);
 await q('update kw_portal_access set active=false where user_id=$1',[u]);
 await assert.rejects(review(c,3,'approved',''));
 // Multiple clients, one contact across projects, immutable identity binding.

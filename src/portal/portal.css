@@ -330,3 +330,42 @@
 .portal-overlay .portal-meeting-title{padding:18px 2px;border-bottom:1px solid #38383c;color:#f7f7f7;font-size:14px;font-weight:400;overflow-wrap:anywhere}
 .portal-overlay .portal-meeting-title:last-child{border-bottom:0}
 .portal-overlay .portal-meeting-empty{margin:16px 0;color:#aaaab0;font-size:13px}
+
+/* Portal preferences: one accessible touch target per notification kind. */
+.client-portal .portal-preferences{font-family:Manrope,Arial,sans-serif}
+.portal-preference-options{display:grid;gap:9px;margin:22px 0}
+.client-portal .portal-preference-options>button{transition:none;display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;min-height:52px;padding:14px 16px;background:#080808;color:#9f9fa6;border:1px solid #303034;border-radius:8px;text-align:left;font:400 14px/1.5 Manrope,Arial,sans-serif}
+.client-portal .portal-preference-options>button svg{opacity:0;flex-shrink:0}
+.client-portal .portal-preference-options>button[aria-pressed=true]{background:#f5f5f5;color:#111;border-color:#f5f5f5}
+.client-portal .portal-preference-options>button[aria-pressed=true] svg{opacity:1}
+.client-portal .portal-preferences>button{min-height:46px;width:100%;background:#080808;border-color:#888;color:#fff;font:400 13px/1.5 Manrope,Arial,sans-serif}
+.portal-directory-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 16px}
+.portal-directory-heading h2{margin:0}
+.client-portal .portal-directory-heading nav{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.portal-directory-heading nav span{min-width:76px;text-align:center;font-size:12px;text-transform:capitalize;color:#c8c8cd}
+.client-portal .portal-directory-heading nav button{display:grid;place-items:center;width:36px;min-height:44px;padding:0;background:transparent;border-color:transparent}
+.portal-directory-filter{display:flex;gap:10px;margin-bottom:8px}
+.client-portal .portal-directory-filter button{font-size:11px;min-height:44px;padding:8px 12px;background:transparent}
+.client-portal .portal-directory-filter button[aria-pressed=true]{background:#fff;color:#111}
+.client-portal .portal-directory-more{display:block;margin:22px auto 0;min-height:44px;background:transparent}
+.portal-directory-icon{display:none}
+@media(max-width:600px){
+ .client-portal .portal-heading{display:flex;flex-direction:column;align-items:center;gap:22px;text-align:center;margin-bottom:30px}
+ .client-portal .portal-heading>div{width:100%}
+ .client-portal .portal-heading small{display:block;text-align:center;line-height:1.6}
+ .client-portal .portal-heading h1{font-family:Manrope,Arial,sans-serif;font-size:clamp(30px,8vw,38px);font-weight:500;line-height:1.25;margin:16px 0 0;overflow-wrap:anywhere}
+ .client-portal .portal-heading p{display:none}
+ .client-portal .portal-heading nav{align-self:center;margin:0;max-width:100%;padding:4px;gap:3px}
+ .client-portal .portal-heading nav button{min-height:48px;padding:11px 17px;font-size:14px}
+ .portal-directory-heading h2{font-size:19px}
+ .client-portal .portal-directory .portal-row{display:grid;grid-template-columns:auto minmax(0,1fr) 44px 44px;gap:4px 6px;align-items:center;padding:12px 0}
+ .client-portal .portal-directory .portal-row .portal-type-tag{grid-column:1;grid-row:1;min-width:0;padding:4px 7px;font-size:10px}
+ .client-portal .portal-directory .portal-row>.portal-directory-date{grid-column:2;grid-row:1;margin:0;font-size:11px;white-space:nowrap}
+ .client-portal .portal-directory .portal-row>b{grid-row:2;grid-column:1/-1;margin:2px 0 0;font-size:14px;font-weight:450;min-width:0;line-height:1.5}
+ .client-portal .portal-directory .portal-view-action{grid-column:3;grid-row:1}
+ .client-portal .portal-directory .portal-approve-action{grid-column:4;grid-row:1}
+ .client-portal .portal-directory .portal-row button{display:grid;place-items:center;width:44px;height:44px;min-height:44px;padding:0;background:transparent;border-color:transparent;border-radius:7px;color:#ccc}
+ .client-portal .portal-directory .portal-row button>span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+ .client-portal .portal-directory .portal-directory-icon{display:block}
+ .client-portal .portal-directory .portal-row .is-approved{background:#1c3425;border-color:#345b40;color:#b8e9c6;opacity:1}
+}

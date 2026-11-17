@@ -4,7 +4,7 @@ import {generatedPassword,requestId,invite} from "../../functions/social-portal-
 import {admin} from "../../functions/_shared/social-drive.ts";
 Deno.test("notification HTML escapes contact/project; password generation and URL validation",()=>{
  const content=notification("welcome","<script>","A & B",undefined,"alias@portal.invalid");
- assert(!content.html.includes("<script>"));assert(content.html.includes("A &amp; B"));assert(content.html.includes("Acceder a mi espacio"));assert(content.text.includes("alias@portal.invalid"));
+ assert(!content.html.includes("<script>"));assert(content.html.includes("A &amp; B"));assert(content.html.includes("Activar mi cuenta"));assert(content.text.includes("alias@portal.invalid"));
  assert.throws(()=>notification("welcome","A","B","https://evil.invalid/portal"));
  const passwords=Array.from({length:100},generatedPassword);assert.equal(new Set(passwords).size,100);assert(passwords.every(p=>p.length>=32));assert.throws(()=>requestId("bad"));
 });

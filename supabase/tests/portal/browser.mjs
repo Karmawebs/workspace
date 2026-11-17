@@ -5,7 +5,7 @@ try{for(const width of [1440,768,375,320]){
  const page=await browser.newPage({viewport:{width,height:800}});
  const exp=Math.floor(Date.now()/1000)+3600,user={id:crypto.randomUUID(),email:"qa@example.invalid",role:"kw_portal_client"};
  const token=["e30",Buffer.from(JSON.stringify({sub:user.id,exp})).toString("base64url"),"ZmFrZQ"].join(".");
- const row={id:"fixture",title:"Nuestra cocina",content_type:"post",description:"Vista previa del menú",calendar_at:new Date().toISOString(),status:"pending",revision:0};
+ const row={id:"fixture",title:"Nuestra cocina",content_type:"post",description:"Vista previa del menú",calendar_at:new Date().toISOString(),status:"pending",revision:0,created_at:new Date().toISOString()};
  let snapshots=0,failOnce=true;
  await page.route("**/*",async r=>{
  const u=new URL(r.request().url());
@@ -26,7 +26,7 @@ try{for(const width of [1440,768,375,320]){
  const layout=()=>page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,dark:getComputedStyle(document.querySelector(".client-portal")).colorScheme}));
  const check=async()=>{const l=await layout();assert.equal(l.scroll,l.width,"overflow at "+width);assert.equal(l.dark,"dark");};
  await check();await page.getByRole("button",{name:"Cerrar vista previa"}).click();
- await page.getByRole("button",{name:"Directorio"}).click();await page.getByRole("button",{name:"Ver contenido"}).click();await page.locator("img.preview").waitFor();await check();await page.getByRole("button",{name:"Cerrar vista previa"}).click();
+ await page.getByRole("button",{name:"Directorio"}).click();await page.getByRole("button",{name:/^Ver contenido:/}).click();await page.locator("img.preview").waitFor();await check();await page.getByRole("button",{name:"Cerrar vista previa"}).click();
  for(const name of ["Drive","Contraseñas","Avisos por correo"]){await page.getByRole("button",{name,exact:true}).click();await page.getByRole("dialog").waitFor();await check();await page.getByRole("button",{name:"Cerrar",exact:true}).click();}
  await page.close();console.log("Calendar, directory, preview, tools and dark theme verified:",width);
 }}finally{await browser.close()}

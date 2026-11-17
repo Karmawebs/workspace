@@ -8,9 +8,14 @@ const escape = (s: string) =>
         c
       ]!,
   );
-export type NotificationKind = "welcome" | "approval" | "changes" | "reminder";
+export type NotificationKind = "welcome" | "approval" | "changes" | "reminder" | "new" | "modified" | "scheduled" | "published" | "reply";
 const subjects: Record<NotificationKind, string> = {
   welcome: "Bienvenido a tu espacio",
+  new: "Hay contenido nuevo",
+  modified: "Se ha actualizado un contenido",
+  scheduled: "Se ha programado un contenido",
+  published: "Se ha publicado un contenido",
+  reply: "Tienes una respuesta a tu solicitud",
   approval: "Diseño pendiente de aprobación",
   changes: "Cambios en tu contenido",
   reminder: "Recordatorio de aprobación",
@@ -21,6 +26,7 @@ export function notification(
   project: string,
   url = PORTAL_URL,
   login?: string,
+  contentTitle?: string,
 ) {
   const target = new URL(url);
   if (
@@ -33,7 +39,7 @@ export function notification(
   const heading = welcome ? "Tu espacio ya está listo." : title;
   const intro = welcome
     ? "Ya puedes entrar en tu espacio de Karma Social para revisar contenidos, solicitar cambios y aprobar publicaciones."
-    : "Tienes novedades en tu espacio de Karma Social. Entra para revisar el contenido de tu proyecto.";
+    : `${title}${contentTitle ? ": «" + contentTitle + "»" : ""}. Entra en tu espacio para consultar las novedades.`;
   const steps = welcome
     ? "1. Pulsa «Activar mi cuenta».\n2. Crea tu contraseña personal desde el enlace seguro.\n3. Guarda tu identificador de acceso y entra cuando lo necesites."
     : "Pulsa «Acceder a mi espacio» para consultar las novedades.";

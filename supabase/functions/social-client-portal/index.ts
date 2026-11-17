@@ -47,7 +47,7 @@ Deno.serve(async req=>{
  if(b.action==="snapshot"){
  const offset=Number(b.offset??0);
  if(!Number.isSafeInteger(offset)||offset<0)throw new Failure("Página no válida.",400);
- const {data,error}=await db.from("kw_social_content_delivery").select("id,title,description,content_type,calendar_at").eq("project_id",project).order("id").range(offset,offset+99);
+ const {data,error}=await db.from("kw_social_content_delivery").select("id,title,description,content_type,calendar_at,created_at").eq("project_id",project).order("id").range(offset,offset+99);
  if(error)throw error;
  const ids=data.map(c=>c.id);
  const reviews=ids.length?await db.from("kw_portal_reviews").select("content_id,status,revision").in("content_id",ids):{data:[],error:null};
