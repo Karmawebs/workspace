@@ -46,26 +46,28 @@ export function PortalInvitation({
   }
   return (
     <div className="client-portal">
-      <form className="portal-login" onSubmit={submit}>
+      <form className="portal-login portal-login-minimal portal-invitation-minimal" onSubmit={submit}>
         <img src="/assets/karma-compact.png" alt="Karma" />
         <h1>Bienvenido a tu espacio</h1>
-        <p>Establece tu contraseña para acceder al proyecto.</p>
-        <label>
-          Nueva contraseña
+        <p className="portal-invitation-description">Crea una contraseña para activar tu acceso al proyecto.</p>
+        <label className="portal-login-field">
+          <span className="portal-sr-only">Nueva contraseña</span>
           <input
             name="password"
             type="password"
             minLength={12}
             maxLength={128}
             autoComplete="new-password"
+            placeholder="Nueva contraseña (mínimo 12 caracteres)"
+            aria-label="Nueva contraseña"
             required
           />
         </label>
         {error && <p role="alert">{error}</p>}
-        <button disabled={busy}>
+        <button type="submit" className="portal-login-submit" disabled={busy}>
           {busy ? "Guardando…" : "Establecer contraseña"}
         </button>
-        <a href="/portal">Volver al acceso</a>
+        <a className="portal-invitation-back" href="/portal">Volver al acceso</a>
       </form>
     </div>
   );
