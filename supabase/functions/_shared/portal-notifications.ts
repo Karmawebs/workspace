@@ -26,20 +26,40 @@ export function notification(
   if (
     target.origin !== new URL(PORTAL_URL).origin ||
     target.pathname !== "/portal"
-  )
-    throw Error("Invalid portal URL");
+  ) throw Error("Invalid portal URL");
+
   const title = subjects[kind];
-  const detail =
-    kind === "welcome"
-      ? "Establece tu contraseña con el botón. El enlace es personal, de un solo uso y caduca en una hora. Si caduca, pide al equipo una nueva invitación."
-      : "Entra en tu espacio para revisar el contenido del proyecto.";
-  const access = login
-    ? `Tu identificador de acceso: ${login}. Es distinto de tu correo de contacto; guárdalo para volver a entrar.`
+  const welcome = kind === "welcome";
+  const heading = welcome ? "Tu espacio ya está listo." : title;
+  const intro = welcome
+    ? "Ya puedes entrar en tu espacio de Karma Social para revisar contenidos, solicitar cambios y aprobar publicaciones."
+    : "Tienes novedades en tu espacio de Karma Social. Entra para revisar el contenido de tu proyecto.";
+  const steps = welcome
+    ? "1. Pulsa «Activar mi cuenta».\n2. Crea tu contraseña personal desde el enlace seguro.\n3. Guarda tu identificador de acceso y entra cuando lo necesites."
+    : "Pulsa «Acceder a mi espacio» para consultar las novedades.";
+  const expiry = welcome
+    ? "El enlace es personal, de un solo uso y caduca en una hora. Si caduca, solicita una nueva invitación a Karma."
     : "";
+  const button = welcome ? "Activar mi cuenta" : "Acceder a mi espacio";
+  const access = login
+    ? "Identificador de acceso: " + login + ". Es distinto de tu email de contacto; consérvalo para iniciar sesión."
+    : "";
+  const safe = {
+    title: escape(heading),
+    name: escape(name),
+    project: escape(project),
+    intro: escape(intro),
+    url: escape(url),
+    button: escape(button),
+    login: login ? escape(login) : "",
+    expiry: escape(expiry),
+  };
+  // Inline styles and tables maximize compatibility with email clients.
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"></head><body style="margin:0;padding:0;background-color:#000000;color:#ffffff;font-family:Arial,Helvetica,sans-serif"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#000000"><tr><td align="center" style="padding:40px 20px 48px"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:560px;background-color:#000000"><tr><td style="padding:12px 0 38px"><img src="https://workspace.karmawebs.com/assets/karma-compact.png" alt="Karma" width="76" style="display:block;width:76px;height:auto;border:0;color:#ffffff"><p style="margin:16px 0 0;font-size:11px;letter-spacing:2px;color:#bfbfbf">KARMA SOCIAL</p></td></tr><tr><td><p style="margin:0 0 12px;font-size:12px;letter-spacing:1px;color:#c4c4c4">${safe.project}</p><h1 style="margin:0 0 24px;color:#ffffff;font-size:32px;font-weight:700;line-height:1.14">${safe.title}</h1><p style="margin:0 0 16px;color:#ffffff;font-size:16px;line-height:1.65">Hola, ${safe.name}.</p><p style="margin:0 0 30px;color:#ffffff;font-size:15px;line-height:1.75">${safe.intro}</p>${welcome ? `<h2 style="margin:0 0 15px;color:#ffffff;font-size:16px">Cómo empezar</h2><ol style="color:#ffffff;padding-left:20px;margin:0 0 27px;font-size:15px;line-height:1.9"><li>Pulsa <strong>«Activar mi cuenta»</strong>.</li><li>Establece tu contraseña desde el enlace seguro.</li><li>Guarda tu identificador para tus próximos accesos.</li></ol>` : ""}<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="#ffffff" style="background:#ffffff;border-radius:4px"><a href="${safe.url}" style="display:inline-block;padding:18px 28px;background:#ffffff;color:#000000;text-decoration:none;font-size:15px;font-weight:700;border-radius:4px">${safe.button}</a></td></tr></table>${welcome ? `<p style="color:#d1d1d1;font-size:12px;line-height:1.7;margin:20px 0 0">${safe.expiry}</p>` : ""}${login ? `<div style="border:1px solid #4a4a4a;padding:18px;margin-top:32px"><p style="margin:0 0 9px;color:#bfbfbf;font-size:11px;letter-spacing:1px">TU IDENTIFICADOR DE ACCESO</p><p style="margin:0;color:#ffffff;font-size:13px;overflow-wrap:anywhere;word-break:break-all">${safe.login}</p><p style="margin:10px 0 0;color:#bbbbbb;font-size:12px;line-height:1.5">Es distinto de tu correo de contacto. Guárdalo para iniciar sesión.</p></div>` : ""}</td></tr><tr><td style="padding-top:48px"><div style="border-top:1px solid #444444;padding-top:26px"><p style="margin:0 0 9px;color:#ffffff;font-size:14px;font-weight:bold">El equipo de Karma.</p><p style="margin:0 0 15px;color:#c7c7c7;font-size:13px">Diseño, estrategia y creatividad.</p><p style="margin:0;font-size:12px;color:#bdbdbd">¿Necesitas ayuda? Responde a este correo o escríbenos a <a href="mailto:info@karmawebs.com" style="color:#ffffff;text-decoration:underline">info@karmawebs.com</a>.</p></div></td></tr></table></td></tr></table></body></html>`;
   return {
     subject: `${title} · Karma Social`,
-    text: `Hola ${name}. ${title} a ${project}. ${detail} ${access}\n${url}`,
-    html: `<!doctype html><html lang="es"><body style="margin:0;background:#f4f4f4;font-family:Arial,sans-serif;color:#111"><div style="max-width:560px;margin:32px auto;background:#fff;padding:40px"><div style="font-size:28px;font-weight:bold;letter-spacing:4px">KARMA</div><p style="color:#777">SOCIAL / ${escape(project)}</p><h1 style="font-size:26px">${title}</h1><p>Hola ${escape(name)},</p><p>${detail}</p>${login ? `<p>${escape(access)}</p>` : ""}<p style="padding:24px 0"><a href="${escape(url)}" style="background:#111;color:#fff;padding:16px 24px;text-decoration:none;display:inline-block">Acceder a mi espacio</a></p><p style="color:#777;font-size:13px">¿Necesitas ayuda? Responde a este correo.</p></div></body></html>`,
+    text: `Hola, ${name}.\n\n${heading}\n${intro}\n\n${steps}\n\n${button}: ${url}\n\n${expiry}\n${access}\n\nEl equipo de Karma.\ninfo@karmawebs.com`,
+    html,
   };
 }
 export function smtpConfigured() {
