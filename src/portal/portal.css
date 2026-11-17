@@ -280,3 +280,35 @@
   .client-portal .portal-login-minimal .portal-login-submit,
   .client-portal .portal-login-minimal .portal-login-field input{transition:none}
 }
+
+/* Activación de contraseña: misma experiencia visual que el login */
+.client-portal .portal-invitation-minimal>h1{margin-bottom:14px}
+.client-portal .portal-invitation-minimal .portal-invitation-description{
+  width:100%;
+  margin:0 0 30px;
+  color:#b7b7bd;
+  font-size:14px;
+  font-weight:300;
+  line-height:1.7;
+  text-align:center;
+}
+.client-portal .portal-invitation-minimal .portal-invitation-back{
+  display:inline-block;
+  margin-top:25px;
+  color:#a7a7ad;
+  font-size:13px;
+  font-weight:300;
+  text-decoration:none;
+  transition:color .2s;
+}
+.client-portal .portal-invitation-minimal .portal-invitation-back:hover{color:#fff;text-decoration:none}
+.client-portal .portal-invitation-minimal .portal-invitation-back:focus-visible{
+  outline:2px solid #fff;outline-offset:5px;
+}
+@media(max-width:600px){
+  .client-portal .portal-invitation-minimal .portal-invitation-description{
+    margin-bottom:26px;
+    font-size:13px;
+  }
+  .client-portal .portal-invitation-minimal .portal-invitation-back{margin-top:24px}
+}
