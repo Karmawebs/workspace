@@ -312,3 +312,21 @@
   }
   .client-portal .portal-invitation-minimal .portal-invitation-back{margin-top:24px}
 }
+
+/* Reuniones visibles para clientes: indicador y lista privada de títulos */
+.client-portal aside .portal-shortcut .portal-meeting-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 auto;min-width:21px;height:21px;padding:0 6px;
+  border-radius:99px;background:#b83439;color:#fff;
+  font:600 11px/1 Manrope,Arial,sans-serif;
+  opacity:1;visibility:visible;margin-left:auto;
+}
+@media(min-width:901px){
+ .client-portal aside:not(:hover):not(:focus-within) .portal-shortcut .portal-meeting-badge{
+   position:absolute;top:3px;right:1px;min-width:17px;height:17px;padding:0 4px;font-size:10px;
+ }
+}
+.portal-overlay .portal-meetings-list{padding:10px 0 0;display:grid;gap:0}
+.portal-overlay .portal-meeting-title{padding:18px 2px;border-bottom:1px solid #38383c;color:#f7f7f7;font-size:14px;font-weight:400;overflow-wrap:anywhere}
+.portal-overlay .portal-meeting-title:last-child{border-bottom:0}
+.portal-overlay .portal-meeting-empty{margin:16px 0;color:#aaaab0;font-size:13px}
