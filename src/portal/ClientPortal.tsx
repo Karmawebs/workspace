@@ -1,3 +1,4 @@
+import {PortalInvitation} from "./PortalInvitation";
 import {CalendarDays,List,FolderOpen,KeyRound,Plus,Mail,LogOut} from "lucide-react";
 import {PortalTools} from "./PortalTools";
 import {useEffect,useState} from "react";
@@ -16,10 +17,12 @@ const wrongAccount="Has iniciado sesión con una cuenta de Workspace. Utiliza el
 const date=(s:string|null)=>s?new Date(s).toLocaleDateString("es-ES"):"Sin fecha";
 export function ClientPortal(){
  const [identity,identify]=useState({id:"",wrong:false});
+ const [invitation,setInvitation]=useState(()=>{const token=new URLSearchParams(location.hash.slice(1)).get("invite")||"";if(token)history.replaceState(null,"",location.pathname);return token;});
  useEffect(()=>{const {data}=auth.auth.onAuthStateChange((_,session)=>{
  const user=session?.user;
  identify({id:user?.role==="kw_portal_client"?user.id:"",wrong:!!user&&user.role!=="kw_portal_client"});
  });return ()=>data.subscription.unsubscribe()},[]);
+ if(invitation)return <PortalInvitation auth={auth} token={invitation} done={()=>setInvitation("")}/>;
  return <PortalSession key={identity.id} signed={!!identity.id} wrong={identity.wrong}/>;
 }
 function PortalSession({signed,wrong}:{signed:boolean,wrong:boolean}){

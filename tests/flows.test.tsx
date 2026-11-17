@@ -8,6 +8,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, it, expect, vi } from "vitest";
+Object.defineProperty(window,"matchMedia",{writable:true,value:vi.fn().mockImplementation(query=>({matches:false,media:query,addEventListener:vi.fn(),removeEventListener:vi.fn()}))});
 const mock = vi.hoisted(() => ({
   tables: {} as Record<string, Record<string, unknown>[]>,
   writes: [] as { table: string; values: Record<string, unknown> }[],
@@ -15,6 +16,7 @@ const mock = vi.hoisted(() => ({
   listener: null as null | ((event: string, session: unknown) => void),
 }));
 vi.mock("../src/lib/supabase", () => ({
+  config: {url:"https://fixture.supabase.co",key:"fixture-key"},
   db: {
     auth: {
       getSession: async () => ({

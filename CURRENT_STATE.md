@@ -129,3 +129,10 @@ Enter, archivo, editor con adjunto existente, tres accesos y navegación verific
 escritorio 1440 conserva tema claro, dos columnas y creación rápida oculta. Social
 no hereda el tema. No se escribieron datos reales. Pendiente comprobación física en
 Safari/iPhone con teclado y subida/descarga real de archivos; no se afirma cubierta.
+
+## Social — usuarios por proyecto e invitaciones, 2026-11-17
+
+Tarjeta Usuarios en lugar de Información, modal con contexto fijo, alta, contacto, estado y reenvío. Reutiliza portal `/portal`, identidades exclusivas y tablas existentes. Nuevas identidades Auth con alias independiente del correo de contacto, contraseña aleatoria de servidor y enlace de un uso para elegir contraseña. SMTP Sered TLS 465 con remitente notificaciones@karmawebs.com y Reply-To info@karmawebs.com; secreto y habilitación pendientes. No se envían contraseñas ni se activan automatizaciones adicionales.
+
+Aplicada `20261117163813_social_portal_invitations`: estado/idempotencia de invitaciones, vínculo inmutable y RPC service_role con comprobación de sesión administrativa viva. Registro público desactivado confirmado; dos accesos existentes conservados. Backend social-portal-admin desplegado. 102 tests frontend, build, SQL desechable, cinco pruebas Edge y Auth local real (alta, repetición, invitación, caducidad, login/logout, aislamiento/desactivación) pasan. SMTP real no probado: falta PORTAL_SMTP_PASSWORD y habilitar PORTAL_SMTP_ENABLED tras verificar entrega. SPF y DKIM publicados; DMARC ausente. Ver SOCIAL_PORTAL_USERS.md.
+Modal Usuarios revisado con navegador a 1440/375/320 px, sin overflow; portal existente también a 768 px. Cambio de 320 px limitado al wrap de cabeceras Social.

@@ -17,3 +17,4 @@
 .social-attachments-open:hover span{text-decoration:underline}
 .social-attachments-delete{border:0;background:transparent;padding:12px;color:#a34a56;cursor:pointer}
 .social-attachments-delete:hover{background:#fff0f1;border-radius:8px}
+@media(max-width:360px){.social-dashboard .section-header{flex-wrap:wrap}}

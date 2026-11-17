@@ -6,6 +6,7 @@ Deno.test("administrative list returns project labels and usernames only after c
  Object.defineProperty(Deno,"serve",{configurable:true,value:(h:typeof handler)=>handler=h});
  let role="member",reveals=0;
  globalThis.fetch=async(i,init)=>{const r=new Request(i,init),u=new URL(r.url),table=u.pathname.split("/").pop();const wrap=(row:object)=>Response.json(r.headers.get("accept")?.includes("object")?row:[row]);
+ if(table==="kw_portal_admin_session")return Response.json(true);
  if(table==="user")return Response.json({id:"admin"});
  if(table==="kw_projects")return wrap({workspace_id:"w"});if(table==="kw_workspace_members")return wrap({role});
  if(table==="kw_portal_credential"){assert.deepEqual(await r.json(),{p_project:"p",p_id:"c",p_action:"reveal"});reveals++;return Response.json({username:"Editor",password:"not-in-list",notes:"not-in-list"});}

@@ -27,6 +27,7 @@ type Access = {
   contact_email: string;
   login_email: string;
   active: boolean;
+  invitation_state?: string;
 };
 type Activity = {
   id: string;
@@ -53,6 +54,16 @@ type Dialog =
   | { kind: "access" | "edit" | "reset"; user: Access }
   | { kind: "activity"; item: Activity }
   | { kind: "credential"; record?: Credential; readonly?: boolean };
+export const deliveryLabel = (state: string) =>
+  ({
+    none: "Sin invitación",
+    sent: "Invitación enviada.",
+    sending:
+      "Envío en curso; si no cambia, puedes reenviar tras cinco minutos.",
+    failed: "No se pudo generar la invitación. Puedes reintentarlo.",
+    unconfigured: "Correo pendiente de configurar SMTP.",
+    unknown: "Entrega no confirmada. Comprueba la recepción antes de reenviar.",
+  })[state] || "Sin invitación";
 const labels = {
   changes: "Cambios solicitados",
   approved: "Aprobado",
@@ -155,8 +166,10 @@ export function PortalAdmin({
   projectId,
   workspaceId,
   children,
+  usersOnly = false,
 }: {
   projectId?: string;
+  usersOnly?: boolean;
   workspaceId: string;
   children?: ReactNode;
 }) {
@@ -182,7 +195,12 @@ export function PortalAdmin({
       live = false;
     };
   }, [projectId, workspaceId]);
-  if(projectId && children) return <Controls key={projectId} id={projectId}>{children}</Controls>;
+  if (projectId && children)
+    return (
+      <Controls key={projectId} id={projectId}>
+        {children}
+      </Controls>
+    );
   return (
     <div className="pa-stack">
       {!projectId && (
@@ -199,7 +217,11 @@ export function PortalAdmin({
       )}
       {error && <p role="alert">{error}</p>}
       {(projectId || choice) && (
-        <Controls key={projectId || choice} id={projectId || choice} />
+        <Controls
+          key={projectId || choice}
+          id={projectId || choice}
+          usersOnly={usersOnly}
+        />
       )}
     </div>
   );
@@ -211,21 +233,34 @@ async function invoke<T>(
   const r = await db.functions.invoke("social-portal-admin", {
     body: { ...body, projectId: id },
   });
-  if (r.error)
+  if (r.error) {
+    const detail = await r.error.context?.json?.().catch(() => null);
     throw Error(
-      "No se pudo completar la operación. Comprueba los datos e inténtalo de nuevo.",
+      detail?.error ||
+        "No se pudo completar la operación. Comprueba los datos e inténtalo de nuevo.",
     );
+  }
   return r.data;
 }
-function Controls({ id, children }: { id: string; children?: ReactNode }) {
+function Controls({
+  id,
+  children,
+  usersOnly = false,
+}: {
+  id: string;
+  children?: ReactNode;
+  usersOnly?: boolean;
+}) {
+  const createRequest = useRef(crypto.randomUUID());
+  const actionLock = useRef(false);
   const [data, set] = useState<Listing>(),
     [modal, open] = useState<Dialog | null>(null),
     [error, err] = useState(""),
     [notice, tell] = useState(""),
     [busy, lock] = useState(false);
   const [attempt, reload] = useState(0);
-  const [activityOpen,setActivityOpen] = useState(false);
-  const [accessOpen,setAccessOpen] = useState(false);
+  const [activityOpen, setActivityOpen] = useState(false);
+
   useEffect(() => {
     let live = true;
     invoke<Listing>(id, { action: "list" })
@@ -245,21 +280,34 @@ function Controls({ id, children }: { id: string; children?: ReactNode }) {
     open(m);
   }
   async function act(body: Record<string, unknown>, message: string) {
-    if (busy) return;
+    if (actionLock.current) return;
+    actionLock.current = true;
     lock(true);
     err("");
     try {
-      const result = await invoke<{ login?: string }>(id, body);
+      const result = await invoke<{
+        login?: string;
+        delivery?: string;
+        retryAfter?: number;
+      }>(id, body);
+      if (body.action === "create") createRequest.current = crypto.randomUUID();
       open(null);
       tell(
-        result.login
-          ? "Acceso creado. Correo de acceso: " + result.login
-          : message,
+        result.delivery
+          ? (result.login ? "Acceso creado. " : "") +
+              deliveryLabel(result.delivery) +
+              (result.retryAfter
+                ? " Para reenviar, espera cinco minutos desde el último intento."
+                : "")
+          : result.login
+            ? "Acceso creado. Correo de acceso: " + result.login
+            : message,
       );
       reload((n) => n + 1);
     } catch (e) {
       err((e as Error).message);
     } finally {
+      actionLock.current = false;
       lock(false);
     }
   }
@@ -292,7 +340,7 @@ function Controls({ id, children }: { id: string; children?: ReactNode }) {
   );
   const title =
     modal?.kind === "create"
-      ? "Añadir cliente"
+      ? "Nuevo usuario"
       : modal?.kind === "access"
         ? "Gestionar acceso"
         : modal?.kind === "edit"
@@ -319,149 +367,179 @@ function Controls({ id, children }: { id: string; children?: ReactNode }) {
     </>
   );
   const accessCard = (
-      <Card
-        title="Accesos de clientes"
-        icon={<UsersRound />}
-        count={data?.access.length}
-        action={add("Añadir cliente", { kind: "create" })}
-      >
-        {data?.access.length
-          ? data.access.map((a) => (
-              <div className="pa-row" key={a.user_id}>
-                <div className="record-main">
-                  <button
-                    className="text-button"
-                    onClick={() => show({ kind: "access", user: a })}
-                  >
-                    {a.name}
-                  </button>
-                  <small>{a.login_email}</small>
-                </div>
-                <Badge
-                  text={a.active ? "Activo" : "Desactivado"}
-                  tone={a.active ? "active" : ""}
-                />
+    <Card
+      title="Accesos de clientes"
+      icon={<UsersRound />}
+      count={data?.access.length}
+      action={add("Nuevo usuario", { kind: "create" })}
+    >
+      {data?.access.length
+        ? data.access.map((a) => (
+            <div className="pa-row" key={a.user_id}>
+              <div className="record-main">
                 <button
-                  className="secondary"
+                  className="text-button"
                   onClick={() => show({ kind: "access", user: a })}
                 >
-                  Gestionar
-                  <ChevronRight size={14} />
+                  {a.name}
                 </button>
+                <small>{a.contact_email}</small>
+                <small>Acceso: {a.login_email}</small>
+                {a.invitation_state && (
+                  <small>{deliveryLabel(a.invitation_state)}</small>
+                )}
               </div>
-            ))
-          : empty("Todavía no hay clientes con acceso a este proyecto.")}
-      </Card>
+              <Badge
+                text={a.active ? "Activo" : "Desactivado"}
+                tone={a.active ? "active" : ""}
+              />
+              <button
+                className="secondary"
+                onClick={() => show({ kind: "access", user: a })}
+              >
+                Gestionar
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          ))
+        : empty("Todavía no hay clientes con acceso a este proyecto.")}
+    </Card>
   );
   const activityCard = (
-      <Card
-        title="Avisos y aprobaciones"
-        icon={<MessagesSquare />}
-        count={data?.history.length}
-      >
-        {data?.history.length
-          ? data.history.map((h) => (
-              <div className="pa-row" key={h.id}>
-                <div className="record-main">
-                  <strong>{h.title || "Publicación no disponible"}</strong>
-                  <small>
-                    {h.event === "reply"
-                      ? "Respuesta del equipo"
-                      : h.client || "Actividad del proyecto"}{" "}
-                    · {date(h.created_at)}
-                  </small>
-                </div>
-                <Badge text={labels[h.event]} tone={tones[h.event]} />
-                <button
-                  className="icon-button"
-                  aria-label={"Consultar " + labels[h.event]}
-                  onClick={() => show({ kind: "activity", item: h })}
-                >
-                  <Eye size={17} />
-                </button>
+    <Card
+      title="Avisos y aprobaciones"
+      icon={<MessagesSquare />}
+      count={data?.history.length}
+    >
+      {data?.history.length
+        ? data.history.map((h) => (
+            <div className="pa-row" key={h.id}>
+              <div className="record-main">
+                <strong>{h.title || "Publicación no disponible"}</strong>
+                <small>
+                  {h.event === "reply"
+                    ? "Respuesta del equipo"
+                    : h.client || "Actividad del proyecto"}{" "}
+                  · {date(h.created_at)}
+                </small>
               </div>
-            ))
-          : empty("Las solicitudes de cambios y aprobaciones aparecerán aquí.")}
-      </Card>
+              <Badge text={labels[h.event]} tone={tones[h.event]} />
+              <button
+                className="icon-button"
+                aria-label={"Consultar " + labels[h.event]}
+                onClick={() => show({ kind: "activity", item: h })}
+              >
+                <Eye size={17} />
+              </button>
+            </div>
+          ))
+        : empty("Las solicitudes de cambios y aprobaciones aparecerán aquí.")}
+    </Card>
   );
   const credentialsCard = (
-      <Card
-        title="Credenciales"
-        icon={<KeyRound />}
-        count={data?.credentials.length}
-        action={add("Añadir credencial", { kind: "credential" })}
-      >
-        {data?.credentials.length
-          ? data.credentials.map((c) => (
-              <div className="pa-row" key={c.id}>
-                <div className="record-main">
-                  <strong>{c.service}</strong>
-                  <small>{c.username || "Sin usuario registrado"}</small>
-                </div>
-                <Badge text={c.visible ? "Compartida" : "Privada"} />
-                <div className="record-actions">
-                  <button
-                    className="icon-button"
-                    aria-label={"Consultar " + c.service}
-                    onClick={() =>
-                      show({ kind: "credential", record: c, readonly: true })
-                    }
-                  >
-                    <Eye size={16} />
-                  </button>
-                  <button
-                    className="icon-button"
-                    aria-label={"Editar " + c.service}
-                    onClick={() => show({ kind: "credential", record: c })}
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    className="icon-button danger"
-                    aria-label={"Eliminar " + c.service}
-                    disabled={busy}
-                    onClick={() =>
-                      confirm(
-                        "¿Eliminar la credencial de " + c.service + "?",
-                      ) &&
-                      act(
-                        { action: "credential", op: "delete", id: c.id },
-                        "Credencial eliminada.",
-                      )
-                    }
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+    <Card
+      title="Credenciales"
+      icon={<KeyRound />}
+      count={data?.credentials.length}
+      action={add("Añadir credencial", { kind: "credential" })}
+    >
+      {data?.credentials.length
+        ? data.credentials.map((c) => (
+            <div className="pa-row" key={c.id}>
+              <div className="record-main">
+                <strong>{c.service}</strong>
+                <small>{c.username || "Sin usuario registrado"}</small>
               </div>
-            ))
-          : empty("No hay credenciales guardadas en este proyecto.")}
-      </Card>
+              <Badge text={c.visible ? "Compartida" : "Privada"} />
+              <div className="record-actions">
+                <button
+                  className="icon-button"
+                  aria-label={"Consultar " + c.service}
+                  onClick={() =>
+                    show({ kind: "credential", record: c, readonly: true })
+                  }
+                >
+                  <Eye size={16} />
+                </button>
+                <button
+                  className="icon-button"
+                  aria-label={"Editar " + c.service}
+                  onClick={() => show({ kind: "credential", record: c })}
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  className="icon-button danger"
+                  aria-label={"Eliminar " + c.service}
+                  disabled={busy}
+                  onClick={() =>
+                    confirm("¿Eliminar la credencial de " + c.service + "?") &&
+                    act(
+                      { action: "credential", op: "delete", id: c.id },
+                      "Credencial eliminada.",
+                    )
+                  }
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+          ))
+        : empty("No hay credenciales guardadas en este proyecto.")}
+    </Card>
   );
   return (
     <>
-      {children ? <>
-        {children}
-        <div className="pa-stack pa-project-accordions">
+      {children ? (
+        <>
+          {children}
+          <div className="pa-stack pa-project-accordions">
+            {feedback}
+            <section className="card pa-accordion">
+              <button
+                type="button"
+                className="pa-accordion-toggle"
+                aria-expanded={activityOpen}
+                onClick={() => setActivityOpen((v) => !v)}
+              >
+                <MessagesSquare size={19} />
+                <strong>Avisos y aprobaciones</strong>
+                <span className="badge">{data?.history.length ?? 0}</span>
+                <ChevronDown
+                  size={18}
+                  className={
+                    activityOpen
+                      ? "pa-accordion-chevron is-open"
+                      : "pa-accordion-chevron"
+                  }
+                />
+              </button>
+              {activityOpen && (
+                <div className="pa-accordion-content">{activityCard}</div>
+              )}
+            </section>
+          </div>
+        </>
+      ) : (
+        <>
           {feedback}
-          <section className="card pa-accordion">
-            <button type="button" className="pa-accordion-toggle" aria-expanded={activityOpen} onClick={()=>setActivityOpen(v=>!v)}>
-              <MessagesSquare size={19}/><strong>Avisos y aprobaciones</strong><span className="badge">{data?.history.length??0}</span><ChevronDown size={18} className={activityOpen?"pa-accordion-chevron is-open":"pa-accordion-chevron"}/>
-            </button>
-            {activityOpen&&<div className="pa-accordion-content">{activityCard}</div>}
-          </section>
-          <section className="card pa-accordion">
-            <button type="button" className="pa-accordion-toggle" aria-expanded={accessOpen} onClick={()=>setAccessOpen(v=>!v)}>
-              <UsersRound size={19}/><strong>Accesos de clientes</strong><span className="badge">{data?.access.length??0}</span><ChevronDown size={18} className={accessOpen?"pa-accordion-chevron is-open":"pa-accordion-chevron"}/>
-            </button>
-            {accessOpen&&<div className="pa-accordion-content">{accessCard}</div>}
-          </section>
-        </div>
-      </> : <>{feedback}{accessCard}{activityCard}{credentialsCard}</>}
+          {accessCard}
+          {!usersOnly && (
+            <>
+              {activityCard}
+              {credentialsCard}
+            </>
+          )}
+        </>
+      )}
       {modal && (
         <Modal title={title} close={() => show(null)} busy={busy}>
           {problem}
-          {notice && <p className="pa-notice" role="status">{notice}</p>}
+          {notice && (
+            <p className="pa-notice" role="status">
+              {notice}
+            </p>
+          )}
           {modal.kind === "access" && (
             <>
               <h3>{modal.user.name}</h3>
@@ -492,9 +570,19 @@ function Controls({ id, children }: { id: string; children?: ReactNode }) {
               <footer>
                 <button
                   className="secondary"
-                  onClick={() => show({ kind: "reset", user: modal.user })}
+                  disabled={busy || !modal.user.active}
+                  onClick={() =>
+                    act(
+                      {
+                        action: "invite",
+                        id: modal.user.user_id,
+                        request: crypto.randomUUID(),
+                      },
+                      "Invitación solicitada.",
+                    )
+                  }
                 >
-                  Restablecer contraseña
+                  Reenviar invitación
                 </button>
                 <button
                   className="secondary"
@@ -540,6 +628,9 @@ function Controls({ id, children }: { id: string; children?: ReactNode }) {
                   {
                     ...f,
                     action: modal.kind,
+                    ...(modal.kind === "create"
+                      ? { request: createRequest.current }
+                      : {}),
                     id: "user" in modal ? modal.user.user_id : undefined,
                   },
                   modal.kind === "reset"
@@ -575,11 +666,16 @@ function Controls({ id, children }: { id: string; children?: ReactNode }) {
                     </label>
                   </>
                 )}
-                {modal.kind !== "edit" && (
+                {modal.kind === "create" && (
+                  <p className="muted">
+                    Contraseña inicial generada de forma segura en el servidor.
+                    El cliente recibirá un enlace para establecer la suya; no se
+                    envían contraseñas por correo.
+                  </p>
+                )}
+                {modal.kind === "reset" && (
                   <label>
-                    {modal.kind === "reset"
-                      ? "Nueva contraseña"
-                      : "Contraseña inicial"}
+                    Nueva contraseña
                     <input
                       name="password"
                       type="password"

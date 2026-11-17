@@ -31,7 +31,7 @@ export function failure(e: unknown) {
 }
 export const admin = () =>
   createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), {
-    auth: { persistSession: false },
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 export async function scope(req: Request, projectId: string) {
   const jwt = req.headers.get("Authorization")?.match(/^Bearer (.+)$/i)?.[1];

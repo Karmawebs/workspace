@@ -12,18 +12,19 @@ create function cron.schedule(text,text,text) returns int language sql as 'selec
 create table auth.users(id uuid primary key,role text,email text,raw_app_meta_data jsonb);
 create table auth.sessions(id uuid primary key,user_id uuid,created_at timestamptz default now());
 create table kw_projects(id uuid primary key,workspace_id uuid,app_key text);
-create table kw_workspace_members(user_id uuid);
+create table kw_workspace_members(user_id uuid,workspace_id uuid,role text);
 create function kw_is_workspace_member(uuid) returns boolean language sql as 'select false';
 create table kw_content_items(id uuid primary key,workspace_id uuid,project_id uuid,title text,description text,file_urls text[],content_type text,client_approved boolean);
 create table kw_content_files(content_id uuid,sort_order int,storage_path text);
 create table kw_tasks(id uuid primary key default gen_random_uuid(),workspace_id uuid,project_id uuid,app_key text,title text,description text,metadata jsonb);
 create table kw_instagram_publications(id uuid,content_id uuid,state text,scheduled_for timestamptz);`);
 await pg.exec(readFileSync('supabase/migrations/'+readdirSync('supabase/migrations').find(x=>x.endsWith('_social_client_portal.sql')),'utf8'));
+await pg.exec(readFileSync('supabase/migrations/20261117163813_social_portal_invitations.sql','utf8'));
 const [w,p,other,u,s,c,d]=Array.from({length:7},()=>crypto.randomUUID());
 await q("insert into kw_projects values ($1,$3,'social'),($2,$3,'social')",[p,other,w]);
 await q("insert into auth.users values($1,'kw_portal_client','fixture@example.invalid',$2)",[u,{portal:'social',project:p,name:'Fixture',contact:'fixture@example.invalid'}]);
 await q("insert into auth.sessions(id,user_id) values($1,$2)",[s,u]);
-await assert.rejects(q('insert into kw_workspace_members values($1)',[u]));
+await assert.rejects(q('insert into kw_workspace_members(user_id) values($1)',[u]));
 await q("insert into kw_content_items(id,workspace_id,project_id,title) values($1,$3,$4,'A'),($2,$3,$5,'B')",[c,d,w,p,other]);
 const review=(id,rev,event,comment,key=crypto.randomUUID())=>q('select kw_portal_review($1,$2,$3,$4,$5,$6,$7)',[u,s,id,rev,event,comment,key]);
 await assert.rejects(review(d,0,'approved',''));
@@ -38,6 +39,21 @@ assert.equal((await first('select state from kw_instagram_publications')).state,
 assert.equal((await first("select count(*)::int n from kw_portal_mail where project_id=$1",[other])).n,0);
 await q('update kw_portal_access set active=false where user_id=$1',[u]);
 await assert.rejects(review(c,3,'approved',''));
+// Multiple clients, one contact across projects, immutable identity binding.
+const u2=crypto.randomUUID(),u3=crypto.randomUUID();
+await q("insert into auth.users values($1,'kw_portal_client','second@portal.invalid',$2)",[u2,{portal:'social',project:p,name:'Second',contact:'second@example.invalid'}]);
+await q("insert into auth.users values($1,'kw_portal_client','third@portal.invalid',$2)",[u3,{portal:'social',project:other,name:'Third',contact:'fixture@example.invalid'}]);
+await assert.rejects(q("insert into auth.users values($1,'kw_portal_client','duplicate@portal.invalid',$2)",[crypto.randomUUID(),{portal:'social',project:p,name:'Duplicate',contact:'fixture@example.invalid'}]));
+await assert.rejects(q('update kw_portal_access set project_id=$1 where user_id=$2',[other,u]));
+assert.equal((await first('select count(*)::int n from kw_portal_access')).n,3);
+const claim=async(uid,project,request)=>(await first('select kw_portal_claim_invitation($1,$2,$3) ok',[uid,project,request])).ok;
+const req=crypto.randomUUID();assert.equal(await claim(u2,p,req),true);
+assert.equal(await claim(u2,p,req),false);assert.equal(await claim(u2,p,crypto.randomUUID()),false);
+assert.equal(await claim(u,p,crypto.randomUUID()),false);
+await assert.rejects(claim(u2,other,crypto.randomUUID()));
+await q("update kw_portal_access set invitation_at=now()-interval '6 minutes' where user_id=$1",[u2]);
+assert.equal(await claim(u2,p,req),false);assert.equal(await claim(u2,p,crypto.randomUUID()),true);
 await pg.exec('set role authenticated');await assert.rejects(q('select * from kw_portal_credentials'));await assert.rejects(q('select * from kw_portal_access'));
-console.log('Portal SQL: project isolation, membership guard, revision checks, invalidation, idempotent tasks, schedule independence, outbox scope, deactivation and grants passed.');
+await assert.rejects(claim(u2,p,crypto.randomUUID()));
+console.log('Portal SQL: invitation claims, duplicate contacts, immutable bindings, project isolation, membership guard, revision checks, invalidation, idempotent tasks, schedule independence, outbox scope, deactivation and grants passed.');
 } finally {await pg.close();}
