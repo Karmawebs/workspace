@@ -2,7 +2,7 @@ import {PortalAdmin} from "../portal/PortalAdmin";
 import { SocialConnectionsDialog } from "../modules/SocialConnections";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowUpRight, Settings2, Pencil, CalendarDays, BookOpen, KeyRound, Plug, Info, X } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Settings2, Pencil, CalendarDays, BookOpen, KeyRound, Plug, Info, Paperclip, X } from "lucide-react";
 import { db } from "../lib/supabase";
 import { type Scope, message } from "./data";
 import { type Row, text, pretty, dateLabel } from "./model";
@@ -15,11 +15,12 @@ import { useRows } from "./useRows";
 import { ProjectUrgency } from "./ProjectUrgency";
 import { Care } from "../modules/Care";
 import { SocialLibrary } from "../modules/SocialLibrary";
+import { SocialAttachments } from "../modules/SocialAttachments";
 import "../modules/social-project-dashboard.css";
 export function ProjectDetail({ scope, socialConnections=false, canManageConnections=false }: { scope: Scope; socialConnections?:boolean; canManageConnections?:boolean }) {
   const { id = "" } = useParams(), [project, setProject] = useState<Row>(), [error, setError] = useState(""), [tab, setTab] = useState("activity"), [edit, setEdit] = useState(false), [version, setVersion] = useState(0);
   const [connectionsProject,setConnectionsProject]=useState<string>();
-  const [socialModal,setSocialModal]=useState<"schedule"|"library"|"credentials"|"connections"|"information"|null>(null);
+  const [socialModal,setSocialModal]=useState<"schedule"|"library"|"credentials"|"connections"|"information"|"attachments"|null>(null);
   const panels = useRows(entity("panels"), scope, id), events = useRows(entity("events"), scope, id), milestones = useRows(entity("milestones"), scope, id);
   useEffect(() => { let alive = true; setProject(undefined); setError(""); db.from("kw_projects").select("*").eq("id", id).eq("workspace_id", scope.workspaceId).eq("app_key", scope.app).single().then(({ data, error }) => { if (!alive) return; if (error) setError("Proyecto no disponible o sin acceso."); else setProject(data as Row); }); return () => { alive = false; }; }, [id, scope.workspaceId, scope.app, version]);
   if (error) return <div className="error" role="alert">{error}<Link to={`/${scope.app}/projects`}>Volver a proyectos</Link></div>;
@@ -38,10 +39,10 @@ export function ProjectDetail({ scope, socialConnections=false, canManageConnect
     <div className="social-dashboard-columns"><EntityView kind="tasks" scope={scope} projectId={id} compact/><EntityView kind="events" scope={scope} projectId={id} compact/><WorkJournal scope={scope} projectId={id}/></div>
     <div className="social-dashboard-links">{([
       ["schedule","Programación",CalendarDays],["library","Biblioteca",BookOpen],["credentials","Contraseñas",KeyRound],
-      ["connections","Conexiones",Plug],["information","Información",Info]
+      ["connections","Conexiones",Plug],["information","Información",Info],["attachments","Adjuntos",Paperclip]
     ] as const).map(([key,label,Icon])=><button className="social-dashboard-link" key={key} onClick={()=>setSocialModal(key)}><Icon size={20}/><strong>{label}</strong><ArrowUpRight size={17}/></button>)}</div>
-    {socialModal&&<div className="social-dashboard-backdrop" onMouseDown={e=>e.target===e.currentTarget&&setSocialModal(null)}><section className="social-dashboard-modal" role="dialog" aria-modal="true" aria-label={socialModal}><header><h2>{{schedule:"Programación",library:"Biblioteca",credentials:"Contraseñas",connections:"Conexiones",information:"Información"}[socialModal]}</h2><button type="button" className="secondary" onClick={()=>setSocialModal(null)} aria-label="Cerrar"><X size={20}/></button></header><div className="social-dashboard-modal-body">
-      {socialModal==="schedule"?<EntityView kind="content" scope={scope} projectId={id}/>:socialModal==="library"?<SocialLibrary scope={scope} projectId={id}/>:socialModal==="credentials"?<EntityView kind="resources" scope={scope} projectId={id}/>:socialModal==="connections"?socialConnections?<SocialConnectionsDialog workspaceId={scope.workspaceId} projectId={id} projectName={text(project.name)} canManage={canManageConnections} onClose={()=>setSocialModal(null)}/>:<EntityView kind="connections" scope={scope} projectId={id}/>:<section className="info-panel"><p className="preserve-lines">{text(project.description)||"Sin descripción."}</p><dl><dt>Estado</dt><dd>{pretty(project.status)}</dd><dt>Prioridad</dt><dd>{pretty(project.priority)}</dd><dt>Inicio</dt><dd>{dateLabel(project.start_date)||"Sin fecha"}</dd><dt>Entrega</dt><dd>{dateLabel(project.due_date)||"Sin fecha"}</dd></dl><button className="secondary" onClick={()=>{setSocialModal(null);setEdit(true);}}>Editar información</button></section>}
+    {socialModal&&<div className="social-dashboard-backdrop" onMouseDown={e=>e.target===e.currentTarget&&setSocialModal(null)}><section className="social-dashboard-modal" role="dialog" aria-modal="true" aria-label={socialModal}><header><h2>{{schedule:"Programación",library:"Biblioteca",credentials:"Contraseñas",connections:"Conexiones",information:"Información",attachments:"Adjuntos"}[socialModal]}</h2><button type="button" className="secondary" onClick={()=>setSocialModal(null)} aria-label="Cerrar"><X size={20}/></button></header><div className="social-dashboard-modal-body">
+      {socialModal==="schedule"?<EntityView kind="content" scope={scope} projectId={id}/>:socialModal==="library"?<SocialLibrary scope={scope} projectId={id}/>:socialModal==="attachments"?<SocialAttachments scope={scope} projectId={id}/>:socialModal==="credentials"?<EntityView kind="resources" scope={scope} projectId={id}/>:socialModal==="connections"?socialConnections?<SocialConnectionsDialog workspaceId={scope.workspaceId} projectId={id} projectName={text(project.name)} canManage={canManageConnections} onClose={()=>setSocialModal(null)}/>:<EntityView kind="connections" scope={scope} projectId={id}/>:<section className="info-panel"><p className="preserve-lines">{text(project.description)||"Sin descripción."}</p><dl><dt>Estado</dt><dd>{pretty(project.status)}</dd><dt>Prioridad</dt><dd>{pretty(project.priority)}</dd><dt>Inicio</dt><dd>{dateLabel(project.start_date)||"Sin fecha"}</dd><dt>Entrega</dt><dd>{dateLabel(project.due_date)||"Sin fecha"}</dd></dl><button className="secondary" onClick={()=>{setSocialModal(null);setEdit(true);}}>Editar información</button></section>}
     </div></section></div>}
   </div>;
   const projectContent = <>
