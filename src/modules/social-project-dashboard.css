@@ -6,3 +6,14 @@
 .social-dashboard .social-journal-entry-toggle svg.is-open{transform:rotate(180deg)}
 .social-dashboard .work-journal-entry:has(.social-journal-entry-toggle){padding:8px 0}
 .social-dashboard .work-journal-entry:has(.social-journal-entry-toggle)>p{margin:8px 0 4px;white-space:pre-wrap;overflow-wrap:anywhere}
+
+
+.social-attachments-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.social-attachments-toolbar p{margin:0}
+.social-attachments-list{display:grid;gap:0;margin-top:20px}
+.social-attachments-row{display:flex;align-items:center;border-bottom:1px solid var(--line,#e5e5e5);gap:8px}
+.social-attachments-open{min-width:0;flex:1;display:flex;align-items:center;gap:12px;padding:15px 4px;background:transparent;border:0;text-align:left;color:inherit;cursor:pointer}
+.social-attachments-open span{flex:1;min-width:0;overflow-wrap:anywhere}
+.social-attachments-open:hover span{text-decoration:underline}
+.social-attachments-delete{border:0;background:transparent;padding:12px;color:#a34a56;cursor:pointer}
+.social-attachments-delete:hover{background:#fff0f1;border-radius:8px}
