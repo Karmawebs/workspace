@@ -25,6 +25,21 @@ Deno.serve(async req=>{
  const input=new Request(req.url,{method:"POST",body:JSON.stringify({folderId:b.folderId,pageToken:b.pageToken,fileId:b.fileId,projectId:project})});
  return (b.action==="drive-list"?driveList:driveFile)(input,async()=>({db,user:user.id,session,workspace:p.workspace_id,projectId:project}));
  }
+ if(b.action==="meetings"){
+  // Authenticate/authorize first; never return private meeting metadata.
+  const {data,error}=await db.from("kw_events")
+    .select("title,starts_at,metadata")
+    .eq("project_id",project)
+    .eq("app_key","social")
+    .gte("starts_at",new Date().toISOString())
+    .order("starts_at",{ascending:true})
+    .limit(200);
+  if(error)throw error;
+  const items=(data??[])
+    .filter(x=>x.metadata?.client_visible===true)
+    .map(x=>({title:x.title}));
+  return json({items});
+ }
  if(b.action==="preferences"){
  if(!Array.isArray(b.preferences)||!b.preferences.every((x:unknown)=>typeof x==="string"&&["new","modified","scheduled","published","reply"].includes(x)))throw new Failure("Preferencias no válidas.",400);
  const {error}=await db.from("kw_portal_access").update({preferences:[...new Set(b.preferences)]}).eq("user_id",user.id).eq("project_id",project).eq("active",true);if(error)throw error;return json({ok:true});
