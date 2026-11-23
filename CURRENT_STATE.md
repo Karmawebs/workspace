@@ -163,3 +163,25 @@ Publicado commit funcional `a5ba86b` en main. Cloudflare activo:
 byte a byte/SHA-256 con el build local verificado. Formato: los mismos 55 archivos
 preexistentes fallan el check global (contrastado contra el commit anterior);
 archivos nuevos pasan Prettier. Árbol limpio al finalizar implementación.
+
+## Social — sincronización Instagram y calendario, 2026-11-23
+
+Importación oficial global por conexión, cola independiente con leases/cursor, cron,
+backoff y reautorización. Histórico al conectar; consulta reciente cada 30 min y
+refresco completo diario. IDs oficiales por cliente, reconciliación con publicaciones
+locales; se difieren medios nuevos si existe un envío ambiguo sin ID oficial.
+Caché privada instagram-media (máximo 50 MiB/archivo), nombres deterministas,
+conservación del histórico y fallback remoto cuando Meta no permite descargar.
+Sin notificaciones de alta por importación histórica. Credenciales existentes intactas.
+
+Ficha publicada de consulta, miniaturas/origen y sincronización manual por proyecto.
+Arrastre fecha-only con RPC atómica sobre el mismo trabajo, control de revisión,
+bloqueo de publicados/en curso, validación futura y conservación de hora/contenido.
+Móvil conserva selector de fecha del editor. Tres migraciones aplicadas y Edge
+social-instagram-sync desplegada en wrkoskqfjuefgrwhymqu; backend antiguo intacto.
+
+Verificación inicial real: RIBSFUNDE 6/6, segunda pasada 6 sin duplicados, 10 archivos
+privados (6 portadas + 4 del carrusel); Sidrería 12, Karmawebs 10. Garden Nails
+histórico paginado en curso. SQL transaccional con rollback verifica importación,
+reconciliación local, bloqueo, reprogramación, conflictos, pasado y no miembros.
+127 tests frontend pasan; build pasa. Validación visual y despliegue frontend en curso.

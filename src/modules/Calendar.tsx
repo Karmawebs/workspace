@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { movePublicationDay } from "./socialScheduleTime";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { message, type Scope } from "../core/data";
 import { dayKey, text, type Row } from "../core/model";
@@ -6,7 +7,12 @@ import { db } from "../lib/supabase";
 import { SocialContentEditor } from "./SocialContentEditor";
 import { SocialContentDot } from "./SocialContentDot";
 import { cleanSocialMedia } from "./socialMedia";
-import { itemsForDay, mainState, statusFilters } from "./socialContent";
+import {
+  itemsForDay,
+  mainState,
+  statusFilters,
+  movableContent,
+} from "./socialContent";
 
 export function Calendar({ scope }: { scope: Scope }) {
   const [month, setMonth] = useState(
@@ -25,6 +31,120 @@ export function Calendar({ scope }: { scope: Scope }) {
     });
   }, [scope.workspaceId]);
   const [revision, setRevision] = useState(0);
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "visible") setRevision((v) => v + 1);
+    };
+    window.addEventListener("focus", refresh);
+    const timer = window.setInterval(refresh, 60000);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  const [syncBusy, setSyncBusy] = useState(false);
+  const [syncInfo, setSyncInfo] = useState("");
+  const [dragging, setDragging] = useState("");
+  const [dropDay, setDropDay] = useState("");
+  const moving = useRef(false);
+  useEffect(() => {
+    let active = true;
+    setSyncInfo("");
+    if (!projectFilter) return;
+    void (async () => {
+      const { data: accounts, error } = await db
+        .from("kw_social_platform_connections")
+        .select("id")
+        .eq("project_id", projectFilter)
+        .eq("platform", "instagram");
+      if (error || !accounts?.length) return;
+      const result = await db
+        .from("kw_instagram_sync")
+        .select("last_success_at,last_error,connection_id,imported_count")
+        .in(
+          "connection_id",
+          accounts.map((a) => a.id),
+        );
+      if (!active) return;
+      const dates = (result.data || [])
+        .map((r) => r.last_success_at)
+        .filter((d): d is string => !!d)
+        .sort();
+      setSyncInfo(
+        (dates.length
+          ? "Última sincronización: " + new Date(dates[0]).toLocaleString("es")
+          : "Sincronización inicial pendiente") +
+          ((result.data || []).some((r) => r.last_error)
+            ? " · No se pudo actualizar. Revisa la conexión."
+            : ""),
+      );
+    })();
+    return () => {
+      active = false;
+    };
+  }, [projectFilter, revision]);
+  async function synchronize() {
+    if (syncBusy || !projectFilter) return;
+    setSyncBusy(true);
+    setError("");
+    try {
+      const { data, error } = await db.functions.invoke(
+        "social-instagram-sync",
+        { body: { projectId: projectFilter } },
+      );
+      if (error) {
+        const reason = await error.context?.json?.().catch(() => null);
+        throw new Error(reason?.error || "No se pudo sincronizar Instagram.");
+      }
+      if (
+        data?.results?.some(
+          (r: { complete?: boolean; busy?: boolean }) => r.busy || !r.complete,
+        )
+      )
+        setSyncInfo(
+          "Sincronización en curso. El histórico continuará automáticamente.",
+        );
+      setRevision((v) => v + 1);
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      setSyncBusy(false);
+    }
+  }
+  async function move(id: string, day: string) {
+    setDragging("");
+    setDropDay("");
+    const row = rows.find((r) => r.id === id);
+    if (!row || moving.current || !movableContent(row)) return;
+    moving.current = true;
+    setError("");
+    try {
+      const due = movePublicationDay(
+        text(row.automatic_at || row.calendar_at || row.scheduled_at),
+        day,
+      );
+      if (mainState(row) === "scheduled" && Date.parse(due) <= Date.now())
+        throw new Error("Selecciona una fecha futura.");
+      const { error } = await db.rpc("kw_move_social_content", {
+        p_content: row.id,
+        p_version: text(row.updated_at),
+        p_due: due,
+        p_attempt: text(row.attempt_id) || undefined,
+        p_revision:
+          typeof row.attempt_revision === "number"
+            ? row.attempt_revision
+            : undefined,
+      });
+      if (error) throw error;
+      setRevision((v) => v + 1);
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      moving.current = false;
+    }
+  }
+
   useEffect(() => {
     if (
       !rows.some((row) =>
@@ -160,6 +280,20 @@ export function Calendar({ scope }: { scope: Scope }) {
           </span>
         </div>
       </div>
+      {projectFilter && (
+        <div className="social-sync-controls">
+          <button
+            className="ghost"
+            onClick={() => void synchronize()}
+            disabled={syncBusy}
+          >
+            {syncBusy ? "Sincronizando…" : "Sincronizar Instagram"}
+          </button>
+          <small className="muted" role="status">
+            {syncInfo}
+          </small>
+        </div>
+      )}
       <div
         className="social-status-filters"
         role="group"
@@ -232,8 +366,26 @@ export function Calendar({ scope }: { scope: Scope }) {
             ))}
             {days.map((d) => (
               <div
-                className={`calendar-day ${d.getMonth() !== month.getMonth() ? "outside" : ""} ${dayKey(d) === dayKey(new Date()) ? "today" : ""}`}
+                className={`calendar-day ${dropDay === dayKey(d) ? "social-drop-target" : ""} ${d.getMonth() !== month.getMonth() ? "outside" : ""} ${dayKey(d) === dayKey(new Date()) ? "today" : ""}`}
                 key={dayKey(d)}
+                onDragOver={(event) => {
+                  if (dragging) {
+                    event.preventDefault();
+                    event.dataTransfer.dropEffect = "move";
+                    setDropDay(dayKey(d));
+                  }
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  void move(
+                    event.dataTransfer.getData("text/plain"),
+                    dayKey(d),
+                  );
+                }}
+                onDragEnd={() => {
+                  setDragging("");
+                  setDropDay("");
+                }}
               >
                 <span className="day-number">{d.getDate()}</span>
                 <div className="social-day-dots">
@@ -246,6 +398,7 @@ export function Calendar({ scope }: { scope: Scope }) {
                     <SocialContentDot
                       key={r.id}
                       row={r}
+                      onDrag={setDragging}
                       projectName={
                         projects.find((p) => p.id === r.project_id)?.name
                       }

@@ -37,3 +37,16 @@ export function scheduleInstants(date: string, time: string) {
     ? [first, later.toISOString()]
     : [first];
 }
+
+// Preserve wall-clock time, including seconds; reject DST gaps rather than silently moving the hour.
+export function movePublicationDay(instant: string, day: string): string {
+  const source = new Date(instant);
+  if (!Number.isFinite(source.getTime()))
+    throw new Error("Fecha original inválida.");
+  const time = `${String(source.getHours()).padStart(2, "0")}:${String(source.getMinutes()).padStart(2, "0")}`;
+  const target = publicationTimestamp(day, time);
+  if (!target) throw new Error("Fecha inválida.");
+  const result = new Date(target);
+  result.setSeconds(source.getSeconds(), source.getMilliseconds());
+  return result.toISOString();
+}

@@ -96,7 +96,11 @@ export function mainState(row: Row) {
   return text(
     row.main_state ||
       row.publication_state ||
-      (row.status === "approved" ? "ready" : "draft"),
+      (row.published_at || row.status === "published"
+        ? "published"
+        : row.status === "approved"
+          ? "ready"
+          : "draft"),
   );
 }
 export const statusFilters = [
@@ -114,3 +118,9 @@ export function publicationTime(value: unknown): string {
       }).format(date);
 }
 export { publicationTimestamp, scheduleInstants } from "./socialScheduleTime";
+
+export function movableContent(row: Row) {
+  return (
+    !row.send_started && !["published", "publishing"].includes(mainState(row))
+  );
+}

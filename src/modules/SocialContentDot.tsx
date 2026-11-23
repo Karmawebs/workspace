@@ -1,3 +1,5 @@
+import { ContentThumbnail } from "./InstagramMedia";
+import { movableContent } from "./socialContent";
 import { InstagramDelivery } from "./InstagramDelivery";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -109,10 +111,12 @@ export function SocialContentDot({
   row,
   onEdit,
   projectName,
+  onDrag,
 }: {
   row: Row;
   onEdit: () => void;
   projectName?: string;
+  onDrag?: (id: string) => void;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -122,6 +126,13 @@ export function SocialContentDot({
     <>
       <button
         ref={ref}
+        draggable={!!onDrag && movableContent(row)}
+        onDragStart={(event) => {
+          setOpen(false);
+          event.dataTransfer.setData("text/plain", row.id);
+          event.dataTransfer.effectAllowed = "move";
+          onDrag?.(row.id);
+        }}
         className={`social-calendar-entry ${contentFormat(row.content_type)}`}
         aria-label={`${label}: ${text(row.title)}`}
         aria-describedby={open ? id : undefined}
@@ -137,6 +148,7 @@ export function SocialContentDot({
           onEdit();
         }}
       >
+        <ContentThumbnail row={row} />
         <span className="social-entry-meta">
           <i className={`social-dot ${contentFormat(row.content_type)}`} />
           {publicationTime(row.calendar_at || row.scheduled_at)}
@@ -148,6 +160,9 @@ export function SocialContentDot({
         )}
         <span className="social-entry-title">{text(row.title)}</span>
         <InstagramDelivery row={row} compact />
+        {(row.metadata as { origin?: string })?.origin === "instagram" && (
+          <small>Instagram</small>
+        )}
       </button>
       {open && ref.current && (
         <Preview

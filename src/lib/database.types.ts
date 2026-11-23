@@ -14,6 +14,50 @@ export type Database = {
   };
   public: {
     Tables: {
+      kw_instagram_sync: {
+        Row: {
+          connection_id: string
+          cursor: string | null
+          failures: number
+          imported_count: number
+          last_error: string | null
+          last_success_at: string | null
+          lease_until: string
+          next_at: string
+          ticket: string
+        }
+        Insert: {
+          connection_id: string
+          cursor?: string | null
+          failures?: number
+          imported_count?: number
+          last_error?: string | null
+          last_success_at?: string | null
+          lease_until?: string
+          next_at?: string
+          ticket?: string
+        }
+        Update: {
+          connection_id?: string
+          cursor?: string | null
+          failures?: number
+          imported_count?: number
+          last_error?: string | null
+          last_success_at?: string | null
+          lease_until?: string
+          next_at?: string
+          ticket?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kw_instagram_sync_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: true
+            referencedRelation: "kw_social_platform_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       action_jobs: {
         Row: {
           action_type: string;
@@ -1802,6 +1846,16 @@ export type Database = {
       };
     };
     Functions: {
+      kw_move_social_content: {
+        Args: {
+          p_attempt?: string
+          p_content: string
+          p_due: string
+          p_revision?: number
+          p_version: string
+        }
+        Returns: undefined
+      }
       agent_finish_action: {
         Args: {
           p_action_id: string;

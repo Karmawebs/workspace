@@ -564,7 +564,6 @@ it.each([
   "review",
   "approved",
   "scheduled",
-  "published",
   "discarded",
 ])(
   "conserva campos de contenido heredado %s al marcarlo listo",
@@ -730,4 +729,34 @@ it("muestra la solicitud del portal aunque exista una aprobación manual anterio
   openEditor({ client_approved: true });
   expect(await screen.findByText("Cambios solicitados")).toBeTruthy();
   expect(screen.getByLabelText("Aprobación registrada manualmente")).toHaveProperty("checked", true);
+});
+
+it('abre publicados en consulta sin controles de edición', async()=>{
+ openEditor({status:'published',description:'Copy publicado'});
+ expect(await screen.findByText(/Solo consulta/)).toBeTruthy();
+ expect(screen.queryByRole('button',{name:'Guardar borrador'})).toBeNull();
+ expect(screen.queryByLabelText('Fecha de publicación')).toBeNull();
+ expect(mock.writes).toHaveLength(0);
+});
+it.each([false,true])('arrastra un borrador con RPC real de fecha y conserva la tarjeta ante error=%s',async(failure)=>{
+ const now=new Date();now.setHours(19,0,0,0);
+ mock.content=[{id:'drag-item',workspace_id:'w',project_id:'p1',title:'Arrastrable',content_type:'post',status:'draft',scheduled_at:now.toISOString(),updated_at:'2026-11-01T12:00:00Z'}];
+ mock.conflict=failure;
+ render(<Calendar scope={scope}/>);
+ const card=await screen.findByRole('button',{name:'Post: Arrastrable'});
+ expect(card.draggable).toBe(true);
+ const target=screen.getAllByText('28',{selector:'.day-number'})[0].parentElement!;
+ const dataTransfer={setData:vi.fn(),getData:()=> 'drag-item',effectAllowed:'',dropEffect:''};
+ fireEvent.dragStart(card,{dataTransfer});
+ fireEvent.drop(target,{dataTransfer});
+ await waitFor(()=>expect(mock.writes).toHaveLength(1));
+ expect(mock.writes[0]).toMatchObject({p_content:'drag-item',p_version:'2026-11-01T12:00:00Z'});
+ expect(new Date(String(mock.writes[0].p_due)).getHours()).toBe(19);
+ expect(mock.writes[0]).not.toHaveProperty('p_values');
+ if(failure)expect(await screen.findByRole('alert')).toBeTruthy();
+ expect(await screen.findByRole('button',{name:'Post: Arrastrable'})).toBeTruthy();
+});
+it('no permite arrastrar una publicación realizada',()=>{
+ render(<SocialContentDot row={{id:'done',title:'Publicado',content_type:'post',publication_state:'published'}} onEdit={()=>{}} onDrag={()=>{}}/>);
+ expect(screen.getByRole('button',{name:'Post: Publicado'}).draggable).toBe(false);
 });

@@ -22,3 +22,6 @@ verify_jwt = false
 verify_jwt = false
 [functions.social-portal-admin]
 verify_jwt = false
+
+[functions.social-instagram-sync]
+verify_jwt = false

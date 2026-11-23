@@ -1,3 +1,4 @@
+import { SocialPublishedContent } from "./SocialPublishedContent";
 import { RichTextEditor } from "../components/rich-text/RichTextEditor";
 import { RichText } from "../components/rich-text/RichText";
 import { InstagramDelivery } from "./InstagramDelivery";
@@ -32,7 +33,7 @@ import {
   socialLabels as labels,
 } from "./socialContent";
 
-export function SocialContentEditor({
+function EditableSocialContent({
   scope,
   original,
   projectId,
@@ -696,4 +697,10 @@ export function SocialContentEditor({
       </form>
     </dialog>
   );
+}
+
+export function SocialContentEditor(props: Parameters<typeof EditableSocialContent>[0]) {
+ return props.original && mainState(props.original)==='published'
+ ? <SocialPublishedContent row={props.original} onClose={props.onClose}/>
+ : <EditableSocialContent {...props}/>;
 }
