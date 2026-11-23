@@ -1,5 +1,10 @@
 # KARMA WORKSPACE — CURRENT STATE
 
+## Instagram 3:4 — 2026-11-23
+
+Publicación inmediata de JPEG 1080×1440 (3:4) verificada de extremo a extremo en @karmawebs, sin recorte, desde Workspace Social mediante Meta Graph API. El validador compartido de frontend y Edge Function `social-instagram-publish` admite 3:4 a 1,91:1 para imágenes del feed. PR #21 fusionada; Edge Function Workspace v8 desplegada y activa. Se elimina el aviso experimental de la interfaz. La publicación programada aún requiere una prueba real de extremo a extremo; no asumir compatibilidad garantizada en todas las cuentas o futuros cambios de Meta.
+
+
 ## Atajos macOS — 2026-11-16
 
 Endpoint exclusivo `https://karma-task-shortcut.infokarmawebs.workers.dev/tasks`, Worker
