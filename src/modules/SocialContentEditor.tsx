@@ -1,3 +1,5 @@
+import { RichTextEditor } from "../components/rich-text/RichTextEditor";
+import { RichText } from "../components/rich-text/RichText";
 import { InstagramDelivery } from "./InstagramDelivery";
 import {
   InstagramPublishControls,
@@ -306,7 +308,7 @@ export function SocialContentEditor({
           status,
           scheduled_at: scheduled,
           channel,
-          internal_notes: text(fd.get("internal_notes")).trim(),
+          internal_notes: text(fd.get("internal_notes")),
           client_approved: fd.get("client_approved") === "on",
         },
         p_file_ids: next.map((item) => item.record!.id),
@@ -526,6 +528,7 @@ export function SocialContentEditor({
               rows={4}
             />
           </label>
+          {caption && <details><summary>Vista previa del copy y enlaces</summary><RichText value={caption}/></details>}
           {!filesReady && <p role="status">Cargando archivos…</p>}
           <SocialMediaPicker
             items={items}
@@ -598,14 +601,14 @@ export function SocialContentEditor({
               )}
             </details>
           )}
-          <label>
+          <div className="editor-field">
             Notas internas
-            <textarea
+            <RichTextEditor label="Notas internas" disabled={busy || locked}
               name="internal_notes"
               defaultValue={text(original?.internal_notes)}
               rows={3}
             />
-          </label>
+          </div>
           <p>Revisión del portal: <strong>{portalReview}</strong></p>
           <label className="check social-client-approval">
             <input

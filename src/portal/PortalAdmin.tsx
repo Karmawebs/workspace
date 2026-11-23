@@ -1,3 +1,4 @@
+import { RichText } from "../components/rich-text/RichText";
 import {
   useEffect,
   useRef,
@@ -706,15 +707,13 @@ function Controls({
                 {modal.item.client || "Actividad del proyecto"} ·{" "}
                 {date(modal.item.created_at)}
               </p>
-              <p className="pa-comment">
-                {modal.item.comment || labels[modal.item.event]}
-              </p>
+              <RichText className="pa-comment" value={modal.item.comment || labels[modal.item.event]}/>
               {data?.history
                 .filter((h) => h.parent_id === modal.item.id)
                 .map((h) => (
                   <div key={h.id} className="pa-comment">
                     <small>Respuesta · {date(h.created_at)}</small>
-                    <p>{h.comment}</p>
+                    <RichText value={h.comment}/>
                   </div>
                 ))}
               {modal.item.event === "changes" && (

@@ -1,17 +1,28 @@
+import { Editor } from "./Editor";
+import { RichTextEditor } from "../components/rich-text/RichTextEditor";
+import { RichText } from "../components/rich-text/RichText";
+import { plainText } from "../components/rich-text/content";
 import { useState } from "react";
-import { Plus, ChevronDown } from "lucide-react";
+import { Plus, ChevronDown, Pencil } from "lucide-react";
 import { entity } from "./entities";
 import { message, saveRow, type Scope } from "./data";
 import { useRows } from "./useRows";
-import { dateLabel, text } from "./model";
+import { dateLabel, text, type Row } from "./model";
 
-export function WorkJournal({ scope, projectId }: { scope: Scope; projectId: string }) {
+export function WorkJournal({
+  scope,
+  projectId,
+}: {
+  scope: Scope;
+  projectId: string;
+}) {
   const def = entity("journal");
   const { rows, loading, error, reload } = useRows(def, scope, projectId);
+  const [editing, setEditing] = useState<Row>();
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState("");
-  const [expandedEntries,setExpandedEntries] = useState<string[]>([]);
+  const [expandedEntries, setExpandedEntries] = useState<string[]>([]);
 
   const entries = [...rows].sort((a, b) => {
     const aCreated = text(a.created_at);
@@ -25,8 +36,8 @@ export function WorkJournal({ scope, projectId }: { scope: Scope; projectId: str
   });
 
   async function addEntry() {
-    const note = body.trim();
-    if (!note || busy) return;
+    const note = body;
+    if (!plainText(note).trim() || busy) return;
     setBusy(true);
     setFailure("");
     try {
@@ -34,7 +45,7 @@ export function WorkJournal({ scope, projectId }: { scope: Scope; projectId: str
       await saveRow(
         def,
         scope,
-        { title: note.slice(0, 80), body: note, entry_date: today },
+        { title: plainText(note).slice(0, 80), body: note, entry_date: today },
         undefined,
         projectId,
       );
@@ -51,20 +62,24 @@ export function WorkJournal({ scope, projectId }: { scope: Scope; projectId: str
     <section className="card section-card work-journal">
       <header className="section-header work-journal-header">
         <div>
-          <h2>Diario <span className="count">{entries.length}</span></h2>
+          <h2>
+            Diario <span className="count">{entries.length}</span>
+          </h2>
           <p className="muted">Lo que pasa en el proyecto, se queda aquí.</p>
         </div>
       </header>
 
-      <textarea
+      <RichTextEditor
+        label="Nota"
+        disabled={busy}
         className="work-journal-input"
         value={body}
-        onChange={(e) => setBody(e.target.value)}
+        onChange={setBody}
         placeholder="Una actualización, una decisión, una idea…"
         rows={4}
       />
       <div className="work-journal-compose-actions">
-        <button onClick={addEntry} disabled={busy || !body.trim()}>
+        <button onClick={addEntry} disabled={busy || !plainText(body).trim()}>
           <Plus size={17} /> {busy ? "Guardando…" : "Añadir entrada"}
         </button>
       </div>
@@ -79,20 +94,73 @@ export function WorkJournal({ scope, projectId }: { scope: Scope; projectId: str
         ) : (
           entries.map((row) => (
             <article className="work-journal-entry" key={text(row.id)}>
-              {scope.app==="social" ? <>
-                <button type="button" className="social-journal-entry-toggle" aria-expanded={expandedEntries.includes(text(row.id))} onClick={()=>setExpandedEntries(current=>current.includes(text(row.id))?current.filter(id=>id!==text(row.id)):[...current,text(row.id)])}>
-                  <span><time>{dateLabel(row.entry_date || row.created_at)}</time><strong>{text(row.body || row.title).replace(/\s+/g," ").slice(0,75)}{text(row.body || row.title).length>75?"…":""}</strong></span>
-                  <ChevronDown size={17} className={expandedEntries.includes(text(row.id))?"is-open":""}/>
-                </button>
-                {expandedEntries.includes(text(row.id))&&<p>{text(row.body || row.title)}</p>}
-              </> : <>
-                <time>{dateLabel(row.entry_date || row.created_at)}</time>
-                <p>{text(row.body || row.title)}</p>
-              </>}
+              {scope.app === "social" ? (
+                <>
+                  <button
+                    type="button"
+                    className="social-journal-entry-toggle"
+                    aria-expanded={expandedEntries.includes(text(row.id))}
+                    onClick={() =>
+                      setExpandedEntries((current) =>
+                        current.includes(text(row.id))
+                          ? current.filter((id) => id !== text(row.id))
+                          : [...current, text(row.id)],
+                      )
+                    }
+                  >
+                    <span>
+                      <time>{dateLabel(row.entry_date || row.created_at)}</time>
+                      <strong>
+                        {plainText(row.body || row.title)
+                          .replace(/\s+/g, " ")
+                          .slice(0, 75)}
+                        {plainText(row.body || row.title).length > 75
+                          ? "…"
+                          : ""}
+                      </strong>
+                    </span>
+                    <ChevronDown
+                      size={17}
+                      className={
+                        expandedEntries.includes(text(row.id)) ? "is-open" : ""
+                      }
+                    />
+                  </button>
+                  {expandedEntries.includes(text(row.id)) && (
+                    <RichText value={row.body || row.title} />
+                  )}
+                </>
+              ) : (
+                <>
+                  <time>{dateLabel(row.entry_date || row.created_at)}</time>
+                  <RichText value={row.body || row.title} />
+                </>
+              )}
+              <button
+                type="button"
+                className="icon-button journal-edit"
+                aria-label={`Editar entrada ${dateLabel(row.entry_date || row.created_at)}`}
+                onClick={() => setEditing(row)}
+              >
+                <Pencil size={14} />
+              </button>
             </article>
           ))
         )}
       </div>
+      {editing && (
+        <Editor
+          def={def}
+          scope={scope}
+          projectId={projectId}
+          original={editing}
+          onClose={() => setEditing(undefined)}
+          onSave={() => {
+            setEditing(undefined);
+            reload();
+          }}
+        />
+      )}
     </section>
   );
 }

@@ -143,3 +143,18 @@ Avisos new/modified/scheduled/published/reply unificados con SMTP Sered y la pla
 
 Preferencias con botones accesibles, cabecera móvil centrada y directorio compacto con mes, created_at descendente, sin fecha y bloques de 12. Calendario, reuniones, accesos y RLS conservados. Build, 106 pruebas frontend, seis Deno y SQL desechable pasan. Chrome 1440/390/320 y WebKit/iPhone emulado 390/320 verificados. Falta comprobación física en iPhone. Detalles y evidencia SMTP en SOCIAL_PORTAL_NOTIFICATIONS.md.
 SMTP real confirmado: cinco tipos recibidos una vez en INBOX del buzón interno, todos tries=1. La respuesta salió mediante cron normal (18:50 UTC). Preferencias persistentes, opt-out y ausencia de correo por notas internas verificados con sesión real. Fixtures eliminados; sin mensajes de prueba a clientes ni publicaciones reales. No quedan secretos SMTP pendientes.
+
+## Editor enriquecido y enlaces — 2026-11-23
+
+Editor/visor únicos en `src/components/rich-text`, integrados en Core, diario e
+historial editable, biblioteca y notas internas Social, alta Care y contactos
+Karma. Formato básico, URLs automáticas, enlaces personalizados, Cmd/Ctrl+K y barra
+compacta responsive. Sanitización por lista permitida, apertura segura y marca
+versionada dentro de TEXT; los valores heredados sin editar se conservan exactos.
+Sin migraciones, cambios RLS ni escrituras masivas. Copy Instagram, comentarios de
+portal, notas cifradas y mensajes técnicos conservan sus contratos; excepciones en
+RICH_TEXT.md. Visores del portal enlazan URLs sin cambiar el almacenamiento.
+
+Build/TypeScript y 121 pruebas frontend pasan. Chrome con fixture local; escritorio/tablet/
+móvil 1440/768/390/320. Sin publicaciones, correos ni datos de prueba reales.
+Pendiente prueba física de teclado iOS. Despliegue mediante main/Cloudflare.

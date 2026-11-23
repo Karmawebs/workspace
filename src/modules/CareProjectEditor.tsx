@@ -1,3 +1,4 @@
+import { RichTextEditor } from "../components/rich-text/RichTextEditor";
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { db } from "../lib/supabase";
@@ -48,7 +49,7 @@ export function CareProjectEditor({ scope, onClose, onSave }: { scope: Scope; on
         try {
           const fd = new FormData(e.currentTarget);
           const name = String(fd.get("name") || "").trim();
-          const description = String(fd.get("description") || "").trim();
+          const description = String(fd.get("description") || "");
           const clientId = String(fd.get("client_id") || "").trim() || null;
           const planType = String(fd.get("plan") || "care");
           const plan = plans.find((p) => p.plan_type === planType);
@@ -94,7 +95,7 @@ export function CareProjectEditor({ scope, onClose, onSave }: { scope: Scope; on
         }
       }}>
         <label>Nombre<input name="name" required autoFocus/></label>
-        <label>Descripción<textarea name="description" rows={4}/></label>
+        <div className="editor-field">Descripción<RichTextEditor name="description" label="Descripción" rows={4}/></div>
         <label>Cliente<select name="client_id" defaultValue=""><option value="">Sin asignar</option>{clients.map((client) => <option key={String(client.id)} value={String(client.id)}>{String(client.name)}</option>)}</select></label>
         <label>Tipo de mantenimiento<select name="plan" required>{plans.map((p) => <option key={String(p.plan_type)} value={String(p.plan_type)}>{String(p.display_name)} · {Number(p.monthly_price || 0)} €/mes</option>)}</select></label>
         <div className="editor-actions"><button type="button" className="ghost" onClick={onClose}>Cancelar</button><button disabled={busy || !plans.length}>{busy ? "Creando…" : "Crear proyecto"}</button></div>

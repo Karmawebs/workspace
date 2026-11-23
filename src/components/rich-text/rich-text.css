@@ -1,0 +1,152 @@
+.karma-rich-editor {
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid var(--line, #ddd);
+  border-radius: 10px;
+  background: var(--surface, #fff);
+  color: var(--ink, #222);
+  font-size: 14px;
+  font-weight: 400;
+  overflow: hidden;
+  text-align: left;
+}
+.karma-rich-editor:focus-within {
+  border-color: var(--accent-line, #a89ac4);
+}
+.karma-rich-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--line, #eee);
+  opacity: 0.65;
+}
+.karma-rich-editor:focus-within .karma-rich-toolbar,
+.karma-rich-toolbar:hover {
+  opacity: 1;
+}
+.karma-rich-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+}
+.karma-rich-toolbar button:hover,
+.karma-rich-toolbar button[aria-pressed="true"] {
+  background: var(--surface-hover, #eee);
+  color: var(--accent, #7351a4);
+}
+.karma-rich-content {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  min-width: 0;
+  font-weight: 400;
+}
+.karma-rich-content p {
+  margin: 0 0 0.65em;
+  line-height: inherit;
+}
+.karma-rich-content p:last-child {
+  margin-bottom: 0;
+}
+.karma-rich-content ul,
+.karma-rich-content ol {
+  padding-left: 1.5em;
+  margin: 0.4em 0;
+}
+.karma-rich-content li > p {
+  margin: 0;
+}
+.karma-rich-content a {
+  color: var(--accent, #7351a4);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.karma-rich-input {
+  padding: 12px;
+  min-height: calc(var(--rich-rows, 4) * 1.6em + 24px);
+  outline: none;
+}
+.karma-rich-input:has(
+    > p:only-child > br.ProseMirror-trailingBreak:only-child
+  )::before {
+  content: attr(data-placeholder);
+  color: var(--muted, #888);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+.karma-rich-input:focus-visible {
+  outline: none;
+}
+.karma-rich-link {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--line, #ddd);
+  font-size: 12px;
+}
+.karma-rich-link input {
+  width: 100%;
+  font-size: 16px !important;
+}
+.karma-rich-link-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.karma-rich-link-actions button,
+.karma-rich-link-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  padding: 7px;
+  min-width: 0;
+}
+.karma-rich-editor[data-disabled],
+fieldset:disabled .karma-rich-editor {
+  opacity: 0.65;
+  pointer-events: none;
+}
+@media (max-width: 760px) {
+  .karma-rich-toolbar button {
+    width: 40px;
+    height: 40px;
+  }
+  .karma-rich-input {
+    font-size: 16px;
+  }
+  .karma-rich-toolbar {
+    opacity: 1;
+  }
+}
+
+.editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.editor:not(.work-task-editor) .form-fields .editor-field {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 550;
+}
+
+.work-journal-entry .journal-edit {
+  margin-top: 6px;
+  color: var(--muted);
+}

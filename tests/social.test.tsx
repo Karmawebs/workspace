@@ -1,3 +1,4 @@
+import { plainText } from "../src/components/rich-text/content";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -532,7 +533,12 @@ it("crea todos los campos de la fase 2 sin multimedia", async () => {
     "Notas internas": "Pendiente de feedback",
   };
   for (const [label, value] of Object.entries(values))
-    fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    if (label === "Notas internas") {
+      const node = screen.getByRole("textbox", {name: label});
+      node.innerHTML = `<p>${value}</p>`;
+      fireEvent.input(node);
+      await new Promise(resolve => setTimeout(resolve, 0));
+    } else fireEvent.change(screen.getByLabelText(label), { target: { value } });
   fireEvent.click(screen.getByLabelText("Aprobación registrada manualmente"));
   fireEvent.click(screen.getByRole("button", { name: "Guardar borrador" }));
   await waitFor(() => expect(mock.writes).toHaveLength(1));
@@ -545,11 +551,12 @@ it("crea todos los campos de la fase 2 sin multimedia", async () => {
       content_type: "carousel",
       status: "draft",
       description: "Texto público",
-      internal_notes: "Pendiente de feedback",
+      internal_notes: expect.any(String),
       client_approved: true,
     },
     p_file_ids: [],
   });
+  expect(plainText(mock.writes[0].p_values.internal_notes)).toBe("Pendiente de feedback");
 });
 it.each([
   "idea",
@@ -571,8 +578,8 @@ it.each([
       updated_at: "2026-10-30",
     });
     await screen.findByRole("option", { name: "Cliente Uno" });
-    expect(screen.getByLabelText("Notas internas")).toHaveProperty(
-      "value",
+    expect(screen.getByRole("textbox", {name:"Notas internas"})).toHaveProperty(
+      "textContent",
       "Nota",
     );
     expect(screen.getByLabelText("Canal")).toHaveProperty("value", "facebook");

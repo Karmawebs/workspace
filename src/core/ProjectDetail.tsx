@@ -1,3 +1,5 @@
+import { RichText } from "../components/rich-text/RichText";
+import { plainText } from "../components/rich-text/content";
 import {PortalAdmin} from "../portal/PortalAdmin";
 import { SocialConnectionsDialog } from "../modules/SocialConnections";
 import { useEffect, useState } from "react";
@@ -34,7 +36,7 @@ export function ProjectDetail({ scope, socialConnections=false, canManageConnect
     { key: "panels", title: "Paneles", entity: "panels" },
   ];
   function panelTarget(key: string) { return key === "information" ? "information" : key === "connections" ? "connections" : key === "next_milestone" ? "milestones" : key === "next_event" ? scope.app === "work" ? "meetings" : "activity" : "resources"; }
-  function panelSubtitle(key: string) { if (key === "information") return text(project?.description) || "Datos del proyecto"; if (key === "next_event") { const next = events.rows.find((r) => new Date(text(r.starts_at)) >= new Date()); return next ? `${text(next.title)} · ${dateLabel(next.starts_at)}` : "Sin eventos próximos"; } if (key === "next_milestone") { const next = milestones.rows.filter((r) => r.status !== "completed").sort((a, b) => text(a.due_at || "9999").localeCompare(text(b.due_at || "9999")))[0]; return next ? text(next.title) : "Sin hitos pendientes"; } return "Ver y gestionar"; }
+  function panelSubtitle(key: string) { if (key === "information") return plainText(project?.description) || "Datos del proyecto"; if (key === "next_event") { const next = events.rows.find((r) => new Date(text(r.starts_at)) >= new Date()); return next ? `${text(next.title)} · ${dateLabel(next.starts_at)}` : "Sin eventos próximos"; } if (key === "next_milestone") { const next = milestones.rows.filter((r) => r.status !== "completed").sort((a, b) => text(a.due_at || "9999").localeCompare(text(b.due_at || "9999")))[0]; return next ? text(next.title) : "Sin hitos pendientes"; } return "Ver y gestionar"; }
   const socialDashboard = <div className="social-dashboard">
     <div className="social-dashboard-columns"><EntityView kind="tasks" scope={scope} projectId={id} compact/><EntityView kind="events" scope={scope} projectId={id} compact/><WorkJournal scope={scope} projectId={id}/></div>
     <div className="social-dashboard-links">{([
@@ -53,7 +55,7 @@ export function ProjectDetail({ scope, socialConnections=false, canManageConnect
     <div role="tabpanel">
       {tab === "activity" ? scope.app === "work" ? <div className="operations-grid"><EntityView kind="tasks" scope={scope} projectId={id} compact/><WorkJournal scope={scope} projectId={id}/></div> : scope.app === "social" ? <div className="operations-grid social-project-columns"><div className="social-project-left"><EntityView kind="tasks" scope={scope} projectId={id} compact/><EntityView kind="events" scope={scope} projectId={id} compact/></div><WorkJournal scope={scope} projectId={id}/></div> : <div className="operations-grid"><EntityView kind="tasks" scope={scope} projectId={id} compact/><EntityView kind="events" scope={scope} projectId={id} compact/></div>
       : tab === "meetings" && scope.app === "work" ? <EntityView kind="events" scope={scope} projectId={id} compact/>
-      : tab === "information" ? <section className="card info-panel"><h2>Información del proyecto</h2><p className="preserve-lines">{text(project.description) || "Añade una descripción para dar contexto al equipo."}</p><dl><dt>Estado</dt><dd>{pretty(project.status)}</dd><dt>Prioridad</dt><dd>{pretty(project.priority)}</dd><dt>Inicio</dt><dd>{dateLabel(project.start_date) || "Sin fecha"}</dd><dt>Entrega</dt><dd>{dateLabel(project.due_date) || "Sin fecha"}</dd></dl><button className="secondary" onClick={() => setEdit(true)}>Editar información</button></section>
+      : tab === "information" ? <section className="card info-panel"><h2>Información del proyecto</h2><RichText value={project.description || "Añade una descripción para dar contexto al equipo."}/><dl><dt>Estado</dt><dd>{pretty(project.status)}</dd><dt>Prioridad</dt><dd>{pretty(project.priority)}</dd><dt>Inicio</dt><dd>{dateLabel(project.start_date) || "Sin fecha"}</dd><dt>Entrega</dt><dd>{dateLabel(project.due_date) || "Sin fecha"}</dd></dl><button className="secondary" onClick={() => setEdit(true)}>Editar información</button></section>
       : tab === "members" ? <ProjectMembers scope={scope} projectId={id}/>
       : tab === "sites" ? <Care scope={scope} projectId={id}/>
       : <EntityView key={tab} kind={tabs.find((t) => t.key === tab)?.entity || "resources"} scope={scope} projectId={id}/>}</div>

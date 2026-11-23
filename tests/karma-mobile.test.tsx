@@ -31,7 +31,7 @@ it('completes, opens archived editor and restores without losing attachments',as
  await userEvent.click(await screen.findByRole('button',{name:'Tareas archivadas (2)'}));
  await userEvent.click(await screen.findByRole('button',{name:'Preparar propuesta para el nuevo proyecto',exact:true}));
  expect(await screen.findByRole('link',{name:'Documento de prueba.pdf'})).toBeTruthy();
- expect(screen.getByDisplayValue('Notas conservadas de la tarea')).toBeTruthy();
+ expect(screen.getByRole('textbox',{name:'Descripción'}).textContent).toBe('Notas conservadas de la tarea');
  await userEvent.click(screen.getByRole('button',{name:'Recuperar tarea'}));
  await waitFor(()=>expect(screen.queryByRole('button',{name:'Recuperar tarea'})).toBeNull());
  expect(tables.kw_tasks[0].status).toBe('pending');expect(tables.kw_task_attachments).toHaveLength(1);

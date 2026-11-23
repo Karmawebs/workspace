@@ -1,3 +1,4 @@
+import { RichTextEditor } from "../components/rich-text/RichTextEditor";
 import { useEffect, useRef, useState } from "react";
 import { FileText, KeyRound, Paperclip, Plus, Trash2, Users, X } from "lucide-react";
 import { db } from "../lib/supabase";
@@ -129,7 +130,7 @@ export function KarmaInternal({ scope }: { scope: Scope }) {
         phone:String(fd.get("phone") || "").trim() || null,
         contact_type:String(fd.get("contact_type") || "other"),
         url:String(fd.get("url") || "").trim() || null,
-        notes:String(fd.get("notes") || "").trim() || null,
+        notes:String(fd.get("notes") || "") || null,
         updated_at:new Date().toISOString(),
       };
       if (!payload.name) throw new Error("El nombre es obligatorio.");
@@ -204,7 +205,7 @@ export function KarmaInternal({ scope }: { scope: Scope }) {
           <div className="karma-contact-form-row"><input name="email" type="email" placeholder="Email" defaultValue={contactEdit?.email || ""}/><input name="phone" placeholder="Teléfono" defaultValue={contactEdit?.phone || ""}/></div>
           <select name="contact_type" defaultValue={contactEdit?.contact_type || "other"}><option value="offer">Oferta</option><option value="cv">CV</option><option value="collaborator">Colaborador</option><option value="supplier">Proveedor</option><option value="other">Otro</option></select>
           <input name="url" type="url" placeholder="Web / LinkedIn / Portfolio" defaultValue={contactEdit?.url || ""}/>
-          <textarea name="notes" rows={4} placeholder="Notas" defaultValue={contactEdit?.notes || ""}/>
+          <RichTextEditor name="notes" label="Notas" rows={4} placeholder="Notas" disabled={contactBusy} defaultValue={contactEdit?.notes || ""}/>
           <div className="karma-contact-actions"><button disabled={contactBusy}><Plus size={16}/>{contactBusy ? "Guardando…" : contactEdit ? "Guardar cambios" : "Añadir contacto"}</button>{contactEdit&&<button type="button" className="secondary" onClick={() => setContactEdit(undefined)}>Cancelar</button>}</div>
         </form>
         <div className="karma-contact-list">{contacts.length ? contacts.map((contact) => <article className="karma-contact-row" key={contact.id}><button type="button" className="karma-contact-main" onClick={() => setContactEdit(contact)}><strong>{contact.name}</strong><span>{[contact.company,contact.role].filter(Boolean).join(" · ") || contact.email || "Sin detalle"}</span><small>{contact.contact_type === "cv" ? "CV" : contact.contact_type === "offer" ? "Oferta" : contact.contact_type === "collaborator" ? "Colaborador" : contact.contact_type === "supplier" ? "Proveedor" : "Otro"}</small></button><button type="button" className="ghost danger" aria-label={`Eliminar ${contact.name}`} disabled={contactBusy} onClick={() => void deleteContact(contact)}><Trash2 size={16}/></button></article>) : <p className="muted">Todavía no hay contactos guardados.</p>}</div>
