@@ -43,8 +43,8 @@ export function geometryError(
 ) {
   if (!(w > 0 && h > 0)) return "No se pudieron comprobar las dimensiones.";
   const ratio = w / h;
-  if (!video && format !== "story" && (ratio < 0.8 || ratio > 1.91))
-    return "La imagen del feed debe tener una proporción entre 4:5 y 1,91:1.";
+  if (!video && format !== "story" && (ratio < 0.75 || ratio > 1.91))
+    return "La imagen del feed debe tener una proporción entre 3:4 y 1,91:1.";
   if (
     video &&
     (w > 1920 ||

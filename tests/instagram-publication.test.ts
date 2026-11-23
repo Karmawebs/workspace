@@ -130,6 +130,9 @@ describe("Instagram publication", () => {
       formatError("post", [{ ...jpeg, size: 9 * 1024 ** 2 }], ""),
     ).toBeTruthy();
     expect(formatError("post", [jpeg], "a".repeat(2201))).toBeTruthy();
+    expect(geometryError("post", false, 1080, 1440, 0)).toBe("");
+    expect(geometryError("carousel", false, 1080, 1440, 0)).toBe("");
+    expect(geometryError("post", false, 749, 1000, 0)).toBeTruthy();
     expect(geometryError("post", false, 300, 900, 0)).toBeTruthy();
     expect(geometryError("story", true, 1080, 1920, 65)).toBeTruthy();
   });
