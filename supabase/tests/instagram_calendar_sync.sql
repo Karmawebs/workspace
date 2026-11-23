@@ -4,13 +4,19 @@ create temporary table calendar_fixture(ids uuid[]);
 grant all on calendar_fixture to authenticated,service_role;
 set local role service_role;
 do $$
-declare a public.kw_social_platform_connections; c public.kw_content_items; id1 uuid; id2 uuid; job uuid:=gen_random_uuid(); payload jsonb;
+declare a public.kw_social_platform_connections; b public.kw_social_platform_connections; c public.kw_content_items; id1 uuid; id2 uuid; other_id uuid; new_connection uuid:=gen_random_uuid(); job uuid:=gen_random_uuid(); payload jsonb;
 begin
  select * into strict a from public.kw_social_platform_connections where username='ribsfunde' and status='connected';
  payload:='{"id":"9999999999999990001","timestamp":"2026-11-01T18:00:00Z","caption":"Transactional fixture","media_type":"IMAGE"}';
  id1:=public.kw_import_instagram_media(a.id,payload);
  id2:=public.kw_import_instagram_media(a.id,payload||'{"caption":"Updated fixture"}');
  if id1<>id2 then raise exception 'Duplicate import'; end if;
+ select * into strict b from public.kw_social_platform_connections where username='lasidreriahoznayo' and status='connected';
+ other_id:=public.kw_import_instagram_media(b.id,payload);
+ if other_id=id1 or (select project_id from public.kw_content_items where id=other_id)<>b.project_id then raise exception 'Cross-client import';end if;
+ insert into public.kw_social_platform_connections(id,workspace_id,project_id,platform,external_account_id,username,status,connected_at)
+ values(new_connection,a.workspace_id,a.project_id,'instagram','9999999999999980001','rollback-fixture','connected',now());
+ if not exists(select 1 from public.kw_instagram_sync where connection_id=new_connection and last_success_at is null) then raise exception 'New connection not queued';end if;
  if (select metadata->'instagram'->>'caption' from public.kw_content_items where id=id1)<>'Updated fixture' then raise exception 'Refresh failed';end if;
  insert into public.kw_content_items(workspace_id,project_id,title,description,status,scheduled_at,content_type,channel)
  values(a.workspace_id,a.project_id,'Rollback only','Keep this copy','approved',now()+interval '3 days','post','instagram') returning * into c;

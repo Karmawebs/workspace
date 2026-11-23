@@ -184,4 +184,8 @@ Verificación inicial real: RIBSFUNDE 6/6, segunda pasada 6 sin duplicados, 10 a
 privados (6 portadas + 4 del carrusel); Sidrería 12, Karmawebs 10. Garden Nails
 histórico paginado en curso. SQL transaccional con rollback verifica importación,
 reconciliación local, bloqueo, reprogramación, conflictos, pasado y no miembros.
-127 tests frontend pasan; build pasa. Validación visual y despliegue frontend en curso.
+127 tests frontend pasan; build y Cloudflare (34f9c04) pasan. Sesión real:
+seis fichas con imágenes/copy/enlace; arrastre borrador 26→28 a las 19:00 y recarga,
+selector móvil 28→29 a las 19:00 verificados. Borrador retirado; ningún envío real.
+Garden Nails: 175 medios importados, histórico todavía paginado sin errores.
+Detalles y límites en SOCIAL_INSTAGRAM_CALENDAR.md.
