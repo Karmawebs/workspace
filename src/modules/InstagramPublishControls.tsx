@@ -258,12 +258,6 @@ export function InstagramPublishControls({
         </small>
       )}
       {problem && <small role="status">{problem}</small>}
-      {current && !problem && format === "post" && (
-        <small role="status">
-          Prueba de compatibilidad 3:4: Meta puede rechazar imágenes de 1080 × 1440.
-          Solo confirma la publicación cuando quieras enviarla realmente.
-        </small>
-      )}
       {manualOnly && (
         <p className="ig-manual-notice" role="status">
           Puedes guardar este diseño original en Workspace y publicarlo
