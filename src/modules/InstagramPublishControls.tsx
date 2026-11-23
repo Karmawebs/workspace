@@ -222,7 +222,7 @@ export function InstagramPublishControls({
   const current =
     media?.items === items && media?.format === format ? media : undefined;
   const manualOnly =
-    !!current?.error && current.error.includes("proporción entre 4:5");
+    !!current?.error && current.error.includes("proporción entre 3:4");
   const problem = !account
     ? accountError ||
       "Selecciona un proyecto con una cuenta de Instagram conectada."
@@ -258,7 +258,7 @@ export function InstagramPublishControls({
         </small>
       )}
       {problem && <small role="status">{problem}</small>}
-      {manualOnly && (
+      {current && !problem && format === "post" && (\n        <small role="status">\n          Prueba de compatibilidad 3:4: Meta puede rechazar imágenes de 1080 × 1440.\n          Solo confirma la publicación cuando quieras enviarla realmente.\n        </small>\n      )}\n      {manualOnly && (
         <p className="ig-manual-notice" role="status">
           Puedes guardar este diseño original en Workspace y publicarlo
           manualmente desde Instagram. La publicación automática permanecerá
