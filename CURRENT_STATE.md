@@ -158,3 +158,8 @@ RICH_TEXT.md. Visores del portal enlazan URLs sin cambiar el almacenamiento.
 Build/TypeScript y 121 pruebas frontend pasan. Chrome con fixture local; escritorio/tablet/
 móvil 1440/768/390/320. Sin publicaciones, correos ni datos de prueba reales.
 Pendiente prueba física de teclado iOS. Despliegue mediante main/Cloudflare.
+Publicado commit funcional `a5ba86b` en main. Cloudflare activo:
+`b318746b-60b5-4dac-8dbb-dab6b866065d`; HTML y bundle App público coinciden
+byte a byte/SHA-256 con el build local verificado. Formato: los mismos 55 archivos
+preexistentes fallan el check global (contrastado contra el commit anterior);
+archivos nuevos pasan Prettier. Árbol limpio al finalizar implementación.

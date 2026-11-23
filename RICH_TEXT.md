@@ -70,3 +70,8 @@ para no implementar desde cero selección, undo/redo y compatibilidad de edició
 El visor del portal no importa el motor de edición. Vite avisa del chunk grande
 existente de App; el build completa correctamente. No se cambia la configuración
 de bundling o despliegue de otras áreas.
+
+Despliegue verificado: commit `a5ba86b`, Cloudflare versión
+`b318746b-60b5-4dac-8dbb-dab6b866065d`. El dominio público sirve el mismo HTML y
+bundle App que el build local (SHA-256 idéntico). El check global de formato
+señala 55 archivos, igual que la base previa; los archivos nuevos pasan Prettier.
