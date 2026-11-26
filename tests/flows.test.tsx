@@ -30,6 +30,7 @@ vi.mock("../src/lib/supabase", () => ({
       signOut: async () => ({ error: null }),
     },
     from: (table: string) => {
+      let order: { key: string; ascending: boolean } | undefined;
       let mode = "read",
         payload: Record<string, unknown> = {},
         single = false;
@@ -40,7 +41,10 @@ vi.mock("../src/lib/supabase", () => ({
           filters.push({ key, value });
           return q;
         },
-        order: () => q,
+        order: (key: string, options?: { ascending: boolean }) => {
+          order = { key, ascending: options?.ascending ?? true };
+          return q;
+        },
         limit: () => q,
         gte: () => q,
         lt: () => q,
@@ -67,6 +71,10 @@ vi.mock("../src/lib/supabase", () => ({
           let rows = (mock.tables[table] || []).filter((row) =>
             filters.every((f) => row[f.key] === f.value),
           );
+          if (table === "kw_events" && order) {
+            const {key, ascending} = order;
+            rows.sort((a,b) => String(a[key] ?? "").localeCompare(String(b[key] ?? "")) * (ascending ? 1 : -1));
+          }
           if (mode === "insert") {
             const row = {
               ...payload,
@@ -96,6 +104,7 @@ vi.mock("../src/lib/supabase", () => ({
 }));
 import { Auth } from "../src/core/Auth";
 import { EntityView } from "../src/core/EntityView";
+import { WorkJournal } from "../src/core/WorkJournal";
 import { Calendar } from "../src/modules/Calendar";
 import App from "../src/App";
 const scope = {
@@ -277,6 +286,36 @@ describe("Flujos compartidos", () => {
     await user.click(screen.getByRole("button", { name: "Editar Sesión de contenido" }));
     expect(await screen.findByRole("dialog")).toBeTruthy();
     expect(mock.writes).toHaveLength(0);
+  });
+  it("ordena reuniones de Social por creación descendente aunque tengan fecha anterior", async () => {
+    const shared = {workspace_id:scope.workspaceId, app_key:"social", project_id:"project-1", type:"meeting"};
+    mock.tables.kw_events = [
+      {...shared, id:"old", title:"Primera reunión", starts_at:"2026-12-05T10:00:00Z", created_at:"2026-11-01T10:00:00Z"},
+      {...shared, id:"new", title:"Última añadida", starts_at:"2026-10-01T10:00:00Z", created_at:"2026-11-26T14:00:00Z"},
+    ];
+    render(<EntityView kind="events" scope={scope} projectId="project-1" compact/>);
+    await screen.findByText("Última añadida");
+    const rows = screen.getAllByRole("article");
+    expect(rows[0].textContent).toContain("Última añadida");
+    expect(rows[1].textContent).toContain("Primera reunión");
+  });
+  it("mantiene los controles del diario Social juntos e independientes", async () => {
+    const user = userEvent.setup();
+    mock.tables.kw_journal_entries = [{
+      id:"journal-1", workspace_id:scope.workspaceId, app_key:"social", project_id:"project-1",
+      title:"Entrada", body:"Resumen de una reunión con notas completas", entry_date:"2026-11-26",
+      created_at:"2026-11-26T14:00:00Z"
+    }];
+    render(<WorkJournal scope={scope} projectId="project-1"/>);
+    const toggle = await screen.findByRole("button", {name:/Resumen de una reunión/});
+    const edit = screen.getByRole("button", {name:/Editar entrada/});
+    expect(toggle.nextElementSibling).toBe(edit);
+    expect(toggle.parentElement?.classList.contains("social-journal-entry-header")).toBe(true);
+    await user.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    await user.click(edit);
+    expect(await screen.findByRole("dialog")).toBeTruthy();
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
   });
   it("rechaza un evento con fin anterior al inicio", async () => {
     const user = userEvent.setup();

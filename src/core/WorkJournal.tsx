@@ -92,50 +92,8 @@ export function WorkJournal({
         ) : entries.length === 0 ? (
           <p className="muted work-journal-empty">Todavía no hay entradas.</p>
         ) : (
-          entries.map((row) => (
-            <article className="work-journal-entry" key={text(row.id)}>
-              {scope.app === "social" ? (
-                <>
-                  <button
-                    type="button"
-                    className="social-journal-entry-toggle"
-                    aria-expanded={expandedEntries.includes(text(row.id))}
-                    onClick={() =>
-                      setExpandedEntries((current) =>
-                        current.includes(text(row.id))
-                          ? current.filter((id) => id !== text(row.id))
-                          : [...current, text(row.id)],
-                      )
-                    }
-                  >
-                    <span>
-                      <time>{dateLabel(row.entry_date || row.created_at)}</time>
-                      <strong>
-                        {plainText(row.body || row.title)
-                          .replace(/\s+/g, " ")
-                          .slice(0, 75)}
-                        {plainText(row.body || row.title).length > 75
-                          ? "…"
-                          : ""}
-                      </strong>
-                    </span>
-                    <ChevronDown
-                      size={17}
-                      className={
-                        expandedEntries.includes(text(row.id)) ? "is-open" : ""
-                      }
-                    />
-                  </button>
-                  {expandedEntries.includes(text(row.id)) && (
-                    <RichText value={row.body || row.title} />
-                  )}
-                </>
-              ) : (
-                <>
-                  <time>{dateLabel(row.entry_date || row.created_at)}</time>
-                  <RichText value={row.body || row.title} />
-                </>
-              )}
+          entries.map((row) => {
+            const editButton = (
               <button
                 type="button"
                 className="icon-button journal-edit"
@@ -144,8 +102,62 @@ export function WorkJournal({
               >
                 <Pencil size={14} />
               </button>
-            </article>
-          ))
+            );
+            return (
+              <article className="work-journal-entry" key={text(row.id)}>
+                {scope.app === "social" ? (
+                  <>
+                    <div className="social-journal-entry-header">
+                      <button
+                        type="button"
+                        className="social-journal-entry-toggle"
+                        aria-expanded={expandedEntries.includes(text(row.id))}
+                        onClick={() =>
+                          setExpandedEntries((current) =>
+                            current.includes(text(row.id))
+                              ? current.filter((id) => id !== text(row.id))
+                              : [...current, text(row.id)],
+                          )
+                        }
+                      >
+                        <span>
+                          <time>
+                            {dateLabel(row.entry_date || row.created_at)}
+                          </time>
+                          <strong>
+                            {plainText(row.body || row.title)
+                              .replace(/\s+/g, " ")
+                              .slice(0, 75)}
+                            {plainText(row.body || row.title).length > 75
+                              ? "…"
+                              : ""}
+                          </strong>
+                        </span>
+                        <ChevronDown
+                          size={17}
+                          className={
+                            expandedEntries.includes(text(row.id))
+                              ? "is-open"
+                              : ""
+                          }
+                        />
+                      </button>
+                      {editButton}
+                    </div>
+                    {expandedEntries.includes(text(row.id)) && (
+                      <RichText value={row.body || row.title} />
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <time>{dateLabel(row.entry_date || row.created_at)}</time>
+                    <RichText value={row.body || row.title} />
+                    {editButton}
+                  </>
+                )}
+              </article>
+            );
+          })
         )}
       </div>
       {editing && (

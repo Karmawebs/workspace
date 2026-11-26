@@ -47,3 +47,21 @@
   align-items: center;
   flex: 0 0 auto;
 }
+
+/* Keep journal expansion and editing side by side; expanded text stays below. */
+.social-dashboard .social-journal-entry-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.social-dashboard .social-journal-entry-header .social-journal-entry-toggle {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+.social-dashboard .social-journal-entry-header .journal-edit {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  padding: 7px;
+}

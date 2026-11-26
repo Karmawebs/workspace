@@ -59,14 +59,17 @@ function CareSiteProgress({row}:{row:Row}){
  </div>;
 }
 
+// Social project meetings are an activity history, not the calendar.
+const socialProjectMeetings = {...entity("events"), order: undefined};
+
 export function EntityView({kind,scope,projectId,compact=false,extra}:{kind:EntityKey;scope:Scope;projectId?:string;compact?:boolean;extra?:(row:Row)=>ReactNode}){
  if((scope.app==="work"||scope.app==="care")&&kind==="journal"&&projectId&&compact)return <WorkJournal scope={scope} projectId={projectId}/>;
- const def=entity(kind),{rows,loading,error,reload}=useRows(def,scope,projectId),[edit,setEdit]=useState<Row|null|undefined>(),[query,setQuery]=useState(""),[archived,setArchived]=useState(false),[failure,setFailure]=useState(""),[busy,setBusy]=useState(false),[status,setStatus]=useState(""),[projectFilter,setProjectFilter]=useState("");
+ const socialEventCompact=compact&&!!projectId&&scope.app==="social"&&kind==="events";
+ const def=socialEventCompact?socialProjectMeetings:entity(kind),{rows,loading,error,reload}=useRows(def,scope,projectId),[edit,setEdit]=useState<Row|null|undefined>(),[query,setQuery]=useState(""),[archived,setArchived]=useState(false),[failure,setFailure]=useState(""),[busy,setBusy]=useState(false),[status,setStatus]=useState(""),[projectFilter,setProjectFilter]=useState("");
  const karmaTaskArchive=scope.app==="karma"&&kind==="tasks"&&compact&&!!projectId;
  const [showCompleted,setShowCompleted]=useState(false);
  const completedTasks=karmaTaskArchive?rows.filter(r=>text(r.status)==="done"):[];
  const projectCompact=compact&&!!projectId&&(((scope.app==="work"||scope.app==="care"||scope.app==="karma")&&(kind==="tasks"||kind==="events"))||(scope.app==="social"&&kind==="tasks"));
- const socialEventCompact=compact&&!!projectId&&scope.app==="social"&&kind==="events";
  const careSite=scope.app==="care"&&kind==="sites";
  const visible=rows.filter(r=>(!karmaTaskArchive||text(r.status)!=="done")&&(!def.archive||!!r.archived===archived)&&(!status||(kind==="content"?mainState(r):text(r.status))===status)&&(!projectFilter||(projectFilter==="none"?!r.project_id:text(r.project_id)===projectFilter))&&[r[def.primary],r.description,r.body,r.company].some(v=>plainText(v).toLowerCase().includes(query.toLowerCase())));
  async function archive(row:Row){setBusy(true);try{await saveRow(def,scope,{archived:!row.archived},row,projectId);reload();}catch(e){setFailure(message(e));}finally{setBusy(false)}}
