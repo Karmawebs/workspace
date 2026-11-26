@@ -17,6 +17,7 @@ export function WorkJournal({
   projectId: string;
 }) {
   const def = entity("journal");
+  const minimal = scope.app === "work" || scope.app === "care";
   const { rows, loading, error, reload } = useRows(def, scope, projectId);
   const [editing, setEditing] = useState<Row>();
   const [body, setBody] = useState("");
@@ -59,7 +60,9 @@ export function WorkJournal({
   }
 
   return (
-    <section className="card section-card work-journal">
+    <section
+      className={`card section-card work-journal${minimal ? " work-journal--minimal" : ""}`}
+    >
       <header className="section-header work-journal-header">
         <div>
           <h2>
@@ -150,9 +153,11 @@ export function WorkJournal({
                   </>
                 ) : (
                   <>
-                    <time>{dateLabel(row.entry_date || row.created_at)}</time>
+                    <div className="work-journal-entry-heading">
+                      <time>{dateLabel(row.entry_date || row.created_at)}</time>
+                      {editButton}
+                    </div>
                     <RichText value={row.body || row.title} />
-                    {editButton}
                   </>
                 )}
               </article>

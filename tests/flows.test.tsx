@@ -310,12 +310,31 @@ describe("Flujos compartidos", () => {
     const toggle = await screen.findByRole("button", {name:/Resumen de una reunión/});
     const edit = screen.getByRole("button", {name:/Editar entrada/});
     expect(toggle.nextElementSibling).toBe(edit);
+    expect(toggle.closest(".work-journal--minimal")).toBeNull();
     expect(toggle.parentElement?.classList.contains("social-journal-entry-header")).toBe(true);
     await user.click(toggle);
     expect(toggle.getAttribute("aria-expanded")).toBe("true");
     await user.click(edit);
     expect(await screen.findByRole("dialog")).toBeTruthy();
     expect(toggle.getAttribute("aria-expanded")).toBe("true");
+  });
+  it.each(["work", "care"] as const)("muestra el diario minimalista de %s con edición junto a la fecha", async (app) => {
+    const user = userEvent.setup();
+    const localScope = {...scope, app};
+    mock.tables.kw_journal_entries = [{
+      id:"journal-1", workspace_id:scope.workspaceId, app_key:app, project_id:"project-1",
+      title:"Entrada", body:"Notas completas del proyecto", entry_date:"2026-11-26",
+      created_at:"2026-11-26T14:00:00Z"
+    }];
+    const {container} = render(<WorkJournal scope={localScope} projectId="project-1"/>);
+    const edit = await screen.findByRole("button", {name:/Editar entrada/});
+    expect(container.querySelector(".work-journal--minimal .work-journal-input")).toBeTruthy();
+    expect(edit.previousElementSibling?.tagName).toBe("TIME");
+    expect(edit.parentElement?.classList.contains("work-journal-entry-heading")).toBe(true);
+    expect(screen.getByText("Notas completas del proyecto")).toBeTruthy();
+    await user.click(edit);
+    expect(await screen.findByRole("dialog")).toBeTruthy();
+    expect(mock.writes).toHaveLength(0);
   });
   it("rechaza un evento con fin anterior al inicio", async () => {
     const user = userEvent.setup();
