@@ -249,6 +249,35 @@ describe("Flujos compartidos", () => {
       app_key: "social",
     });
   });
+  it("compacta reuniones Social y abre el contenido completo desde el título o la fecha", async () => {
+    const user = userEvent.setup();
+    mock.tables.kw_events = [{
+      id: "meeting-1", workspace_id: scope.workspaceId, app_key: "social",
+      project_id: "project-1", title: "Sesión de contenido", type: "meeting",
+      starts_at: "2026-11-26T14:00:00Z", description: "Notas completas de la reunión",
+      metadata: {
+        checklist: [{ title: "Preparar fotos", completed: false }],
+        attachments: [{ id: "attachment-1", file_name: "brief.pdf", file_url: "https://example.test/brief.pdf" }],
+      },
+    }];
+    render(<EntityView kind="events" scope={scope} projectId="project-1" compact/>);
+    const title = await screen.findByText("Sesión de contenido");
+    const row = title.closest("article")!;
+    expect(row.classList.contains("social-meeting-record")).toBe(true);
+    expect(row.querySelector("small")?.textContent).toContain("26 nov 2026");
+    expect(within(row).queryByText("Notas completas de la reunión")).toBeNull();
+    expect(within(row).getByRole("button", { name: "Editar Sesión de contenido" })).toBeTruthy();
+    expect(within(row).getByRole("button", { name: "Eliminar Sesión de contenido" })).toBeTruthy();
+    await user.click(row.querySelector("small")!);
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText("Notas completas de la reunión")).toBeTruthy();
+    expect(within(dialog).getByDisplayValue("Preparar fotos")).toBeTruthy();
+    expect(within(dialog).getByRole("link", { name: "brief.pdf" })).toBeTruthy();
+    await user.click(within(dialog).getByRole("button", { name: "Cerrar" }));
+    await user.click(screen.getByRole("button", { name: "Editar Sesión de contenido" }));
+    expect(await screen.findByRole("dialog")).toBeTruthy();
+    expect(mock.writes).toHaveLength(0);
+  });
   it("rechaza un evento con fin anterior al inicio", async () => {
     const user = userEvent.setup();
     render(<EntityView kind="events" scope={scope} />);

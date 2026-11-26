@@ -18,3 +18,32 @@
 .social-attachments-delete{border:0;background:transparent;padding:12px;color:#a34a56;cursor:pointer}
 .social-attachments-delete:hover{background:#fff0f1;border-radius:8px}
 @media(max-width:360px){.social-dashboard .section-header{flex-wrap:wrap}}
+
+
+/* Compact meeting rows: keep the full content in the existing editor dialog. */
+.section-card .social-meeting-record {
+  align-items: center;
+  padding: 10px 0;
+}
+.social-meeting-record .social-meeting-open {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  width: 100%;
+  min-height: 40px;
+  justify-content: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.social-meeting-open small {
+  font-size: var(--text-xs);
+  font-weight: 400;
+  line-height: var(--leading-body);
+  color: var(--muted);
+}
+.section-card .social-meeting-record .record-actions {
+  flex-direction: row;
+  align-items: center;
+  flex: 0 0 auto;
+}
