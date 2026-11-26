@@ -30,7 +30,7 @@ vi.mock("../src/lib/supabase", () => ({
       signOut: async () => ({ error: null }),
     },
     from: (table: string) => {
-      let order: { key: string; ascending: boolean } | undefined;
+      const orders: { key: string; ascending: boolean }[] = [];
       let mode = "read",
         payload: Record<string, unknown> = {},
         single = false;
@@ -42,7 +42,7 @@ vi.mock("../src/lib/supabase", () => ({
           return q;
         },
         order: (key: string, options?: { ascending: boolean }) => {
-          order = { key, ascending: options?.ascending ?? true };
+          orders.push({ key, ascending: options?.ascending ?? true });
           return q;
         },
         limit: () => q,
@@ -71,9 +71,14 @@ vi.mock("../src/lib/supabase", () => ({
           let rows = (mock.tables[table] || []).filter((row) =>
             filters.every((f) => row[f.key] === f.value),
           );
-          if (table === "kw_events" && order) {
-            const {key, ascending} = order;
-            rows.sort((a,b) => String(a[key] ?? "").localeCompare(String(b[key] ?? "")) * (ascending ? 1 : -1));
+          if (table === "kw_events" || table === "kw_tasks") {
+            rows.sort((a,b) => {
+              for (const {key, ascending} of orders) {
+                const value = key === "sort_order" ? Number(a[key] ?? 0) - Number(b[key] ?? 0) : String(a[key] ?? "").localeCompare(String(b[key] ?? ""));
+                if (value) return value * (ascending ? 1 : -1);
+              }
+              return 0;
+            });
           }
           if (mode === "insert") {
             const row = {
@@ -105,6 +110,7 @@ vi.mock("../src/lib/supabase", () => ({
 import { Auth } from "../src/core/Auth";
 import { EntityView } from "../src/core/EntityView";
 import { WorkJournal } from "../src/core/WorkJournal";
+import { Dashboard } from "../src/modules/Dashboard";
 import { Calendar } from "../src/modules/Calendar";
 import App from "../src/App";
 const scope = {
@@ -335,6 +341,44 @@ describe("Flujos compartidos", () => {
     await user.click(edit);
     expect(await screen.findByRole("dialog")).toBeTruthy();
     expect(mock.writes).toHaveLength(0);
+  });
+  it.each(["work","social","care"] as const)("guarda el orden de tareas de proyecto en %s", async (app) => {
+    const localScope = {...scope, app};
+    const shared = {workspace_id:scope.workspaceId, app_key:app, project_id:"project-1", status:"pending", sort_order:0};
+    mock.tables.kw_tasks = [
+      {...shared,id:"a",title:"Tarea A",created_at:"2026-11-26T14:00:00Z"},
+      {...shared,id:"b",title:"Tarea B",created_at:"2026-11-25T14:00:00Z"},
+      {...shared,id:"c",title:"Tarea C",project_id:"other-project",created_at:"2026-11-25T14:00:00Z"},
+    ];
+    const rendered = render(<EntityView kind="tasks" scope={localScope} projectId="project-1" compact/>);
+    const grip = await screen.findByRole("button", {name:/Reordenar Tarea B/});
+    fireEvent.keyDown(grip, {key:"ArrowUp"});
+    await waitFor(() => expect(mock.tables.kw_tasks.find(r=>r.id==="b")?.sort_order).toBe(1));
+    await waitFor(() => expect(screen.getAllByRole("article")[0].textContent).toContain("Tarea B"));
+    expect(mock.tables.kw_tasks.find(r=>r.id==="c")?.sort_order).toBe(0);
+    expect(mock.writes.every(w=>Object.keys(w.values).join(",")==="sort_order")).toBe(true);
+    rendered.unmount();
+    render(<EntityView kind="tasks" scope={localScope} projectId="project-1" compact/>);
+    await screen.findByRole("button",{name:/Reordenar Tarea B/});
+    expect(screen.getAllByRole("article")[0].textContent).toContain("Tarea B");
+  });
+  it("permite ordenar las tareas sueltas arrastrando en el resumen de Work", async () => {
+    const localScope = {...scope,app:"work" as const};
+    const shared = {workspace_id:scope.workspaceId,app_key:"work",project_id:null,status:"pending",sort_order:0};
+    mock.tables.kw_tasks = [{...shared,id:"a",title:"Tarea A",created_at:"2026-11-26T14:00:00Z"},{...shared,id:"b",title:"Tarea B",created_at:"2026-11-25T14:00:00Z"}];
+    render(<MemoryRouter><Dashboard scope={localScope}/></MemoryRouter>);
+    const grip = await screen.findByRole("button",{name:/Reordenar Tarea B/});
+    const target = screen.getByRole("button",{name:/Reordenar Tarea A/});
+    const original = document.elementFromPoint;
+    document.elementFromPoint = vi.fn(()=>target);
+    try {
+      fireEvent.pointerDown(grip,{pointerId:1,button:0,isPrimary:true,clientX:10,clientY:100});
+      fireEvent.pointerMove(grip,{pointerId:1,isPrimary:true,clientX:10,clientY:50});
+      fireEvent.pointerUp(grip,{pointerId:1,isPrimary:true,clientX:10,clientY:50});
+      await waitFor(()=>expect(mock.tables.kw_tasks.find(r=>r.id==="b")?.sort_order).toBe(1));
+    } finally {
+      document.elementFromPoint = original;
+    }
   });
   it("rechaza un evento con fin anterior al inicio", async () => {
     const user = userEvent.setup();

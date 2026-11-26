@@ -194,3 +194,9 @@ seis fichas con imágenes/copy/enlace; arrastre borrador 26→28 a las 19:00 y r
 selector móvil 28→29 a las 19:00 verificados. Borrador retirado; ningún envío real.
 Garden Nails: 175 medios importados, histórico todavía paginado sin errores.
 Detalles y límites en SOCIAL_INSTAGRAM_CALENDAR.md.
+
+## Workspace — orden manual de tareas, 2026-11-26
+
+El Core reutiliza `kw_tasks.sort_order` (ascendente; empate por creación descendente e ID), sin migraciones. El agarre funciona en listas de proyecto Work/Social/Care/Karma, tareas sueltas Work y archivo Karma, con puntero/táctil y flechas del teclado. Se mantienen filtros y estados; las escrituras afectan únicamente al orden y respetan workspace, app y revisión. Si falla una parte del guardado se avisa y se recarga desde servidor.
+
+Compilación y 140 pruebas frontend correctas, incluyendo arrastre simulado, persistencia en fixtures, filtros y Karma móvil. Pendiente comprobación autenticada en producción y dispositivo físico; el conector Supabase activo corresponde a otro proyecto.

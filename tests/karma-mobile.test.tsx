@@ -45,3 +45,19 @@ it('opens and closes all three existing shortcuts',async()=>{
   expect(screen.queryByRole('dialog')).toBeNull();
  }
 });
+
+it('reorders Karma tasks with a touch grip and keeps archived tasks separate',async()=>{
+ mount();
+ const grip=await screen.findByRole('button',{name:/Reordenar Revisar los documentos/});
+ const target=screen.getByRole('button',{name:/Reordenar Preparar propuesta/});
+ const original=document.elementFromPoint;
+ document.elementFromPoint=vi.fn(()=>target);
+ try{
+  fireEvent.pointerDown(grip,{pointerId:7,pointerType:'touch',button:0,isPrimary:true,clientY:120});
+  fireEvent.pointerMove(grip,{pointerId:7,pointerType:'touch',isPrimary:true,clientY:80});
+  fireEvent.pointerUp(grip,{pointerId:7,pointerType:'touch',isPrimary:true,clientY:80});
+  await waitFor(()=>expect(tables.kw_tasks.find(t=>t.id==='task-2').sort_order).toBe(1));
+  await waitFor(()=>expect(screen.getAllByRole('article')[0].textContent).toContain('Revisar los documentos'));
+  expect(tables.kw_tasks.find(t=>t.id==='task-done').status).toBe('done');
+ }finally{document.elementFromPoint=original;}
+});

@@ -6,16 +6,27 @@ const records = db as SupabaseClient;
 import type { AppKey, Entity, Row } from "./model";
 export type Scope = { workspaceId: string; app: AppKey; userId: string };
 export async function listRows(def: Entity, scope: Scope, projectId?: string) {
-  let q = records.from(def.table === "kw_content_items" && scope.app === "social" ? "kw_social_content_delivery" : def.table).select("*");
+  let q = records
+    .from(
+      def.table === "kw_content_items" && scope.app === "social"
+        ? "kw_social_content_delivery"
+        : def.table,
+    )
+    .select("*");
   if (def.table === "kw_project_panels") {
     if (!projectId) return [];
     q = q.eq("project_id", projectId);
   } else q = q.eq("workspace_id", scope.workspaceId);
   if (def.appScoped) q = q.eq("app_key", scope.app);
   if (projectId && def.project) q = q.eq("project_id", projectId);
-  const { data, error } = await q
-    .order(def.order || "created_at", { ascending: !!def.order })
-    .limit(1000);
+  const ordered =
+    def.table === "kw_tasks"
+      ? q
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: true })
+      : q.order(def.order || "created_at", { ascending: !!def.order });
+  const { data, error } = await ordered.limit(1000);
   if (error) throw error;
   return data as unknown as Row[];
 }
@@ -105,4 +116,46 @@ export function message(error: unknown) {
     : typeof error === "object" && error && "message" in error
       ? String(error.message)
       : "No se pudo completar la operación.";
+}
+
+/** Save only the existing rank column, under the same workspace/app RLS as tasks. */
+export async function saveTaskOrder(
+  scope: Scope,
+  changes: { row: Row; sortOrder: number }[],
+) {
+  if (!changes.length) return;
+  let failed = false;
+  try {
+    // Limit concurrent requests, checking each row was actually updated.
+    for (let i = 0; i < changes.length; i += 10) {
+      const results = await Promise.allSettled(
+        changes.slice(i, i + 10).map(async ({ row, sortOrder }) => {
+          let q = records
+            .from("kw_tasks")
+            .update({ sort_order: sortOrder })
+            .eq("id", row.id)
+            .eq("workspace_id", scope.workspaceId)
+            .eq("app_key", scope.app);
+          if (row.updated_at) q = q.eq("updated_at", String(row.updated_at));
+          const { data, error } = await q.select("id").single();
+          if (error || !data)
+            throw error || new Error("La tarea cambió o ya no tienes acceso.");
+        }),
+      );
+      if (results.some((result) => result.status === "rejected")) {
+        failed = true;
+        break;
+      }
+    }
+  } finally {
+    window.dispatchEvent(
+      new CustomEvent("kw-records-changed", {
+        detail: { table: "kw_tasks", workspaceId: scope.workspaceId },
+      }),
+    );
+  }
+  if (failed)
+    throw new Error(
+      "No se pudo guardar todo el orden. Se ha recargado el listado; vuelve a intentarlo.",
+    );
 }

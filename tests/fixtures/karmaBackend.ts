@@ -23,10 +23,17 @@ export const db:any={
  channel:()=>{const c={on:()=>c,subscribe:()=>c};return c;},removeChannel:()=>{},
  storage:{from:()=>({createSignedUrl:async()=>({data:{signedUrl:'https://example.test/file'}}),upload:async()=>({error:null}),getPublicUrl:()=>({data:{publicUrl:'https://example.test/file'}})})},
  from(table:string){
-  let mode='read',payload:any,single=false;const filters:((row:any)=>boolean)[]=[];
-  const q:any={select:()=>q,eq:(key:string,value:any)=>{filters.push(row=>row[key]===value);return q;},contains:(key:string,value:any)=>{filters.push(row=>Object.keys(value).every(k=>row[key]?.[k]===value[k]));return q;},order:()=>q,limit:()=>q,maybeSingle:()=>{single=true;return q;},single:()=>{single=true;return q;},insert:(value:any)=>{mode='insert';payload=value;return q;},update:(value:any)=>{mode='update';payload=value;return q;},delete:()=>{mode='delete';return q;},then(resolve:any,reject:any){return new Promise(r=>setTimeout(r,20)).then(()=>{
+  let mode='read',payload:any,single=false;const orders:{key:string;ascending:boolean}[]=[];const filters:((row:any)=>boolean)[]=[];
+  const q:any={select:()=>q,eq:(key:string,value:any)=>{filters.push(row=>row[key]===value);return q;},contains:(key:string,value:any)=>{filters.push(row=>Object.keys(value).every(k=>row[key]?.[k]===value[k]));return q;},order:(key:string,options?:{ascending:boolean})=>{orders.push({key,ascending:options?.ascending??true});return q;},limit:()=>q,maybeSingle:()=>{single=true;return q;},single:()=>{single=true;return q;},insert:(value:any)=>{mode='insert';payload=value;return q;},update:(value:any)=>{mode='update';payload=value;return q;},delete:()=>{mode='delete';return q;},then(resolve:any,reject:any){return new Promise(r=>setTimeout(r,20)).then(()=>{
    if(mode!=='read'&&failNext){failNext=false;return {data:null,error:{message:'Fallo de prueba'}};}
    let rows=(tables[table]||[]).filter(row=>filters.every(f=>f(row)));
+   if(table==='kw_tasks')rows.sort((a,b)=>{
+    for(const {key,ascending} of orders){
+     const cmp=key==='sort_order'?Number(a[key]??0)-Number(b[key]??0):String(a[key]??'').localeCompare(String(b[key]??''));
+     if(cmp)return cmp*(ascending?1:-1);
+    }
+    return 0;
+   });
    if(mode==='insert'){rows=(Array.isArray(payload)?payload:[payload]).map(v=>({id:crypto.randomUUID(),status:'pending',priority:'normal',...v}));tables[table]=[...(tables[table]||[]),...rows];writes.push({table,payload});}
    if(mode==='update'){rows.forEach(row=>Object.assign(row,payload));writes.push({table,payload});}
    if(mode==='delete')tables[table]=(tables[table]||[]).filter(row=>!rows.includes(row));
