@@ -33,3 +33,18 @@
 .social-account summary {
   cursor: pointer;
 }
+.social-drive-status {
+  margin-bottom: 12px;
+  overflow-wrap: anywhere;
+}
+.social-drive-status a {
+  text-decoration: none;
+  margin: 0 6px 6px 0;
+}
+.social-platforms .social-drive-connection {
+  display: block;
+}
+.social-platforms .social-drive-folder-list {
+  max-height: 250px;
+  overflow: auto;
+}

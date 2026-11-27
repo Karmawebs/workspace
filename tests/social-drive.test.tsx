@@ -8,7 +8,10 @@ import {
 } from "@testing-library/react";
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
 vi.mock("../src/lib/supabase", () => ({ db: { functions: { invoke } } }));
-import { finishDrive } from "../src/modules/SocialDriveConnection";
+import {
+  finishDrive,
+  SocialDriveConnection,
+} from "../src/modules/SocialDriveConnection";
 import { SocialDriveBrowser } from "../src/modules/SocialDriveBrowser";
 
 afterEach(() => {
@@ -94,4 +97,83 @@ it("allows only the loopback test stack in local development", async () => {
       true,
     ),
   ).toThrow();
+});
+
+it("shows the existing project's folder and updates it through the same binding action", async () => {
+  let folder = { id: "existing_folder", name: "Garden Nails" };
+  const onChange = vi.fn();
+  invoke.mockImplementation(async (_name, { body }) => {
+    expect(body.projectId).toBe("A");
+    if (body.action === "status")
+      return {
+        data: {
+          status: "connected",
+          account: { name: "Karma", email: "test@example.com" },
+          folder,
+          canChoose: true,
+        },
+      };
+    if (body.action === "folders")
+      return {
+        data: {
+          files: body.folderId
+            ? []
+            : [{ id: "new_folder", name: "Nueva carpeta" }],
+        },
+      };
+    if (body.action === "bind") {
+      expect(body.folderId).toBe("new_folder");
+      folder = { id: "new_folder", name: "Nueva carpeta" };
+      return { data: { linked: true } };
+    }
+    throw new Error("unexpected action");
+  });
+  render(
+    <SocialDriveConnection projectId="A" onChange={onChange} showStatus />,
+  );
+  expect(await screen.findByText("Garden Nails")).toBeTruthy();
+  expect(
+    screen
+      .getByRole("link", { name: "Abrir carpeta en Drive" })
+      .getAttribute("href"),
+  ).toBe("https://drive.google.com/drive/folders/existing_folder");
+  fireEvent.click(screen.getByRole("button", { name: "Cambiar carpeta" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Nueva carpeta" }));
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Vincular esta carpeta" }),
+  );
+  await waitFor(() =>
+    expect(
+      screen
+        .getByRole("link", { name: "Abrir carpeta en Drive" })
+        .getAttribute("href"),
+    ).toBe("https://drive.google.com/drive/folders/new_folder"),
+  );
+  expect(onChange).toHaveBeenCalledOnce();
+});
+
+it("does not offer folder selection to an administrator other than the Google account owner", async () => {
+  invoke.mockResolvedValue({
+    data: {
+      status: "connected",
+      account: { name: "Google Drive" },
+      folder: null,
+      canChoose: false,
+    },
+  });
+  render(
+    <SocialDriveConnection projectId="B" onChange={() => {}} showStatus />,
+  );
+  expect(
+    await screen.findByText(
+      "Solo quien autorizó esta cuenta puede cambiar la carpeta.",
+    ),
+  ).toBeTruthy();
+  expect(
+    (
+      screen.getByRole("button", {
+        name: "Elegir carpeta",
+      }) as HTMLButtonElement
+    ).disabled,
+  ).toBe(true);
 });
