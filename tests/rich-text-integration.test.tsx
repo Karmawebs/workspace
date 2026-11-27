@@ -32,7 +32,7 @@ it("persists formatted task content through the existing save path and keeps att
     />,
   );
   const box = await screen.findByRole("textbox", { name: "Descripción" });
-  await screen.findByRole("link", { name: "Documento de prueba.pdf" });
+  await screen.findByRole("button", { name: "Documento de prueba.pdf" });
   box.innerHTML =
     '<p><strong>Instrucciones</strong> <a href="https://example.com">Roles</a></p>';
   fireEvent.input(box);

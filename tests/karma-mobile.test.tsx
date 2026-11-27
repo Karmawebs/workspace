@@ -30,7 +30,7 @@ it('completes, opens archived editor and restores without losing attachments',as
  mount();await userEvent.click(await screen.findByRole('checkbox',{name:'Completar Preparar propuesta para el nuevo proyecto'}));
  await userEvent.click(await screen.findByRole('button',{name:'Tareas archivadas (2)'}));
  await userEvent.click(await screen.findByRole('button',{name:'Preparar propuesta para el nuevo proyecto',exact:true}));
- expect(await screen.findByRole('link',{name:'Documento de prueba.pdf'})).toBeTruthy();
+ expect(await screen.findByRole('button',{name:'Documento de prueba.pdf'})).toBeTruthy();
  expect(screen.getByRole('textbox',{name:'Descripción'}).textContent).toBe('Notas conservadas de la tarea');
  await userEvent.click(screen.getByRole('button',{name:'Recuperar tarea'}));
  await waitFor(()=>expect(screen.queryByRole('button',{name:'Recuperar tarea'})).toBeNull());

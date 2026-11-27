@@ -1,5 +1,11 @@
 # KARMA WORKSPACE — CURRENT STATE
 
+## Vista previa de adjuntos de tareas — 2026-11-27
+
+Editor Core compartido por Work, Social, Care y Karma: clic en adjunto guardado o local pendiente, modal independiente con descarga del original y cierre sin guardar ni cerrar la tarea. JPG/PNG y PDF (visor nativo), DOCX con renderizado local en sandbox sin servicios externos, DOC antiguo con extracción de texto en worker aislado y límite de tiempo; formatos restantes descargables. Descarga por la ruta Storage autenticada si existe, fallback a URL heredada solo cuando no hay ruta. Sin cambios de esquema, permisos ni datos. Reuniones Social que reutilizan el editor heredan el visor.
+
+Verificación: build y 147 pruebas automatizadas, render de un DOCX real y extracción de un DOC binario con el worker compilado. Pendiente comprobación del visor nativo en Safari móvil y sesión real de producción.
+
 ## Instagram 3:4 — 2026-11-23
 
 Publicación inmediata de JPEG 1080×1440 (3:4) verificada de extremo a extremo en @karmawebs, sin recorte, desde Workspace Social mediante Meta Graph API. El validador compartido de frontend y Edge Function `social-instagram-publish` admite 3:4 a 1,91:1 para imágenes del feed. PR #21 fusionada; Edge Function Workspace v8 desplegada y activa. Se elimina el aviso experimental de la interfaz. La publicación programada aún requiere una prueba real de extremo a extremo; no asumir compatibilidad garantizada en todas las cuentas o futuros cambios de Meta.
