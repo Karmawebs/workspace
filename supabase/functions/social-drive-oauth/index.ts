@@ -21,6 +21,70 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     const s = await scope(req, body.projectId);
+    if (body.action === "status") {
+      const { data: account, error } = await s.db
+        .from("kw_social_drive_connections")
+        .select("id,status,display_name,google_account_email")
+        .eq("project_id", s.projectId)
+        .eq("workspace_id", s.workspace)
+        .maybeSingle();
+      if (error) throw error;
+      if (!account)
+        return json({
+          status: "disconnected",
+          account: null,
+          folder: null,
+          canChoose: false,
+        });
+      const { data: folder, error: folderError } = await s.db
+        .from("kw_social_drive_folders")
+        .select("drive_folder_id,folder_name")
+        .eq("project_id", s.projectId)
+        .eq("workspace_id", s.workspace)
+        .eq("connection_id", account.id)
+        .maybeSingle();
+      if (folderError) throw folderError;
+      const { data: credential, error: credentialError } = await s.db
+        .from("kw_social_drive_credentials")
+        .select("owner_id")
+        .eq("connection_id", account.id)
+        .maybeSingle();
+      if (credentialError) throw credentialError;
+      let status = account.status;
+      let email = account.google_account_email;
+      let name = account.display_name;
+      if (status === "connected" && credential?.owner_id === s.user) {
+        try {
+          const token = await access(s, account.id, true);
+          const response = await fetch(
+            "https://www.googleapis.com/drive/v3/about?fields=user(emailAddress,displayName)",
+            {
+              headers: { Authorization: "Bearer " + token },
+            },
+          );
+          if (response.ok) {
+            const { user } = await response.json();
+            email = user?.emailAddress || email;
+            name = user?.displayName || name;
+          }
+        } catch (cause) {
+          if (
+            cause instanceof Failure &&
+            cause.message === "GOOGLE_REAUTH_REQUIRED"
+          )
+            status = "reauthorization_required";
+          // Keep stored folder metadata visible if Google is temporarily unavailable.
+        }
+      }
+      return json({
+        status,
+        account: { name, email },
+        folder: folder
+          ? { id: folder.drive_folder_id, name: folder.folder_name }
+          : null,
+        canChoose: credential?.owner_id === s.user,
+      });
+    }
     if (body.action === "start") {
       const verifier = b64(crypto.getRandomValues(new Uint8Array(32)));
       const challenge = b64(

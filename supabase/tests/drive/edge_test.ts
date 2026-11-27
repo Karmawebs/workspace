@@ -55,6 +55,10 @@ Deno.test("OAuth, folder boundaries, refresh and video download", async () => {
     }
     if (url.hostname === "www.googleapis.com") {
       assert.equal(req.headers.get("authorization"), "Bearer google-access");
+      if (url.pathname.endsWith("/about"))
+        return row({
+          user: { emailAddress: "test@example.com", displayName: "Test" },
+        });
       if (url.searchParams.has("alt"))
         return new Response("test", { headers: { "Content-Length": "4" } });
       if (url.pathname.endsWith("/files"))
@@ -89,8 +93,20 @@ Deno.test("OAuth, folder boundaries, refresh and video download", async () => {
         pending = undefined;
         encrypted = (await req.json()).p_token;
         return row(null);
+      case "kw_social_drive_connections":
+        return encrypted
+          ? rows({
+              id: "conn",
+              status: "connected",
+              display_name: "Google Drive",
+            })
+          : row([]);
       case "kw_social_drive_folders":
-        return rows({ drive_folder_id: root, connection_id: "conn" });
+        return rows({
+          drive_folder_id: root,
+          connection_id: "conn",
+          folder_name: "Client",
+        });
       case "kw_social_drive_credentials":
         return rows({ owner_id: user, sealed_token: encrypted });
       default:
@@ -112,7 +128,12 @@ Deno.test("OAuth, folder boundaries, refresh and video download", async () => {
     assert.equal((await call(0, { action: "start" }, false)).status, 401);
     role = "member";
     assert.equal((await call(1, {})).status, 403);
+    assert.equal((await call(0, { action: "status" })).status, 403);
     role = "owner";
+    assert.equal(
+      (await (await call(0, { action: "status" })).json()).status,
+      "disconnected",
+    );
     const start = await (await call(0, { action: "start" })).json();
     const url = new URL(start.url);
     assert.equal(url.searchParams.get("scope"), scope);
@@ -137,12 +158,23 @@ Deno.test("OAuth, folder boundaries, refresh and video download", async () => {
     const finish = { action: "finish", state: start.state, code: "code" };
     assert.equal((await call(0, finish)).status, 200);
     assert.ok(encrypted && !encrypted.includes("private-refresh"));
+    const status = await (await call(0, { action: "status" })).json();
+    assert.deepEqual(status, {
+      status: "connected",
+      account: { name: "Test", email: "test@example.com" },
+      folder: { id: root, name: "Client" },
+      canChoose: true,
+    });
     assert.equal((await call(0, finish)).status, 400);
     assert.equal((await (await call(1, {})).json()).files[0].id, clip);
     assert.equal(await (await call(2, { fileId: clip })).text(), "test");
     parent = "other_root_01";
     assert.equal((await call(2, { fileId: clip })).status, 403);
     revoked = true;
+    assert.equal(
+      (await (await call(0, { action: "status" })).json()).status,
+      "reauthorization_required",
+    );
     assert.equal(
       (await (await call(1, {})).json()).error,
       "GOOGLE_REAUTH_REQUIRED",

@@ -1,5 +1,8 @@
 # KARMA WORKSPACE — CURRENT STATE
 
+## Social — Drive en Conexiones, 2026-11-27
+La ficha Social muestra Instagram, Facebook y Google Drive (TikTok oculto). Drive comparte el selector de Publicaciones y su raíz por proyecto: consulta estado/carpeta, acceso directo y cambio con los permisos existentes. Nueva acción de solo lectura status en social-drive-oauth, versión 8 activa; sin cambios de esquema ni reconexiones. Build, 150 pruebas frontend y escenario Edge simulado correctos. Pendiente comprobar UI autenticada tras despliegue.
+
 ## Vista previa de adjuntos de tareas — 2026-11-27
 
 Editor Core compartido por Work, Social, Care y Karma: clic en adjunto guardado o local pendiente, modal independiente con descarga del original y cierre sin guardar ni cerrar la tarea. JPG/PNG y PDF (visor nativo), DOCX con renderizado local en sandbox sin servicios externos, DOC antiguo con extracción de texto en worker aislado y límite de tiempo; formatos restantes descargables. Descarga por la ruta Storage autenticada si existe, fallback a URL heredada solo cuando no hay ruta. Sin cambios de esquema, permisos ni datos. Reuniones Social que reutilizan el editor heredan el visor.

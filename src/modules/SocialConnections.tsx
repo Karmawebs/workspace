@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { SocialDriveConnection } from "./SocialDriveConnection";
 import { InstagramActions } from "./InstagramConnection";
 import { Link2, X } from "lucide-react";
 import { db } from "../lib/supabase";
@@ -37,7 +38,7 @@ function useAccounts(workspaceId: string, projectId?: string) {
           .range(offset, offset + pageSize - 1)
           .abortSignal(controller.signal);
         if (error) throw error;
-        rows.push(...data);
+        rows.push(...data.filter((account) => account.platform !== "tiktok"));
         if (data.length < pageSize) break;
       }
       if (active) setResult({ rows });
@@ -113,7 +114,7 @@ function Accounts({
   if (projectId)
     return (
       <div className="social-platforms">
-        {(Object.keys(platforms) as Platform[]).map((platform) => {
+        {(["instagram", "facebook"] as Platform[]).map((platform) => {
           const accounts = rows.filter((a) => a.platform === platform);
           const available = platform === "instagram";
           return (
@@ -138,6 +139,15 @@ function Accounts({
             </section>
           );
         })}
+        <section>
+          <h3>Google Drive</h3>
+          <SocialDriveConnection
+            key={projectId}
+            projectId={projectId}
+            onChange={() => {}}
+            showStatus
+          />
+        </section>
       </div>
     );
   if (!rows.length)
@@ -146,8 +156,8 @@ function Accounts({
         <Link2 size={26} aria-hidden="true" />
         <h2>Todavía no hay cuentas vinculadas</h2>
         <p>
-          Las cuentas de Instagram, Facebook y TikTok aparecerán aquí agrupadas
-          por proyecto.
+          Las cuentas de Instagram y Facebook aparecerán aquí agrupadas por
+          proyecto.
         </p>
       </div>
     );
