@@ -1,0 +1,35 @@
+.work-task-attachments .attachment-open {
+  min-width:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  border:0; padding:3px 0; font:inherit; color:var(--ink); background:transparent; text-align:left;
+  cursor:pointer; text-decoration:underline; text-underline-offset:3px;
+}
+.work-task-attachments .attachment-open:hover { color:var(--accent-ink); background:transparent; }
+.attachment-preview {
+  padding:0; border:1px solid var(--line); border-radius:var(--radius-dialog);
+  background:var(--surface); color:var(--ink);
+  width:min(1020px, calc(100% - 32px)); height:min(820px, calc(100dvh - 32px));
+  max-height:none; max-width:none; overflow:hidden; box-shadow:var(--shadow-dialog);
+}
+.attachment-preview::backdrop { background:rgba(12,12,16,.7); }
+.attachment-preview-shell { height:100%; display:flex; flex-direction:column; }
+.attachment-preview-header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex:0 0 auto; padding:12px 18px; border-bottom:1px solid var(--line); }
+.attachment-preview-name { display:flex; align-items:center; min-width:0; gap:8px; }
+.attachment-preview-name svg { flex-shrink:0; }
+.attachment-preview-name strong { min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:14px; }
+.attachment-preview-actions { display:flex; align-items:center; flex-shrink:0; gap:6px; }
+.attachment-preview .icon-button { width:40px; height:40px; padding:0; border:1px solid var(--line); border-radius:9px; display:grid; place-items:center; background:transparent; color:var(--ink); }
+.attachment-preview .icon-button:hover { background:var(--surface-hover); }
+.attachment-preview .icon-button:disabled { opacity:.4; cursor:not-allowed; }
+.attachment-preview-body { flex:1; min-height:0; display:grid; place-items:center; overflow:auto; background:var(--surface-subtle); }
+.attachment-preview-body > img { display:block; max-width:100%; max-height:100%; object-fit:contain; min-height:0; }
+.attachment-preview-body > iframe { border:0; width:100%; height:100%; background:white; }
+.attachment-preview-body > p, .attachment-preview-fallback { text-align:center; padding:24px; }
+.attachment-preview-fallback { display:grid; justify-items:center; gap:10px; }
+.attachment-text-preview { background:white; width:min(760px,100%); padding:24px; min-height:100%; align-self:start; }
+.attachment-text-preview small { display:block; color:var(--muted); margin-bottom:18px; }
+.attachment-text-preview pre { white-space:pre-wrap; overflow-wrap:anywhere; font:inherit; line-height:1.65; }
+@media (max-width: 700px) {
+  .attachment-preview { width:calc(100% - 12px); height:calc(100dvh - 12px); }
+  .attachment-preview-header { padding:9px 10px; gap:8px; }
+  .attachment-preview-name strong { font-size:13px; }
+}

@@ -287,7 +287,7 @@ describe("Flujos compartidos", () => {
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText("Notas completas de la reunión")).toBeTruthy();
     expect(within(dialog).getByDisplayValue("Preparar fotos")).toBeTruthy();
-    expect(within(dialog).getByRole("link", { name: "brief.pdf" })).toBeTruthy();
+    expect(within(dialog).getByRole("button", { name: "brief.pdf" })).toBeTruthy();
     await user.click(within(dialog).getByRole("button", { name: "Cerrar" }));
     await user.click(screen.getByRole("button", { name: "Editar Sesión de contenido" }));
     expect(await screen.findByRole("dialog")).toBeTruthy();

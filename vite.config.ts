@@ -12,5 +12,16 @@ export default defineConfig(async ({ command, mode }) => {
     if (!response.ok)
       throw new Error(`Supabase rechazó la configuración pública del build (${response.status}). Revisa las variables de build de Cloudflare.`);
   }
-  return { plugins: [react()] };
+  return {
+    plugins: [react()],
+    // Only the lazily-loaded legacy Word worker uses these browser shims.
+    resolve: { alias: [
+      { find: /^stream$/, replacement: "stream-browserify" },
+      { find: /^buffer$/, replacement: "buffer/" },
+      { find: /^events$/, replacement: "events/" },
+      { find: /^util$/, replacement: "util/" },
+      { find: /^process$/, replacement: "process/browser.js" },
+    ] },
+    worker: { format: "es" },
+  };
 });
