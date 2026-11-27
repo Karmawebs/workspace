@@ -19,3 +19,32 @@ Deno.test("administrative list returns project labels and usernames only after c
  assert.equal((await run()).status,403);assert.equal(reveals,0);role="owner";const result=await run();assert.equal(result.status,200);const list=await result.json();assert.equal(list.history[0].title,"Menú");assert.equal(list.history[0].client,"Cliente QA");assert.deepEqual(list.credentials,[{id:"c",service:"CMS",visible:false,username:"Editor"}]);assert(!JSON.stringify(list).includes("not-in-list"));
  }finally{globalThis.fetch=f;Object.defineProperty(Deno,"serve",desc)}
 });
+
+Deno.test("alert preferences are validated and updates are restricted to the authorized project and user",async()=>{
+ Deno.env.set("SUPABASE_URL","http://localhost:54321");Deno.env.set("SUPABASE_SERVICE_ROLE_KEY","fixture");
+ let handler!:(r:Request)=>Promise<Response>;
+ const desc=Object.getOwnPropertyDescriptor(Deno,"serve")!, f=globalThis.fetch;
+ Object.defineProperty(Deno,"serve",{configurable:true,value:(h:typeof handler)=>handler=h});
+ let role="member",writes=0;
+ globalThis.fetch=async(i,init)=>{const r=new Request(i,init),u=new URL(r.url),table=u.pathname.split("/").pop();const wrap=(row:object)=>Response.json(r.headers.get("accept")?.includes("object")?row:[row]);
+  if(table==="kw_portal_admin_session")return Response.json(true);
+  if(table==="user")return Response.json({id:"admin"});
+  if(table==="kw_projects")return wrap({workspace_id:"w"});
+  if(table==="kw_workspace_members")return wrap({role});
+  if(table==="kw_portal_access"){
+   assert.equal(u.searchParams.get("project_id"),"eq.p");
+   assert.equal(u.searchParams.get("user_id"),"eq.client");
+   if(r.method==="PATCH"){writes++;assert.deepEqual(await r.json(),{preferences:["new","published"]});}
+   return wrap({user_id:"client"});
+  }
+  throw Error("Unexpected request");
+ };
+ try{
+  await import("../../functions/social-portal-admin/index.ts?prefs-test");
+  const run=(preferences:unknown)=>handler(new Request("http://localhost/",{method:"POST",headers:{authorization:"Bearer e30."+btoa(JSON.stringify({session_id:"s"}))+".sig"},body:JSON.stringify({action:"preferences",projectId:"p",id:"client",preferences})}));
+  assert.equal((await run(["new"])).status,403);assert.equal(writes,0);
+  role="owner";
+  assert.equal((await run(["unknown"])).status,400);assert.equal(writes,0);
+  const result=await run(["published","new","new"]);assert.equal(result.status,200);assert.deepEqual(await result.json(),{ok:true,preferences:["new","published"]});assert.equal(writes,1);
+ }finally{globalThis.fetch=f;Object.defineProperty(Deno,"serve",desc)}
+});

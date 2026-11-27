@@ -9,6 +9,7 @@ import {
 import {
   UsersRound,
   MessagesSquare,
+  Bell,
   KeyRound,
   Plus,
   X,
@@ -29,6 +30,7 @@ type Access = {
   login_email: string;
   active: boolean;
   invitation_state?: string;
+  preferences?: string[];
 };
 type Activity = {
   id: string;
@@ -243,6 +245,47 @@ async function invoke<T>(
   }
   return r.data;
 }
+const alertOptions = [
+  ["new", "Nuevo contenido", "Cuando se añade contenido al proyecto."],
+  ["modified", "Modificaciones", "Cuando se modifica contenido visible para el cliente."],
+  ["scheduled", "Programaciones", "Cuando se confirma la programación automática."],
+  ["published", "Publicaciones", "Cuando se publica correctamente en Instagram."],
+  ["reply", "Respuestas", "Cuando Karma responde a una solicitud de cambios."],
+] as const;
+
+function AlertPreferences({ user, busy, save }: {
+  user: Access;
+  busy: boolean;
+  save: (preferences: string[]) => void;
+}) {
+  const initial = user.preferences;
+  const [prefs, setPrefs] = useState<string[]>(initial ?? []);
+  const disabled = busy || !user.active || !initial;
+  const dirty = JSON.stringify([...prefs].sort()) !== JSON.stringify([...(initial ?? [])].sort());
+  return (
+    <form className="pa-alert-form" onSubmit={(e) => {
+      e.preventDefault();
+      if (!disabled && dirty) save(prefs);
+    }}>
+      {!initial && <p className="pa-empty">Preferencias no disponibles. Recarga el panel.</p>}
+      {!user.active && <p className="pa-empty">Este acceso está desactivado.</p>}
+      <label className="pa-alert-row pa-alert-master">
+        <span><strong>Notificaciones por correo</strong><small>{prefs.length ? "Activadas" : "Desactivadas"}</small></span>
+        <input type="checkbox" role="switch" checked={prefs.length > 0} disabled={disabled}
+          onChange={(e) => setPrefs(e.target.checked ? alertOptions.map(([k]) => k) : [])}/>
+      </label>
+      {alertOptions.map(([key, title, description]) => (
+        <label className="pa-alert-row" key={key}>
+          <span><strong>{title}</strong><small>{description}</small></span>
+          <input type="checkbox" role="switch" checked={prefs.includes(key)} disabled={disabled}
+            onChange={(e) => setPrefs(p => e.target.checked ? [...p, key] : p.filter(k => k !== key))}/>
+        </label>
+      ))}
+      <button type="submit" disabled={disabled || !dirty}>{busy ? "Guardando…" : "Guardar preferencias"}</button>
+    </form>
+  );
+}
+
 function Controls({
   id,
   children,
@@ -261,6 +304,9 @@ function Controls({
     [busy, lock] = useState(false);
   const [attempt, reload] = useState(0);
   const [activityOpen, setActivityOpen] = useState(false);
+  const [alertsOpen, setAlertsOpen] = useState(false);
+  const [alertUserId, setAlertUserId] = useState("");
+  const alertUser = data?.access.find(a => a.user_id === alertUserId) ?? data?.access.find(a => a.active) ?? data?.access[0];
 
   useEffect(() => {
     let live = true;
@@ -518,6 +564,23 @@ function Controls({
               {activityOpen && (
                 <div className="pa-accordion-content">{activityCard}</div>
               )}
+            </section>
+            <section className="card pa-accordion">
+              <button type="button" className="pa-accordion-toggle" aria-expanded={alertsOpen} onClick={() => setAlertsOpen(v => !v)}>
+                <Bell size={19}/>
+                <strong>Centro de alertas</strong>
+                <ChevronDown size={18} className={alertsOpen ? "pa-accordion-chevron is-open" : "pa-accordion-chevron"}/>
+              </button>
+              {alertsOpen && <div className="pa-accordion-content pa-alert-content">
+                {data?.access.length && alertUser ? <>
+                  <label className="pa-alert-user">Usuario del portal
+                    <select value={alertUser.user_id} disabled={busy} onChange={e => setAlertUserId(e.target.value)}>
+                      {data.access.map(a => <option key={a.user_id} value={a.user_id}>{a.name} — {a.contact_email}{a.active ? "" : " (desactivado)"}</option>)}
+                    </select>
+                  </label>
+                  <AlertPreferences key={alertUser.user_id + ":" + (alertUser.preferences ?? []).join(",")} user={alertUser} busy={busy} save={preferences => void act({action:"preferences",id:alertUser.user_id,preferences}, "Preferencias de correo actualizadas.")}/>
+                </> : empty("No hay usuarios del portal en este proyecto.")}
+              </div>}
             </section>
           </div>
         </>

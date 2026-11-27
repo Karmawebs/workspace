@@ -25,7 +25,7 @@ Deno.serve(async req=>{
  return json({login:r.data.user.email,...await invite(db,projectId,r.data.user.id,request)});
  }
  if(b.action==="list"){
- const access=await db.from("kw_portal_access").select("user_id,name,contact_email,login_email,active,invitation_state,invitation_sent_at").eq("project_id",projectId).order("name");
+ const access=await db.from("kw_portal_access").select("user_id,name,contact_email,login_email,active,invitation_state,invitation_sent_at,preferences").eq("project_id",projectId).order("name");
  const history=await db.from("kw_portal_history").select("id,event,actor,content_id,comment,created_at,parent_id,kw_content_items(title,project_id)").eq("project_id",projectId).in("event",["changes","reply","approved","pending"]).order("created_at",{ascending:false}).limit(100);
  const credentials=await db.from("kw_portal_credentials").select("id,service,visible").eq("project_id",projectId).order("service");
  if(access.error||history.error||credentials.error)throw Error();
@@ -46,6 +46,14 @@ Deno.serve(async req=>{
  if(["create","update"].includes(b.op)&&(!b.service?.trim()||typeof b.value!=="object"||!b.value||JSON.stringify(b.value).length>16000))throw new Failure("Revisa los campos.",400);
  const {data,error}=await db.rpc("kw_portal_credential",{p_action:b.op,p_project:projectId,p_id:b.id,p_service:b.service,p_value:b.value,p_visible:b.visible===true});if(error)throw error;return json({value:data});}
  const {data:a}=await db.from("kw_portal_access").select("user_id").eq("project_id",projectId).eq("user_id",b.id).maybeSingle();if(!a)throw new Failure("Acceso no disponible.",404);
+ if(b.action==="preferences"){
+ const kinds=["new","modified","scheduled","published","reply"];
+ if(!Array.isArray(b.preferences)||b.preferences.length>kinds.length||b.preferences.some((k:unknown)=>typeof k!=="string"||!kinds.includes(k)))throw new Failure("Preferencias no válidas.",400);
+ const preferences=kinds.filter(k=>b.preferences.includes(k));
+ const {data:updated,error}=await db.from("kw_portal_access").update({preferences}).eq("project_id",projectId).eq("user_id",a.user_id).select("user_id").maybeSingle();
+ if(error||!updated)throw Error();
+ return json({ok:true,preferences});
+ }
  if(b.action==="invite"){return json(await invite(db,projectId,a.user_id,requestId(b.request)));}
  if(b.action==="reset"){
  checkPassword();const {data}=await db.auth.admin.getUserById(a.user_id);

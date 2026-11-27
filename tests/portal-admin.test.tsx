@@ -41,3 +41,27 @@ it("limita Usuarios al proyecto e informa de SMTP pendiente sin pedir contraseñ
  expect(call.projectId).toBe("p");expect(call.request).toMatch(/^[a-f0-9-]{36}$/);expect(call.password).toBeUndefined();
  click("Gestionar");click("Reenviar invitación");await waitFor(()=>expect(invoke.mock.calls.some(([,b])=>b.body.action==="invite"&&b.body.id==="u")).toBe(true));
 });
+
+it("gestiona preferencias de alertas por usuario sin cambiar los demás accesos",async()=>{
+ const users=[{...user,preferences:["new","modified"]},{...user,user_id:"v",name:"Otro cliente",contact_email:"other@example.invalid",preferences:["published"]}];
+ invoke.mockImplementation(async(_name,{body})=>{
+  if(body.action==="list")return {data:{access:users,history:[],credentials:[]}};
+  if(body.action==="preferences"){const match=users.find(a=>a.user_id===body.id)!;match.preferences=[...body.preferences];return {data:{ok:true,preferences:match.preferences}}}
+  throw Error("Acción inesperada");
+ });
+ render(<PortalAdmin projectId="p" workspaceId="w"><h2>Contenido habitual</h2></PortalAdmin>);
+ expect(screen.queryByRole("switch")).toBeNull();
+ click("Centro de alertas");
+ await screen.findByRole("combobox");
+ const master=()=>screen.getByRole("switch",{name:/Notificaciones por correo/}) as HTMLInputElement;
+ const published=()=>screen.getByRole("switch",{name:/Publicaciones/}) as HTMLInputElement;
+ expect(master().checked).toBe(true);expect(published().checked).toBe(false);
+ fireEvent.click(master());
+ click("Guardar preferencias");
+ await screen.findByText("Preferencias de correo actualizadas.");
+ expect(invoke).toHaveBeenCalledWith("social-portal-admin",{body:{action:"preferences",id:"u",preferences:[],projectId:"p"}});
+ expect(users[1].preferences).toEqual(["published"]);
+ fireEvent.change(screen.getByRole("combobox"),{target:{value:"v"}});
+ expect(published().checked).toBe(true);
+ expect(master().checked).toBe(true);
+});
